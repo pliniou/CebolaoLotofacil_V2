@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Configuração mínima: confiar nas CAs do sistema.
+         Adicione <domain> se precisar permitir cleartext para hosts locais. -->
+    <base-config cleartextTrafficPermitted="false" />
+</network-security-config>
