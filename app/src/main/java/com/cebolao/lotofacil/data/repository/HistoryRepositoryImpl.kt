@@ -4,6 +4,7 @@ import android.util.Log
 import com.cebolao.lotofacil.data.HistoricalDraw
 import com.cebolao.lotofacil.data.datasource.HistoryLocalDataSource
 import com.cebolao.lotofacil.data.datasource.HistoryRemoteDataSource
+import com.cebolao.lotofacil.data.network.LotofacilApiResult
 import com.cebolao.lotofacil.di.ApplicationScope
 import com.cebolao.lotofacil.domain.repository.HistoryRepository
 import com.cebolao.lotofacil.domain.repository.SyncStatus
@@ -31,6 +32,7 @@ class HistoryRepositoryImpl @Inject constructor(
 
     private val cacheMutex = Mutex()
     private val historyCache = mutableMapOf<Int, HistoricalDraw>()
+    private var latestApiResultCache: LotofacilApiResult? = null
 
     private val _syncStatus = MutableStateFlow<SyncStatus>(SyncStatus.Idle)
     override val syncStatus: StateFlow<SyncStatus> = _syncStatus.asStateFlow()
@@ -46,7 +48,6 @@ class HistoryRepositoryImpl @Inject constructor(
             } catch (e: Exception) {
                 Log.e(TAG, "Erro ao inicializar histórico local", e)
             }
-            // Tenta sincronizar de forma assíncrona
             syncHistory()
         }
     }
@@ -57,7 +58,6 @@ class HistoryRepositoryImpl @Inject constructor(
                 return historyCache.values.sortedByDescending { it.contestNumber }
             }
         }
-        // Fallback: carregar do local datasource se cache estiver vazio
         return try {
             val local = localDataSource.getLocalHistory()
             cacheMutex.withLock {
@@ -72,22 +72,25 @@ class HistoryRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getLastDraw(): HistoricalDraw? {
-        // Tenta obter do remoto primeiro
         return try {
-            val remote = remoteDataSource.getLatestDraw()
-            if (remote != null) {
-                cacheMutex.withLock {
-                    historyCache[remote.contestNumber] = remote
+            val remoteResult = remoteDataSource.getLatestDraw()
+            if (remoteResult != null) {
+                latestApiResultCache = remoteResult
+                val historicalDraw = parseApiResultToHistoricalDraw(remoteResult)
+                if (historicalDraw != null) {
+                    cacheMutex.withLock {
+                        historyCache[historicalDraw.contestNumber] = historicalDraw
+                    }
+                    localDataSource.saveNewContests(listOf(historicalDraw))
+                    historicalDraw
+                } else {
+                    getHistory().firstOrNull()
                 }
-                localDataSource.saveNewContests(listOf(remote))
-                remote
             } else {
-                // Fallback para cache/local
                 getHistory().firstOrNull()
             }
         } catch (e: Exception) {
             Log.w(TAG, "Não foi possível obter último concurso remoto", e)
-            // Fallback para cache/local em caso de erro de rede
             getHistory().firstOrNull()
         }
     }
@@ -98,26 +101,19 @@ class HistoryRepositoryImpl @Inject constructor(
         try {
             val localHistory = localDataSource.getLocalHistory()
             val latestLocal = localHistory.maxByOrNull { it.contestNumber }?.contestNumber ?: 0
-            val latestRemote = try {
-                remoteDataSource.getLatestDraw()
-            } catch (_: Exception) {
-                null
-            }
+            val latestRemote = remoteDataSource.getLatestDraw()
 
-            if (latestRemote != null && latestRemote.contestNumber > latestLocal) {
-                val rangeToFetch = (latestLocal + 1)..latestRemote.contestNumber
-                val newDraws = remoteDataSource.getDrawsInRange(rangeToFetch)
-                if (newDraws.isNotEmpty()) {
-                    cacheMutex.withLock {
-                        newDraws.forEach { historyCache[it.contestNumber] = it }
+            if (latestRemote != null) {
+                latestApiResultCache = latestRemote // Cache the full result
+                if (latestRemote.numero > latestLocal) {
+                    val rangeToFetch = (latestLocal + 1)..latestRemote.numero
+                    val newDraws = remoteDataSource.getDrawsInRange(rangeToFetch)
+                    if (newDraws.isNotEmpty()) {
+                        cacheMutex.withLock {
+                            newDraws.forEach { historyCache[it.contestNumber] = it }
+                        }
+                        localDataSource.saveNewContests(newDraws)
                     }
-                    localDataSource.saveNewContests(newDraws)
-                }
-            } else {
-                // garante que cache contém localHistory
-                cacheMutex.withLock {
-                    historyCache.clear()
-                    historyCache.putAll(localHistory.associateBy { it.contestNumber })
                 }
             }
 
@@ -125,6 +121,27 @@ class HistoryRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Log.e(TAG, "Falha ao sincronizar histórico", e)
             _syncStatus.value = SyncStatus.Failed("Falha ao sincronizar histórico: ${e.message ?: "erro desconhecido"}")
+        }
+    }
+
+    override suspend fun getLatestContestDetails(): LotofacilApiResult? {
+        // Return the cached full result, or fetch if null
+        return latestApiResultCache ?: remoteDataSource.getLatestDraw()?.also {
+            latestApiResultCache = it
+        }
+    }
+
+    private fun parseApiResultToHistoricalDraw(apiResult: LotofacilApiResult): HistoricalDraw? {
+        val contest = apiResult.numero
+        val numbers = apiResult.listaDezenas.mapNotNull { it.toIntOrNull() }.toSet()
+        return if (contest > 0 && numbers.size >= 15) {
+            HistoricalDraw(
+                contestNumber = contest,
+                numbers = numbers,
+                date = apiResult.dataApuracao
+            )
+        } else {
+            null
         }
     }
 }

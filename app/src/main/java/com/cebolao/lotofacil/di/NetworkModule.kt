@@ -23,7 +23,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val BASE_URL = "https://loteriascaixa-api.herokuapp.com/api/lotofacil/"
+    private const val BASE_URL = "https://servicebus2.caixa.gov.br/portaldeloterias/api/"
     private const val CACHE_SIZE_BYTES = 10 * 1_024 * 1_024L // 10 MB
 
     @Provides

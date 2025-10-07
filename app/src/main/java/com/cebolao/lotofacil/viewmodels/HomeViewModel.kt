@@ -17,11 +17,11 @@ import androidx.lifecycle.viewModelScope
 import com.cebolao.lotofacil.R
 import com.cebolao.lotofacil.data.HistoricalDraw
 import com.cebolao.lotofacil.data.StatisticsReport
+import com.cebolao.lotofacil.data.network.LotofacilApiResult
 import com.cebolao.lotofacil.di.DefaultDispatcher
 import com.cebolao.lotofacil.domain.repository.HistoryRepository
 import com.cebolao.lotofacil.domain.repository.SyncStatus
 import com.cebolao.lotofacil.domain.service.StatisticsAnalyzer
-import com.cebolao.lotofacil.domain.usecase.GetHomeScreenDataUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.toImmutableSet
@@ -31,6 +31,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.text.NumberFormat
+import java.util.Locale
 import javax.inject.Inject
 
 enum class StatisticPattern(val title: String, val icon: ImageVector) {
@@ -59,6 +61,21 @@ data class LastDrawStats(
 )
 
 @Stable
+@Immutable
+data class NextDrawInfo(
+    val formattedDate: String,
+    val formattedPrize: String
+)
+
+@Stable
+@Immutable
+data class WinnerData(
+    val description: String,
+    val winnerCount: Int,
+    val prize: Double
+)
+
+@Stable
 data class HomeUiState(
     val isScreenLoading: Boolean = true,
     val isStatsLoading: Boolean = false,
@@ -66,6 +83,8 @@ data class HomeUiState(
     @StringRes
     val errorMessageResId: Int? = null,
     val lastDrawStats: LastDrawStats? = null,
+    val nextDrawInfo: NextDrawInfo? = null,
+    val winnerData: List<WinnerData> = emptyList(),
     val statistics: StatisticsReport? = null,
     val selectedPattern: StatisticPattern = StatisticPattern.SUM,
     val selectedTimeWindow: Int = 0,
@@ -75,7 +94,6 @@ data class HomeUiState(
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val getHomeScreenDataUseCase: GetHomeScreenDataUseCase,
     private val historyRepository: HistoryRepository,
     private val statisticsAnalyzer: StatisticsAnalyzer,
     @DefaultDispatcher private val dispatcher: CoroutineDispatcher
@@ -117,6 +135,7 @@ class HomeViewModel @Inject constructor(
         _uiState.update { it.copy(showSyncSuccessMessage = false) }
     }
 
+
     fun retryInitialLoad() = loadInitialData()
 
     fun forceSync() {
@@ -126,63 +145,88 @@ class HomeViewModel @Inject constructor(
 
     private fun loadInitialData() = viewModelScope.launch(dispatcher) {
         _uiState.update { it.copy(isScreenLoading = true, errorMessageResId = null) }
-        getHomeScreenDataUseCase().collect { result ->
-            result.onSuccess { data ->
-                fullHistory = historyRepository.getHistory()
-                _uiState.update {
-                    it.copy(
-                        isScreenLoading = false,
-                        lastDrawStats = data.lastDrawStats,
-                        statistics = data.initialStats
-                    )
-                }
-            }.onFailure {
-                _uiState.update {
-                    it.copy(
-                        isScreenLoading = false,
-                        errorMessageResId = R.string.error_load_data_failed
-                    )
-                }
+        try {
+            fullHistory = historyRepository.getHistory()
+            val latestApiResult = historyRepository.getLatestContestDetails()
+
+            if (fullHistory.isEmpty() && latestApiResult == null) {
+                _uiState.update { it.copy(isScreenLoading = false, errorMessageResId = R.string.error_load_data_failed) }
+                return@launch
+            }
+
+            val stats = statisticsAnalyzer.analyze(fullHistory)
+            val processedState = processApiResult(latestApiResult, fullHistory.firstOrNull())
+
+            _uiState.update {
+                it.copy(
+                    isScreenLoading = false,
+                    lastDrawStats = processedState.lastDrawStats,
+                    nextDrawInfo = processedState.nextDrawInfo,
+                    winnerData = processedState.winnerData,
+                    statistics = stats
+                )
+            }
+        } catch (e: Exception) {
+            _uiState.update {
+                it.copy(isScreenLoading = false, errorMessageResId = R.string.error_load_data_failed)
             }
         }
     }
 
-    private fun refreshDataAfterSync() = viewModelScope.launch(dispatcher) {
-        val newHistory = historyRepository.getHistory()
-        val newLastDraw = newHistory.firstOrNull()
+    private suspend fun refreshDataAfterSync() = viewModelScope.launch(dispatcher) {
+        fullHistory = historyRepository.getHistory()
+        val latestApiResult = historyRepository.getLatestContestDetails()
 
-        if (newHistory.isEmpty()) {
+        if (fullHistory.isEmpty()) {
             _uiState.update { it.copy(errorMessageResId = R.string.error_load_data_failed) }
             return@launch
         }
 
-        fullHistory = newHistory
-
-        val newLastDrawStats = if (newLastDraw != null) calculateLastDrawStats(newLastDraw) else null
-
-        val drawsToAnalyze = if (_uiState.value.selectedTimeWindow > 0) newHistory.take(_uiState.value.selectedTimeWindow) else newHistory
-        val newStats = statisticsAnalyzer.analyze(drawsToAnalyze)
+        val drawsToAnalyze = if (_uiState.value.selectedTimeWindow > 0) fullHistory.take(_uiState.value.selectedTimeWindow) else fullHistory
+        val stats = statisticsAnalyzer.analyze(drawsToAnalyze)
+        val processedState = processApiResult(latestApiResult, fullHistory.firstOrNull())
 
         _uiState.update {
             it.copy(
-                lastDrawStats = newLastDrawStats,
-                statistics = newStats
+                lastDrawStats = processedState.lastDrawStats,
+                nextDrawInfo = processedState.nextDrawInfo,
+                winnerData = processedState.winnerData,
+                statistics = stats
             )
         }
     }
 
-    private fun calculateLastDrawStats(lastDraw: HistoricalDraw): LastDrawStats {
-        return LastDrawStats(
-            contest = lastDraw.contestNumber,
-            numbers = lastDraw.numbers.toImmutableSet(),
-            sum = lastDraw.sum,
-            evens = lastDraw.evens,
-            odds = lastDraw.odds,
-            primes = lastDraw.primes,
-            frame = lastDraw.frame,
-            portrait = lastDraw.portrait,
-            fibonacci = lastDraw.fibonacci,
-            multiplesOf3 = lastDraw.multiplesOf3
+    private fun processApiResult(apiResult: LotofacilApiResult?, lastDraw: HistoricalDraw?): HomeUiState {
+        val currencyFormat = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
+        val lastDrawStats = lastDraw?.let {
+            LastDrawStats(
+                contest = it.contestNumber,
+                numbers = it.numbers.toImmutableSet(),
+                sum = it.sum, evens = it.evens, odds = it.odds, primes = it.primes,
+                frame = it.frame, portrait = it.portrait, fibonacci = it.fibonacci,
+                multiplesOf3 = it.multiplesOf3
+            )
+        }
+
+        val nextDrawInfo = if (apiResult?.dataProximoConcurso != null && apiResult.valorEstimadoProximoConcurso > 0) {
+            NextDrawInfo(
+                formattedDate = apiResult.dataProximoConcurso,
+                formattedPrize = currencyFormat.format(apiResult.valorEstimadoProximoConcurso)
+            )
+        } else null
+
+        val winnerData = apiResult?.listaRateioPremio?.map {
+            WinnerData(
+                description = it.descricaoFaixa,
+                winnerCount = it.numeroDeGanhadores,
+                prize = it.valorPremio
+            )
+        } ?: emptyList()
+
+        return HomeUiState(
+            lastDrawStats = lastDrawStats,
+            nextDrawInfo = nextDrawInfo,
+            winnerData = winnerData
         )
     }
 

@@ -13,7 +13,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 interface HistoryRemoteDataSource {
-    suspend fun getLatestDraw(): HistoricalDraw?
+    suspend fun getLatestDraw(): LotofacilApiResult?
     suspend fun getDrawsInRange(range: IntRange): List<HistoricalDraw>
 }
 
@@ -27,10 +27,9 @@ class HistoryRemoteDataSourceImpl @Inject constructor(
         private const val BATCH_SIZE = 50
     }
 
-    override suspend fun getLatestDraw(): HistoricalDraw? = withContext(Dispatchers.IO) {
+    override suspend fun getLatestDraw(): LotofacilApiResult? = withContext(Dispatchers.IO) {
         try {
-            val result = apiService.getLatestResult()
-            parseApiResult(result)
+            apiService.getLatestResult()
         } catch (e: Exception) {
             Log.e(TAG, "Failed to fetch latest draw", e)
             null
@@ -59,10 +58,10 @@ class HistoryRemoteDataSourceImpl @Inject constructor(
 
     private fun parseApiResult(apiResult: LotofacilApiResult): HistoricalDraw? {
         return try {
-            val contest = apiResult.concurso ?: return null
-            val numbers = apiResult.dezenas?.mapNotNull { it.toIntOrNull() }?.toSet()
+            val contest = apiResult.numero
+            val numbers = apiResult.listaDezenas.mapNotNull { it.toIntOrNull() }.toSet()
 
-            if (numbers != null && numbers.size >= 15) {
+            if (contest > 0 && numbers.size >= 15) {
                 HistoricalDraw(
                     contestNumber = contest,
                     numbers = numbers,

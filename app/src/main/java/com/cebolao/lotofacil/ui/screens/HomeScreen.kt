@@ -23,12 +23,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocalFireDepartment
@@ -75,7 +79,9 @@ import com.cebolao.lotofacil.ui.components.NumberBallVariant
 import com.cebolao.lotofacil.ui.components.StandardScreenHeader
 import com.cebolao.lotofacil.viewmodels.HomeViewModel
 import com.cebolao.lotofacil.viewmodels.LastDrawStats
+import com.cebolao.lotofacil.viewmodels.NextDrawInfo
 import com.cebolao.lotofacil.viewmodels.StatisticPattern
+import com.cebolao.lotofacil.viewmodels.WinnerData
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
@@ -103,6 +109,7 @@ fun HomeScreen(homeViewModel: HomeViewModel = hiltViewModel()) {
             homeViewModel.onSyncSuccessMessageShown()
         }
     }
+
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -161,13 +168,28 @@ fun HomeScreen(homeViewModel: HomeViewModel = hiltViewModel()) {
                         }
                     } else {
                         // RECOMPOSITION FIX: Each section is now a separate 'item'
+                        if (uiState.nextDrawInfo != null || uiState.winnerData.isNotEmpty()) {
+                            item(key = "next_draw") {
+                                AnimateOnEntry(Modifier.padding(horizontal = 20.dp)) {
+                                    NextDrawCard(
+                                        nextDrawInfo = uiState.nextDrawInfo,
+                                        winnerData = uiState.winnerData
+                                    )
+                                }
+                            }
+                        }
+
                         item(key = "last_draw") {
                             uiState.lastDrawStats?.let {
-                                AnimateOnEntry(Modifier.padding(horizontal = 20.dp)) {
+                                AnimateOnEntry(
+                                    modifier = Modifier.padding(horizontal = 20.dp),
+                                    delayMillis = 50
+                                ) {
                                     LastDrawSection(it)
                                 }
                             }
                         }
+
                         item(key = "statistics") {
                             AnimateOnEntry(
                                 modifier = Modifier.padding(horizontal = 20.dp),
@@ -197,6 +219,76 @@ fun HomeScreen(homeViewModel: HomeViewModel = hiltViewModel()) {
         }
     }
 }
+
+@Composable
+private fun NextDrawCard(nextDrawInfo: NextDrawInfo?, winnerData: List<WinnerData>) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            nextDrawInfo?.let {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.CalendarMonth, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "Próximo Sorteio: ${it.formattedDate}",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.ArrowUpward, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "Prêmio Estimado: ${it.formattedPrize}",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            if (winnerData.isNotEmpty()) {
+                HorizontalDivider(color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.EmojiEvents, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "Ganhadores do Último Concurso",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    winnerData.forEach { winnerInfo ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = winnerInfo.description.replace(" Acertos", " acertos"),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Text(
+                                text = "${winnerInfo.winnerCount} ${if (winnerInfo.winnerCount == 1) "ganhador" else "ganhadores"}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -398,7 +490,7 @@ private fun DistributionCharts(
     selected: StatisticPattern,
     onSelect: (StatisticPattern) -> Unit
 ) {
-    val patterns = remember { StatisticPattern.entries }
+    val patterns = remember { StatisticPattern.entries.toTypedArray() }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(patterns, key = { it.name }) { pattern ->

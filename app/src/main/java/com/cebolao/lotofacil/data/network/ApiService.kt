@@ -4,13 +4,10 @@ import retrofit2.http.GET
 import retrofit2.http.Path
 
 interface ApiService {
-    @GET("latest")
-    suspend fun getLatestResult(): LotofacilApiResult
-
-    @GET("{contest}")
+    @GET("lotofacil/{contest}")
     suspend fun getResultByContest(@Path("contest") contestNumber: Int): LotofacilApiResult
 
-    // Observação: para otimização de sincronização incremental, a camada de rede
-    // pode adicionar interceptors (OkHttp) que exponham ETag/Last-Modified e permitir
-    // fetch condicional. Não alteramos a interface Retrofit por compatibilidade.
+    // O endpoint da Caixa, sem um número de concurso, retorna o resultado mais recente.
+    @GET("lotofacil")
+    suspend fun getLatestResult(): LotofacilApiResult
 }
