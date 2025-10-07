@@ -34,9 +34,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.cebolao.lotofacil.R
 import kotlinx.coroutines.launch
 
 data class OnboardingPage(
@@ -162,14 +164,14 @@ fun OnboardingControls(
             enabled = !isLastPage
         ) {
             if (!isLastPage) {
-                Text("Pular")
+                Text(stringResource(R.string.onboarding_skip))
             }
         }
 
         PagerIndicator(pageCount = pageCount, currentPage = currentPage)
 
         Button(onClick = onNextClick) {
-            Text(if (isLastPage) "Começar" else "Próximo")
+            Text(if (isLastPage) stringResource(R.string.onboarding_start) else stringResource(R.string.onboarding_next))
         }
     }
 }

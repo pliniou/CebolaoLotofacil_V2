@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PushPin
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -37,7 +38,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.cebolao.lotofacil.R
 import com.cebolao.lotofacil.data.LotofacilGame
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -48,7 +51,8 @@ fun GameCard(
     onAnalyzeClick: () -> Unit,
     onPinClick: () -> Unit,
     onDeleteClick: () -> Unit,
-    onCheckClick: () -> Unit
+    onCheckClick: () -> Unit,
+    onShareClick: () -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
     val isPinned = game.isPinned
@@ -98,6 +102,10 @@ fun GameCard(
                 onDeleteClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onDeleteClick()
+                },
+                onShareClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onShareClick()
                 }
             )
         }
@@ -110,37 +118,40 @@ private fun GameCardActions(
     onAnalyzeClick: () -> Unit,
     onCheckClick: () -> Unit,
     onPinClick: () -> Unit,
-    onDeleteClick: () -> Unit
+    onDeleteClick: () -> Unit,
+    onShareClick: () -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Ícones de Ação (esquerda)
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             IconButton(onClick = onPinClick) {
                 Icon(
                     imageVector = if (isPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
-                    contentDescription = if (isPinned) "Desafixar jogo" else "Fixar jogo",
+                    contentDescription = if (isPinned) stringResource(R.string.games_unpin_game_description)
+                    else stringResource(R.string.games_pin_game_description),
                     tint = if (isPinned) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             IconButton(onClick = onDeleteClick) {
-                Icon(Icons.Filled.Delete, "Excluir jogo", tint = MaterialTheme.colorScheme.error)
+                Icon(Icons.Filled.Delete, stringResource(R.string.games_delete_game_description), tint = MaterialTheme.colorScheme.error)
+            }
+            IconButton(onClick = onShareClick) {
+                Icon(Icons.Filled.Share, stringResource(R.string.games_share_game_description), tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
-        // Botões de Texto (direita)
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             TextButton(onClick = onAnalyzeClick) {
                 Icon(Icons.Filled.Analytics, null, modifier = Modifier.size(ButtonDefaults.IconSize))
                 Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                Text("Analisar")
+                Text(stringResource(R.string.games_analyze_button))
             }
             TextButton(onClick = onCheckClick) {
                 Icon(Icons.Filled.Check, null, modifier = Modifier.size(ButtonDefaults.IconSize))
                 Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                Text("Conferir")
+                Text(stringResource(R.string.games_check_button))
             }
         }
     }

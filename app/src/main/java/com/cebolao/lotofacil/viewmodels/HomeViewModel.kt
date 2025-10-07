@@ -69,7 +69,8 @@ data class HomeUiState(
     val statistics: StatisticsReport? = null,
     val selectedPattern: StatisticPattern = StatisticPattern.SUM,
     val selectedTimeWindow: Int = 0,
-    val showSyncFailedMessage: Boolean = false
+    val showSyncFailedMessage: Boolean = false,
+    val showSyncSuccessMessage: Boolean = false
 )
 
 @HiltViewModel
@@ -82,7 +83,6 @@ class HomeViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState = _uiState.asStateFlow()
 
-    // Armazena todo o histórico para permitir a seleção de janelas sem recarregar o repositório.
     private var fullHistory: List<HistoricalDraw> = emptyList()
     private var analysisJob: Job? = null
 
@@ -91,9 +91,7 @@ class HomeViewModel @Inject constructor(
         loadInitialData()
     }
 
-    /** Observa o status de sincronização do repositório e reage. */
     private fun observeSyncStatus() {
-        // Coleta no viewModelScope (Dispatcher.Main/Unconfined) para evitar trocas desnecessárias de contexto.
         viewModelScope.launch {
             historyRepository.syncStatus.collect { status ->
                 _uiState.update { it.copy(isSyncing = status is SyncStatus.Syncing) }
@@ -102,7 +100,7 @@ class HomeViewModel @Inject constructor(
                         _uiState.update { it.copy(showSyncFailedMessage = true) }
                     }
                     is SyncStatus.Success -> {
-                        // Recarrega os dados após sincronização bem-sucedida para atualizar a UI.
+                        _uiState.update { it.copy(showSyncSuccessMessage = true) }
                         refreshDataAfterSync()
                     }
                     else -> {}
@@ -115,20 +113,21 @@ class HomeViewModel @Inject constructor(
         _uiState.update { it.copy(showSyncFailedMessage = false) }
     }
 
+    fun onSyncSuccessMessageShown() {
+        _uiState.update { it.copy(showSyncSuccessMessage = false) }
+    }
+
     fun retryInitialLoad() = loadInitialData()
 
     fun forceSync() {
         if (_uiState.value.isSyncing) return
-        // Inicia a sincronização, o resultado será observado em observeSyncStatus
         historyRepository.syncHistory()
     }
 
-    /** Carrega os dados iniciais da tela (último sorteio e estatísticas iniciais). */
     private fun loadInitialData() = viewModelScope.launch(dispatcher) {
         _uiState.update { it.copy(isScreenLoading = true, errorMessageResId = null) }
         getHomeScreenDataUseCase().collect { result ->
             result.onSuccess { data ->
-                // O histórico já foi obtido dentro do UseCase, mas precisamos da cópia completa aqui para uso futuro
                 fullHistory = historyRepository.getHistory()
                 _uiState.update {
                     it.copy(
@@ -148,7 +147,6 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    /** Recarrega apenas as estatísticas após uma sincronização. */
     private fun refreshDataAfterSync() = viewModelScope.launch(dispatcher) {
         val newHistory = historyRepository.getHistory()
         val newLastDraw = newHistory.firstOrNull()
@@ -159,15 +157,13 @@ class HomeViewModel @Inject constructor(
         }
 
         fullHistory = newHistory
-        
-        // Recalcula o LastDrawStats e as estatísticas para a janela atual
+
         val newLastDrawStats = if (newLastDraw != null) calculateLastDrawStats(newLastDraw) else null
-        
-        // Mantém a janela de tempo selecionada e recalcula as estatísticas
+
         val drawsToAnalyze = if (_uiState.value.selectedTimeWindow > 0) newHistory.take(_uiState.value.selectedTimeWindow) else newHistory
         val newStats = statisticsAnalyzer.analyze(drawsToAnalyze)
 
-        _uiState.update { 
+        _uiState.update {
             it.copy(
                 lastDrawStats = newLastDrawStats,
                 statistics = newStats
@@ -175,7 +171,6 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    /** Calcula as estatísticas simples para o último sorteio. Extraída do UseCase para reutilização. */
     private fun calculateLastDrawStats(lastDraw: HistoricalDraw): LastDrawStats {
         return LastDrawStats(
             contest = lastDraw.contestNumber,
@@ -193,18 +188,16 @@ class HomeViewModel @Inject constructor(
 
     fun onTimeWindowSelected(window: Int) {
         if (_uiState.value.selectedTimeWindow == window || fullHistory.isEmpty()) return
-        
-        // Cancela qualquer análise em andamento
+
         analysisJob?.cancel()
-        
+
         analysisJob = viewModelScope.launch(dispatcher) {
             _uiState.update { it.copy(isStatsLoading = true, selectedTimeWindow = window) }
-            
+
             val drawsToAnalyze = if (window > 0) fullHistory.take(window) else fullHistory
-            
-            // Reutiliza o StatisticsAnalyzer
+
             val newStats = statisticsAnalyzer.analyze(drawsToAnalyze)
-            
+
             _uiState.update { it.copy(statistics = newStats, isStatsLoading = false) }
         }
     }

@@ -1,5 +1,6 @@
 package com.cebolao.lotofacil.ui.screens
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
@@ -19,7 +20,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -57,13 +57,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -71,6 +69,7 @@ import com.cebolao.lotofacil.R
 import com.cebolao.lotofacil.data.StatisticsReport
 import com.cebolao.lotofacil.ui.components.AnimateOnEntry
 import com.cebolao.lotofacil.ui.components.BarChart
+import com.cebolao.lotofacil.ui.components.FormattedText
 import com.cebolao.lotofacil.ui.components.NumberBall
 import com.cebolao.lotofacil.ui.components.NumberBallVariant
 import com.cebolao.lotofacil.ui.components.StandardScreenHeader
@@ -83,14 +82,25 @@ import kotlinx.collections.immutable.toImmutableList
 fun HomeScreen(homeViewModel: HomeViewModel = hiltViewModel()) {
     val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
     LaunchedEffect(uiState.showSyncFailedMessage) {
         if (uiState.showSyncFailedMessage) {
             snackbarHostState.showSnackbar(
-                message = "Não foi possível atualizar. Exibindo dados locais.",
+                message = context.getString(R.string.home_sync_failed_message),
                 duration = SnackbarDuration.Long
             )
             homeViewModel.onSyncMessageShown()
+        }
+    }
+
+    LaunchedEffect(uiState.showSyncSuccessMessage) {
+        if (uiState.showSyncSuccessMessage) {
+            snackbarHostState.showSnackbar(
+                message = context.getString(R.string.home_sync_success_message),
+                duration = SnackbarDuration.Short
+            )
+            homeViewModel.onSyncSuccessMessageShown()
         }
     }
 
@@ -98,87 +108,93 @@ fun HomeScreen(homeViewModel: HomeViewModel = hiltViewModel()) {
         snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .windowInsetsPadding(WindowInsets.statusBars),
-            contentPadding = PaddingValues(top = 16.dp, bottom = 60.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            item {
-                StandardScreenHeader(
-                    title = "Cebolão",
-                    subtitle = "Lotofácil Generator",
-                    iconPainter = painterResource(id = R.drawable.ic_lotofacil_logo),
-                    actions = {
-                        AnimatedContent(targetState = uiState.isSyncing, label = "SyncButton") { isSyncing ->
-                            if (isSyncing) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp),
-                                    strokeWidth = 2.dp
-                                )
-                            } else {
-                                IconButton(onClick = { homeViewModel.forceSync() }) {
-                                    Icon(Icons.Default.Refresh, "Atualizar histórico")
+        AnimatedContent(
+            targetState = uiState.isScreenLoading,
+            label = "HomeScreenScaffoldContent"
+        ) { isLoading ->
+            if (isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .windowInsetsPadding(WindowInsets.statusBars),
+                    contentPadding = PaddingValues(top = 16.dp, bottom = 60.dp),
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                ) {
+                    item {
+                        StandardScreenHeader(
+                            title = stringResource(id = R.string.home_title),
+                            subtitle = stringResource(id = R.string.home_subtitle),
+                            iconPainter = painterResource(id = R.drawable.ic_lotofacil_logo),
+                            actions = {
+                                AnimatedContent(targetState = uiState.isSyncing, label = "SyncButton") { isSyncing ->
+                                    if (isSyncing) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(24.dp),
+                                            strokeWidth = 2.dp
+                                        )
+                                    } else {
+                                        IconButton(onClick = { homeViewModel.forceSync() }) {
+                                            Icon(Icons.Default.Refresh, stringResource(id = R.string.home_sync_button_description))
+                                        }
+                                    }
+                                }
+                            }
+                        )
+                    }
+
+                    if (uiState.errorMessageResId != null) {
+                        item {
+                            ErrorState(
+                                messageResId = uiState.errorMessageResId!!,
+                                onRetry = { homeViewModel.retryInitialLoad() }
+                            )
+                        }
+                    } else {
+                        // RECOMPOSITION FIX: Each section is now a separate 'item'
+                        item(key = "last_draw") {
+                            uiState.lastDrawStats?.let {
+                                AnimateOnEntry(Modifier.padding(horizontal = 20.dp)) {
+                                    LastDrawSection(it)
                                 }
                             }
                         }
-                    }
-                )
-            }
-            item {
-                AnimatedContent(targetState = uiState.isScreenLoading, label = "HomeScreenContent") { isLoading ->
-                    if (isLoading) {
-                        LoadingState()
-                    } else if (uiState.errorMessageResId != null) {
-                        ErrorState(
-                            messageResId = uiState.errorMessageResId!!,
-                            onRetry = { homeViewModel.retryInitialLoad() }
-                        )
-                    } else {
-                        SuccessState(
-                            lastDrawStats = uiState.lastDrawStats,
-                            statistics = uiState.statistics,
-                            isStatsLoading = uiState.isStatsLoading,
-                            selectedTimeWindow = uiState.selectedTimeWindow,
-                            selectedPattern = uiState.selectedPattern,
-                            onTimeWindowSelected = { homeViewModel.onTimeWindowSelected(it) },
-                            onPatternSelected = { homeViewModel.onPatternSelected(it) }
-                        )
+                        item(key = "statistics") {
+                            AnimateOnEntry(
+                                modifier = Modifier.padding(horizontal = 20.dp),
+                                delayMillis = 150
+                            ) {
+                                StatisticsSection(
+                                    stats = uiState.statistics,
+                                    isStatsLoading = uiState.isStatsLoading,
+                                    selectedTimeWindow = uiState.selectedTimeWindow,
+                                    selectedPattern = uiState.selectedPattern,
+                                    onTimeWindowSelected = { homeViewModel.onTimeWindowSelected(it) },
+                                    onPatternSelected = { homeViewModel.onPatternSelected(it) }
+                                )
+                            }
+                        }
+                        item(key = "explanation") {
+                            AnimateOnEntry(
+                                modifier = Modifier.padding(horizontal = 20.dp),
+                                delayMillis = 300
+                            ) {
+                                StatisticsExplanationCard()
+                            }
+                        }
                     }
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun SuccessState(
-    lastDrawStats: LastDrawStats?,
-    statistics: StatisticsReport?,
-    isStatsLoading: Boolean,
-    selectedTimeWindow: Int,
-    selectedPattern: StatisticPattern,
-    onTimeWindowSelected: (Int) -> Unit,
-    onPatternSelected: (StatisticPattern) -> Unit
-) {
-    Column(
-        modifier = Modifier.padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
-    ) {
-        lastDrawStats?.let { AnimateOnEntry { LastDrawSection(it) } }
-        AnimateOnEntry(delayMillis = 150) {
-            StatisticsSection(
-                stats = statistics,
-                isStatsLoading = isStatsLoading,
-                selectedTimeWindow = selectedTimeWindow,
-                selectedPattern = selectedPattern,
-                onTimeWindowSelected = onTimeWindowSelected,
-                onPatternSelected = onPatternSelected
-            )
-        }
-        AnimateOnEntry(delayMillis = 300) { StatisticsExplanationCard() }
     }
 }
 
@@ -192,7 +208,7 @@ private fun LastDrawSection(stats: LastDrawStats) {
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Text(
-                "Último Concurso: #${stats.contest}",
+                stringResource(R.string.home_last_contest_format, stats.contest),
                 style = MaterialTheme.typography.titleMedium
             )
             FlowRow(
@@ -211,12 +227,12 @@ private fun LastDrawSection(stats: LastDrawStats) {
                 horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                StatChip("Soma", stats.sum.toString())
-                StatChip("Pares", stats.evens.toString())
-                StatChip("Primos", stats.primes.toString())
-                StatChip("Moldura", stats.frame.toString())
-                StatChip("Miolo", stats.portrait.toString())
-                StatChip("Fibonacci", stats.fibonacci.toString())
+                StatChip(stringResource(R.string.statistic_pattern_title_sum), stats.sum.toString())
+                StatChip(stringResource(R.string.statistic_pattern_title_evens), stats.evens.toString())
+                StatChip(stringResource(R.string.statistic_pattern_title_primes), stats.primes.toString())
+                StatChip(stringResource(R.string.statistic_pattern_title_frame), stats.frame.toString())
+                StatChip(stringResource(R.string.statistic_pattern_title_portrait), stats.portrait.toString())
+                StatChip(stringResource(R.string.statistic_pattern_title_fibonacci), stats.fibonacci.toString())
             }
         }
     }
@@ -245,7 +261,7 @@ private fun StatisticsSection(
     onPatternSelected: (StatisticPattern) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text("Central de Estatísticas", style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(R.string.home_statistics_center), style = MaterialTheme.typography.headlineSmall)
         stats?.let {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -261,12 +277,12 @@ private fun StatisticsSection(
                         Modifier.padding(vertical = 16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        StatRow("Dezenas Mais Atrasadas", currentStats.mostOverdueNumbers, Icons.Default.HourglassEmpty, " atrás")
+                        StatRow(stringResource(R.string.home_overdue_numbers), currentStats.mostOverdueNumbers, Icons.Default.HourglassEmpty, stringResource(R.string.home_suffix_ago))
                         HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
                         TimeWindowSelector(selectedTimeWindow, onTimeWindowSelected)
                         Box {
                             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                                StatRow("Dezenas Mais Sorteadas", currentStats.mostFrequentNumbers, Icons.Default.LocalFireDepartment, "x")
+                                StatRow(stringResource(R.string.home_hot_numbers), currentStats.mostFrequentNumbers, Icons.Default.LocalFireDepartment, stringResource(R.string.home_suffix_times))
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
                                 DistributionCharts(currentStats, selectedPattern, onPatternSelected)
                             }
@@ -291,7 +307,7 @@ private fun StatisticsSection(
 @Composable
 private fun StatisticsExplanationCard() {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text("Entendendo as Estatísticas", style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(R.string.home_understanding_stats), style = MaterialTheme.typography.headlineSmall)
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.large,
@@ -304,29 +320,11 @@ private fun StatisticsExplanationCard() {
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Icon(Icons.Default.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                    Text("Como Ler os Dados", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.home_how_to_read), style = MaterialTheme.typography.titleMedium)
                 }
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
-                Text(
-                    buildAnnotatedString {
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append("• Dezenas Atrasadas/Sorteadas: ")
-                        }
-                        append("Mostram os 5 números mais 'frios' (sem sair) e 'quentes' (mais frequentes). O valor abaixo indica o atraso (em concursos) ou a frequência total.")
-                    },
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    buildAnnotatedString {
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append("• Gráficos de Distribuição: ")
-                        }
-                        append("A barra mais alta indica a ocorrência mais comum de um padrão (ex: 8 números pares). Use os filtros acima do gráfico para explorar diferentes estatísticas.")
-                    },
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                FormattedText(text = stringResource(R.string.home_overdue_hot_numbers_desc))
+                FormattedText(text = stringResource(R.string.home_distribution_charts_desc))
             }
         }
     }
@@ -336,13 +334,15 @@ private fun StatisticsExplanationCard() {
 private fun TimeWindowSelector(selected: Int, onSelect: (Int) -> Unit) {
     val windows = listOf(0, 500, 250, 100, 50, 10)
     Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Período de Análise", style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.home_analysis_period), style = MaterialTheme.typography.titleMedium)
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(windows, key = { it }) { window ->
+                val label = if (window == 0) stringResource(R.string.home_all_contests)
+                else stringResource(R.string.home_last_contests_format, window)
                 TimeWindowChip(
                     isSelected = window == selected,
                     onClick = { onSelect(window) },
-                    label = if (window == 0) "Todos" else "Últimos $window"
+                    label = label
                 )
             }
         }
@@ -398,14 +398,15 @@ private fun DistributionCharts(
     selected: StatisticPattern,
     onSelect: (StatisticPattern) -> Unit
 ) {
+    val patterns = remember { StatisticPattern.entries }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(StatisticPattern.entries.toTypedArray(), key = { it.name }) { pattern ->
+            items(patterns, key = { it.name }) { pattern ->
                 val selectedPattern = selected == pattern
                 FilterChip(
                     selected = selectedPattern,
                     onClick = { onSelect(pattern) },
-                    label = { Text(pattern.title) },
+                    label = { Text(stringResource(pattern.titleResId)) },
                     leadingIcon = { Icon(pattern.icon, null, Modifier.size(FilterChipDefaults.IconSize)) }
                 )
             }
@@ -435,18 +436,6 @@ private fun DistributionCharts(
 }
 
 @Composable
-private fun LoadingState() {
-    Box(
-        Modifier
-            .fillMaxWidth()
-            .height(400.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        CircularProgressIndicator()
-    }
-}
-
-@Composable
 private fun ErrorState(messageResId: Int, onRetry: () -> Unit) {
     Card(
         Modifier
@@ -461,13 +450,25 @@ private fun ErrorState(messageResId: Int, onRetry: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Icon(Icons.Default.CloudOff, null, Modifier.size(48.dp), tint = MaterialTheme.colorScheme.error)
-            Text("Falha ao Carregar Dados", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onErrorContainer)
+            Text(stringResource(R.string.general_failed_to_load_data), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onErrorContainer)
             Text(stringResource(messageResId), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onErrorContainer, textAlign = TextAlign.Center)
             Button(onClick = onRetry) {
                 Icon(Icons.Default.Refresh, null)
                 Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                Text("Tentar Novamente")
+                Text(stringResource(R.string.general_retry))
             }
         }
     }
 }
+
+private val StatisticPattern.titleResId: Int
+    @StringRes
+    get() = when (this) {
+        StatisticPattern.SUM -> R.string.statistic_pattern_title_sum
+        StatisticPattern.EVENS -> R.string.statistic_pattern_title_evens
+        StatisticPattern.PRIMES -> R.string.statistic_pattern_title_primes
+        StatisticPattern.FRAME -> R.string.statistic_pattern_title_frame
+        StatisticPattern.PORTRAIT -> R.string.statistic_pattern_title_portrait
+        StatisticPattern.FIBONACCI -> R.string.statistic_pattern_title_fibonacci
+        StatisticPattern.MULTIPLES_OF_3 -> R.string.statistic_pattern_title_multiples_of_3
+    }

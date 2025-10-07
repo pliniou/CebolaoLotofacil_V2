@@ -26,8 +26,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.cebolao.lotofacil.R
 import com.cebolao.lotofacil.data.CheckResult
 import kotlinx.collections.immutable.ImmutableMap
 
@@ -73,12 +75,13 @@ private fun ResultHeader(totalWins: Int, contestsChecked: Int) {
         Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(26.dp))
         Column {
             Text(
-                text = if (totalWins > 0) "Premiações já ocorridas" else "Análise de Desempenho",
+                text = if (totalWins > 0) stringResource(R.string.checker_results_header_wins)
+                else stringResource(R.string.checker_results_header_no_wins),
                 style = MaterialTheme.typography.titleMedium,
                 color = color
             )
             Text(
-                text = "Análise em $contestsChecked concursos",
+                text = stringResource(R.string.checker_results_analysis_in_contests, contestsChecked),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -102,12 +105,12 @@ private fun ScoreBreakdown(scoreCounts: ImmutableMap<Int, Int>) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        "$score Acertos",
+                        stringResource(R.string.checker_score_breakdown_hits_format, score),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium
                     )
                     Text(
-                        "$animated ${if (animated == 1) "vez" else "vezes"}",
+                        text = "$animated ${if (animated == 1) stringResource(R.string.checker_score_breakdown_times_format_one) else stringResource(R.string.checker_score_breakdown_times_format_other)}",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -131,7 +134,11 @@ private fun LastHitInfo(result: CheckResult) {
             modifier = Modifier.size(18.dp)
         )
         Text(
-            text = "Último prêmio no concurso ${result.lastHitContest} com ${result.lastHitScore} acertos.",
+            text = stringResource(
+                R.string.checker_last_hit_info,
+                result.lastHitContest ?: "--",
+                result.lastHitScore ?: "--"
+            ),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -155,7 +162,7 @@ private fun NoWinsMessage() {
         )
         Spacer(Modifier.width(8.dp))
         Text(
-            "Nenhum prêmio encontrado.",
+            stringResource(R.string.checker_no_wins_message),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

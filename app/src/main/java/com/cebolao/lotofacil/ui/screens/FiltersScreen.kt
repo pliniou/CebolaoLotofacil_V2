@@ -40,9 +40,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cebolao.lotofacil.R
 import com.cebolao.lotofacil.data.FilterType
 import com.cebolao.lotofacil.domain.service.GameGenerator
 import com.cebolao.lotofacil.ui.components.AnimateOnEntry
@@ -109,17 +111,17 @@ fun FiltersScreen(
     if (showResetConfirmation) {
         AlertDialog(
             onDismissRequest = { showResetConfirmation = false },
-            title = { Text("Resetar Filtros?") },
-            text = { Text("Isso desativará todos os filtros e restaurará os padrões. Deseja continuar?") },
+            title = { Text(stringResource(R.string.filters_reset_dialog_title)) },
+            text = { Text(stringResource(R.string.filters_reset_dialog_message)) },
             confirmButton = {
                 Button(onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     filtersViewModel.resetAllFilters()
                     showResetConfirmation = false
-                }) { Text("Resetar") }
+                }) { Text(stringResource(R.string.filters_reset_confirm)) }
             },
             dismissButton = {
-                TextButton(onClick = { showResetConfirmation = false }) { Text("Cancelar") }
+                TextButton(onClick = { showResetConfirmation = false }) { Text(stringResource(id = R.string.general_cancel)) }
             }
         )
     }
@@ -127,7 +129,7 @@ fun FiltersScreen(
     val isGenerating = uiState.generationState is com.cebolao.lotofacil.viewmodels.GenerationUiState.Loading
     val genMessage = when (generationProgress.progressType) {
         is GameGenerator.ProgressType.HeuristicStep -> (generationProgress.progressType as GameGenerator.ProgressType.HeuristicStep).message
-        is GameGenerator.ProgressType.Attempt -> "Gerando... (${generationProgress.current}/${generationProgress.total})"
+        is GameGenerator.ProgressType.Attempt -> stringResource(R.string.filters_button_generating)
         is GameGenerator.ProgressType.Finished -> "Pronto"
         is GameGenerator.ProgressType.Failed -> "Falhou"
         else -> "Pronto"
@@ -153,8 +155,8 @@ fun FiltersScreen(
         ) {
             item {
                 StandardScreenHeader(
-                    title = "Gerador Inteligente",
-                    subtitle = "Refine a sorte com base em estatísticas",
+                    title = stringResource(R.string.filters_title),
+                    subtitle = stringResource(R.string.filters_subtitle),
                     icon = Icons.Default.FilterAlt,
                     actions = {
                         if (uiState.activeFiltersCount > 0) {
@@ -162,7 +164,7 @@ fun FiltersScreen(
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 showResetConfirmation = true
                             }) {
-                                Icon(Icons.Default.Refresh, "Resetar filtros")
+                                Icon(Icons.Default.Refresh, stringResource(R.string.filters_reset_button_description))
                             }
                         }
                     }

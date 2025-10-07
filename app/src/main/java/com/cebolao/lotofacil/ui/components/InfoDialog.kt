@@ -24,9 +24,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.cebolao.lotofacil.R
 
 @Composable
 fun InfoDialog(
@@ -34,7 +36,7 @@ fun InfoDialog(
     dialogTitle: String,
     modifier: Modifier = Modifier,
     icon: ImageVector = Icons.Default.Info,
-    dismissButtonText: String = "Entendi",
+    dismissButtonText: String = stringResource(id = R.string.general_understand),
     content: @Composable ColumnScope.() -> Unit
 ) {
     Dialog(

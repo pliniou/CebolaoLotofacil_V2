@@ -14,7 +14,9 @@ import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.cebolao.lotofacil.R
 
 @Composable
 fun EmptyState(modifier: Modifier = Modifier) {
@@ -29,9 +31,9 @@ fun EmptyState(modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Icon(Icons.Filled.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-            Text("Nenhum jogo gerado ainda", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.games_empty_state_title), style = MaterialTheme.typography.titleMedium)
             Text(
-                "Use o Gerador Inteligente para criar combinações com seus filtros.",
+                text = stringResource(R.string.games_empty_state_description),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

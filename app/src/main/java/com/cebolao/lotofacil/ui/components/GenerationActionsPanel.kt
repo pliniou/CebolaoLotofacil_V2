@@ -36,8 +36,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.cebolao.lotofacil.R
 import com.cebolao.lotofacil.data.LotofacilConstants
 import com.cebolao.lotofacil.viewmodels.GenerationUiState
 import java.math.BigDecimal
@@ -66,12 +68,11 @@ fun GenerationActionsPanel(
         Row(
             modifier = Modifier
                 .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(horizontal = 16.dp, vertical = 8.dp) // Padding reduzido
+                .padding(horizontal = 16.dp, vertical = 8.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Lado Esquerdo: Seletor de Quantidade e Custo
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -101,23 +102,20 @@ fun GenerationActionsPanel(
                 )
             }
 
-            // Lado Direito: Botão de Ação Principal
             Row(
                 modifier = Modifier.weight(1f),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Botão de Cancelar (aparece durante o carregamento)
                 if (isLoading) {
                     IconButton(onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onCancel()
                     }) {
-                        Icon(Icons.Filled.Cancel, contentDescription = "Cancelar geração")
+                        Icon(Icons.Filled.Cancel, contentDescription = stringResource(R.string.filters_button_cancel_description))
                     }
                 }
 
-                // Botão Principal de Gerar
                 Button(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -145,12 +143,15 @@ fun GenerationActionsPanel(
                                 Spacer(modifier = Modifier.width(8.dp))
                                 val loadingText = when (generationState) {
                                     is GenerationUiState.Loading -> {
-                                        val msg = generationState.message
                                         val current = generationState.progress
                                         val total = generationState.total.takeIf { it > 0 } ?: 0
-                                        if (total > 0 && current < total) "$current/$total" else msg
+                                        if (total > 0 && current < total) {
+                                            stringResource(R.string.filters_button_generating_progress, current, total)
+                                        } else {
+                                            generationState.message
+                                        }
                                     }
-                                    else -> "Gerando..."
+                                    else -> stringResource(R.string.filters_button_generating)
                                 }
                                 Text(loadingText, style = MaterialTheme.typography.labelLarge)
                             }
@@ -161,7 +162,7 @@ fun GenerationActionsPanel(
                             ) {
                                 Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null)
                                 Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                                Text("Gerar Jogos")
+                                Text(stringResource(R.string.filters_button_generate))
                             }
                         }
                     }
@@ -181,10 +182,10 @@ private fun QuantitySelector(
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp) // Espaçamento reduzido
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         IconButton(onClick = onDecrement, enabled = isDecrementEnabled, modifier = Modifier.size(36.dp)) {
-            Icon(Icons.Filled.Remove, "Diminuir")
+            Icon(Icons.Filled.Remove, stringResource(R.string.filters_quantity_decrease))
         }
         Text(
             text = quantity.toString(),
@@ -194,7 +195,7 @@ private fun QuantitySelector(
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
         IconButton(onClick = onIncrement, enabled = isIncrementEnabled, modifier = Modifier.size(36.dp)) {
-            Icon(Icons.Filled.Add, "Aumentar")
+            Icon(Icons.Filled.Add, stringResource(R.string.filters_quantity_increase))
         }
     }
 }

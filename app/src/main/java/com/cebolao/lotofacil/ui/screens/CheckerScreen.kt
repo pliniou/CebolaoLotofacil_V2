@@ -50,6 +50,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cebolao.lotofacil.R
 import com.cebolao.lotofacil.data.CheckResult
 import com.cebolao.lotofacil.data.LotofacilConstants
 import com.cebolao.lotofacil.ui.components.AnimateOnEntry
@@ -78,7 +79,7 @@ fun CheckerScreen(checkerViewModel: CheckerViewModel = hiltViewModel()) {
 
     LaunchedEffect(Unit) {
         checkerViewModel.events.collectLatest { event ->
-            when(event) {
+            when (event) {
                 is CheckerUiEvent.ShowSnackbar -> {
                     snackbarHostState.showSnackbar(event.message)
                 }
@@ -102,15 +103,15 @@ fun CheckerScreen(checkerViewModel: CheckerViewModel = hiltViewModel()) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding) // Aplica o padding para a bottomBar
-                .windowInsetsPadding(WindowInsets.statusBars), // CORREÇÃO: Aplica o padding da status bar aqui
+                .padding(innerPadding)
+                .windowInsetsPadding(WindowInsets.statusBars),
             contentPadding = PaddingValues(top = 16.dp, bottom = 120.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             item {
                 StandardScreenHeader(
-                    title = "Conferidor",
-                    subtitle = "Teste seu jogo contra a história",
+                    title = stringResource(R.string.checker_title),
+                    subtitle = stringResource(R.string.checker_subtitle),
                     icon = Icons.Default.Analytics
                 )
             }
@@ -186,7 +187,7 @@ private fun SimpleStatsCard(stats: ImmutableList<Pair<String, String>>) {
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("Estatísticas do Jogo", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.checker_simple_stats_title), style = MaterialTheme.typography.titleMedium)
             HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
             stats.forEach { (label, value) ->
                 Row(
@@ -217,7 +218,7 @@ private fun BarChartCard(result: CheckResult) {
         )
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Acertos nos Últimos 15 Sorteios", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.checker_recent_hits_chart_title), style = MaterialTheme.typography.titleMedium)
             val chartData = result.recentHits.map { it.first.toString().takeLast(4) to it.second }
             val maxValue = (chartData.maxOfOrNull { it.second }?.coerceAtLeast(10) ?: 10)
             BarChart(
@@ -233,7 +234,7 @@ private fun BarChartCard(result: CheckResult) {
 
 @Composable
 private fun SelectionProgress(count: Int) {
-    val progress = count / 15f
+    val progress = count.toFloat() / LotofacilConstants.GAME_SIZE
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -248,7 +249,7 @@ private fun SelectionProgress(count: Int) {
             strokeCap = StrokeCap.Round
         )
         Text(
-            "$count de 15 números",
+            stringResource(R.string.checker_progress_format, count, LotofacilConstants.GAME_SIZE),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -278,7 +279,7 @@ private fun BottomActionsBar(
                 modifier = Modifier.height(52.dp),
                 enabled = selectedCount > 0 && !isLoading
             ) {
-                Icon(Icons.Default.Delete, contentDescription = "Limpar seleção")
+                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.checker_clear_button_description))
             }
 
             OutlinedButton(
@@ -286,7 +287,7 @@ private fun BottomActionsBar(
                 modifier = Modifier.height(52.dp),
                 enabled = isButtonEnabled
             ) {
-                Icon(Icons.Default.Save, contentDescription = "Salvar jogo")
+                Icon(Icons.Default.Save, contentDescription = stringResource(R.string.checker_save_button_description))
             }
 
             Button(
@@ -303,7 +304,7 @@ private fun BottomActionsBar(
                         strokeWidth = 2.5.dp
                     )
                 } else {
-                    Text("Conferir", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.checker_check_button), style = MaterialTheme.typography.titleMedium)
                 }
             }
         }

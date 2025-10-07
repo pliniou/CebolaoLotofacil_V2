@@ -16,7 +16,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.cebolao.lotofacil.R
 import com.cebolao.lotofacil.viewmodels.GameAnalysisResult
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -27,7 +29,7 @@ fun GameAnalysisDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        title = { Text("Análise do Jogo", style = MaterialTheme.typography.titleLarge) },
+        title = { Text(stringResource(R.string.games_analysis_dialog_title), style = MaterialTheme.typography.titleLarge) },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -46,7 +48,7 @@ fun GameAnalysisDialog(
                 }
 
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
-                Text("Estatísticas simples", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.checker_simple_stats_title), style = MaterialTheme.typography.titleMedium)
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     result.simpleStats.forEach { (label, value) ->
                         Row(
@@ -91,7 +93,7 @@ fun GameAnalysisDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismissRequest) {
-                Text("Fechar")
+                Text(stringResource(id = R.string.general_close))
             }
         }
     )

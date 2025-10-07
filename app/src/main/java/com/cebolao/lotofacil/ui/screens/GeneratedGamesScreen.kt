@@ -1,6 +1,7 @@
 package com.cebolao.lotofacil.ui.screens
 
 import android.content.Intent
+import android.text.Html
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -43,11 +44,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cebolao.lotofacil.R
 import com.cebolao.lotofacil.data.LotofacilGame
 import com.cebolao.lotofacil.ui.components.AnimateOnEntry
 import com.cebolao.lotofacil.ui.components.EmptyState
@@ -82,16 +85,16 @@ fun GeneratedGamesScreen(
     if (showClearDialog) {
         AlertDialog(
             onDismissRequest = { showClearDialog = false },
-            title = { Text("Limpar Jogos?") },
-            text = { Text("Isso removerá todos os jogos não fixados. Deseja continuar?") },
+            title = { Text(stringResource(R.string.games_clear_dialog_title)) },
+            text = { Text(stringResource(R.string.games_clear_dialog_message)) },
             confirmButton = {
                 Button(onClick = {
                     gameViewModel.clearUnpinned()
                     showClearDialog = false
-                }) { Text("Limpar") }
+                }) { Text(stringResource(R.string.games_clear_confirm)) }
             },
             dismissButton = {
-                TextButton(onClick = { showClearDialog = false }) { Text("Cancelar") }
+                TextButton(onClick = { showClearDialog = false }) { Text(stringResource(id = R.string.general_cancel)) }
             }
         )
     }
@@ -99,13 +102,13 @@ fun GeneratedGamesScreen(
     uiState.gameToDelete?.let {
         AlertDialog(
             onDismissRequest = { gameViewModel.dismissDeleteDialog() },
-            title = { Text("Excluir Jogo?") },
-            text = { Text("Esta ação é permanente. Deseja excluir este jogo?") },
+            title = { Text(stringResource(R.string.games_delete_dialog_title)) },
+            text = { Text(stringResource(R.string.games_delete_dialog_message)) },
             confirmButton = {
-                Button(onClick = { gameViewModel.confirmDeleteGame() }) { Text("Excluir") }
+                Button(onClick = { gameViewModel.confirmDeleteGame() }) { Text(stringResource(R.string.games_delete_confirm)) }
             },
             dismissButton = {
-                TextButton(onClick = { gameViewModel.dismissDeleteDialog() }) { Text("Cancelar") }
+                TextButton(onClick = { gameViewModel.dismissDeleteDialog() }) { Text(stringResource(id = R.string.general_cancel)) }
             }
         )
     }
@@ -118,11 +121,11 @@ fun GeneratedGamesScreen(
             )
         }
         is GameAnalysisUiState.Loading -> {
-            LoadingDialog(text = "Analisando jogo...")
+            LoadingDialog(text = stringResource(R.string.general_loading_analysis))
         }
         is GameAnalysisUiState.Error -> {
             LaunchedEffect(state) {
-                snackbarHostState.showSnackbar("Falha na análise")
+                snackbarHostState.showSnackbar(context.getString(R.string.general_analysis_failed_snackbar))
             }
         }
         is GameAnalysisUiState.Idle -> {}
@@ -134,8 +137,8 @@ fun GeneratedGamesScreen(
     ) { innerPadding ->
         Column(Modifier.padding(innerPadding)) {
             StandardScreenHeader(
-                title = "Meus Jogos",
-                subtitle = "Visualize, analise e gerencie seus jogos",
+                title = stringResource(R.string.games_title),
+                subtitle = stringResource(R.string.games_subtitle),
                 icon = Icons.AutoMirrored.Filled.ListAlt,
                 actions = {
                     IconButton(onClick = {
@@ -145,18 +148,18 @@ fun GeneratedGamesScreen(
                             showExportDialog = true
                         }
                     }) {
-                        Icon(Icons.Filled.FileUpload, contentDescription = "Exportar jogos")
+                        Icon(Icons.Filled.FileUpload, contentDescription = stringResource(R.string.games_export_button_description))
                     }
                     IconButton(onClick = {
                         importText = TextFieldValue("")
                         showImportDialog = true
                     }) {
-                        Icon(Icons.Filled.FileDownload, contentDescription = "Importar jogos")
+                        Icon(Icons.Filled.FileDownload, contentDescription = stringResource(R.string.games_import_button_description))
                     }
 
                     if (games.any { !it.isPinned }) {
                         IconButton(onClick = { showClearDialog = true }) {
-                            Icon(Icons.Default.DeleteSweep, contentDescription = "Limpar jogos não fixados")
+                            Icon(Icons.Default.DeleteSweep, contentDescription = stringResource(R.string.games_clear_unpinned_button_description))
                         }
                     }
                 }
@@ -179,7 +182,20 @@ fun GeneratedGamesScreen(
                     onAnalyzeClick = { gameViewModel.analyzeGame(it) },
                     onPinClick = { gameViewModel.togglePinState(it) },
                     onDeleteClick = { gameViewModel.requestDeleteGame(it) },
-                    onCheckClick = { onNavigateToCheckScreen(it.numbers) }
+                    onCheckClick = { onNavigateToCheckScreen(it.numbers) },
+                    onShareClick = { game ->
+                        val numbersFormatted = game.numbers.sorted().joinToString(", ")
+                        val shareTemplate = context.getString(R.string.share_game_message_template, numbersFormatted)
+                        // Use Html.fromHtml to correctly handle the <b> tag for bolding.
+                        val shareText = Html.fromHtml(shareTemplate, Html.FROM_HTML_MODE_COMPACT).toString()
+
+                        val intent = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.share_game_subject))
+                            putExtra(Intent.EXTRA_TEXT, shareText)
+                        }
+                        context.startActivity(Intent.createChooser(intent, context.getString(R.string.games_share_chooser_title)))
+                    }
                 )
             }
         }
@@ -188,10 +204,10 @@ fun GeneratedGamesScreen(
     if (showExportDialog) {
         AlertDialog(
             onDismissRequest = { showExportDialog = false },
-            title = { Text("Exportar Jogos") },
+            title = { Text(stringResource(R.string.games_export_dialog_title)) },
             text = {
                 Column {
-                    Text("O texto abaixo contém seus jogos. Você pode copiar para a área de transferência ou compartilhar usando outros aplicativos.")
+                    Text(stringResource(R.string.games_export_dialog_message))
                     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                     Text(exportedText, style = MaterialTheme.typography.bodySmall)
                 }
@@ -203,18 +219,18 @@ fun GeneratedGamesScreen(
                         putExtra(Intent.EXTRA_TEXT, exportedText)
                         type = "text/plain"
                     }
-                    val chooser = Intent.createChooser(intent, "Compartilhar jogos")
+                    val chooser = Intent.createChooser(intent, context.getString(R.string.games_share_chooser_title))
                     context.startActivity(chooser)
-                }) { Text("Compartilhar") }
+                }) { Text(stringResource(R.string.games_export_dialog_share_button)) }
             },
             dismissButton = {
                 TextButton(onClick = {
                     if (exportedText.isNotEmpty()) {
                         clipboardManager.setText(AnnotatedString(exportedText))
-                        scope.launch { snackbarHostState.showSnackbar("Copiado para área de transferência") }
+                        scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.general_copied_to_clipboard)) }
                     }
                     showExportDialog = false
-                }) { Text("Copiar") }
+                }) { Text(stringResource(R.string.games_export_dialog_copy_button)) }
             }
         )
     }
@@ -222,10 +238,10 @@ fun GeneratedGamesScreen(
     if (showImportDialog) {
         AlertDialog(
             onDismissRequest = { showImportDialog = false },
-            title = { Text("Importar Jogos") },
+            title = { Text(stringResource(R.string.games_import_dialog_title)) },
             text = {
                 Column {
-                    Text("Cole o texto exportado (cada jogo em uma linha) e confirme para importar.", style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.games_import_dialog_message), style = MaterialTheme.typography.bodyMedium)
                     OutlinedTextField(
                         value = importText,
                         onValueChange = { importText = it },
@@ -233,7 +249,7 @@ fun GeneratedGamesScreen(
                             .fillMaxWidth()
                             .height(140.dp)
                             .padding(top = 8.dp),
-                        label = { Text("Texto de importação") }
+                        label = { Text(stringResource(R.string.games_import_dialog_textfield_label)) }
                     )
                 }
             },
@@ -242,13 +258,14 @@ fun GeneratedGamesScreen(
                     showImportDialog = false
                     scope.launch {
                         val importedCount = gameViewModel.importGames(importText.text)
-                        val message = if (importedCount > 0) "Importados $importedCount jogos" else "Nenhum jogo válido encontrado"
+                        val message = if (importedCount > 0) context.getString(R.string.games_import_success_message, importedCount)
+                        else context.getString(R.string.games_import_fail_message)
                         snackbarHostState.showSnackbar(message)
                     }
-                }) { Text("Importar") }
+                }) { Text(stringResource(R.string.games_import_dialog_confirm_button)) }
             },
             dismissButton = {
-                TextButton(onClick = { showImportDialog = false }) { Text("Cancelar") }
+                TextButton(onClick = { showImportDialog = false }) { Text(stringResource(id = R.string.general_cancel)) }
             }
         )
     }
@@ -260,7 +277,8 @@ private fun GamesList(
     onAnalyzeClick: (LotofacilGame) -> Unit,
     onPinClick: (LotofacilGame) -> Unit,
     onDeleteClick: (LotofacilGame) -> Unit,
-    onCheckClick: (LotofacilGame) -> Unit
+    onCheckClick: (LotofacilGame) -> Unit,
+    onShareClick: (LotofacilGame) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -277,7 +295,8 @@ private fun GamesList(
                     onAnalyzeClick = { onAnalyzeClick(game) },
                     onPinClick = { onPinClick(game) },
                     onDeleteClick = { onDeleteClick(game) },
-                    onCheckClick = { onCheckClick(game) }
+                    onCheckClick = { onCheckClick(game) },
+                    onShareClick = { onShareClick(game) }
                 )
             }
         }
