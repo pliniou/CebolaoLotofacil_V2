@@ -1,20 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- App -->
     <string name="app_name">Cebolão Lotofácil</string>
 
-    <!-- Estúdio -->
     <string name="studio_name">Cebola Studios</string>
     <string name="studio_slogan">Apps simples, honestos e diretos.</string>
 
-    <!-- Erros e mensagens genéricas -->
     <string name="error_no_history">Histórico indisponível. Tente sincronizar e consultar novamente.</string>
     <string name="error_incomplete_selection">Selecione 15 números para continuar.</string>
     <string name="error_unknown">Ocorreu um erro inesperado. Tente novamente.</string>
     <string name="error_analysis_failed">Falha ao analisar o jogo.</string>
     <string name="error_load_data_failed">Não foi possível carregar os dados. Verifique sua conexão e tente novamente.</string>
 
-    <!-- Sobre: Finalidade -->
     <string name="about_purpose_desc_header">Finalidade do aplicativo</string>
     <string name="about_purpose_desc_body">Este app ajuda você a entender padrões estatísticos da Lotofácil, explorar filtros e visualizar combinações. Ele não promete acertos — serve para estudo, organização e diversão.</string>
     <string name="about_purpose_desc_footer">Importante: loterias são jogos de azar. Use com responsabilidade.</string>
@@ -26,27 +22,23 @@
     <string name="about_purpose_item3_title"><![CDATA[<b>Organizar seus jogos</b>]]></string>
     <string name="about_purpose_item3_desc">Fixe, exporte e importe jogos com facilidade para compartilhar com amigos e bolões.</string>
 
-    <!-- Sobre: Jurídico -->
     <string name="about_legal_desc_header">Avisos legais</string>
     <string name="about_legal_item1">Este app não é afiliado à Caixa Econômica Federal ou a qualquer órgão oficial.</string>
     <string name="about_legal_item2">Resultados e estatísticas podem conter imprecisões. Use por sua conta e risco.</string>
     <string name="about_legal_item3">Não há garantia de ganho, retorno financeiro ou previsões.</string>
     <string name="about_legal_footer"><![CDATA[<b>Isenção de responsabilidade:</b> informações fornecidas são educativas e não constituem aconselhamento financeiro.]]></string>
 
-    <!-- Sobre: Privacidade -->
     <string name="about_privacy_desc_header">Sua privacidade</string>
     <string name="about_privacy_desc_body"><![CDATA[O app prioriza <b>simplicidade</b> e <b>privacidade</b>. Não coletamos dados pessoais sensíveis; preferimos armazenar informações no seu dispositivo.]]></string>
     <string name="about_privacy_item1">Sem cadastro, sem rastreamento entre apps.</string>
     <string name="about_privacy_item2">Preferências salvas localmente via DataStore.</string>
     <string name="about_privacy_item3">Conexões de rede usam HTTPS sempre que possível.</string>
 
-    <!-- Sobre: Regras -->
     <string name="about_rules_desc_header">Regras básicas da Lotofácil</string>
     <string name="about_rules_item1">Você escolhe 15 números entre 25.</string>
     <string name="about_rules_item2">Prêmios a partir de 11 acertos (11, 12, 13, 14 e 15).</string>
     <string name="about_rules_item3">Sorteios ocorrem regularmente; confira sempre canais oficiais.</string>
 
-    <!-- Sobre: Bolão -->
     <string name="about_bolao_desc_header">Bolão: mais chances em grupo</string>
     <string name="about_bolao_desc_body">Participar de bolões permite cobrir mais combinações dividindo custos e prêmios. É uma forma social de jogar com responsabilidade.</string>
     <string name="about_bolao_desc_footer"><![CDATA[<i>Dica:</i> defina regras claras de participação e divisão antes de apostar.]]></string>

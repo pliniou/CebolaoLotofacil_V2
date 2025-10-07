@@ -1,5 +1,8 @@
 package com.cebolao.lotofacil.ui.components
 
+import android.text.style.ForegroundColorSpan
+import android.text.style.StyleSpan
+import android.text.style.UnderlineSpan
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,12 +28,15 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.text.HtmlCompat
 import com.cebolao.lotofacil.R
 
 @Composable
@@ -39,46 +45,43 @@ fun FormattedText(
     modifier: Modifier = Modifier,
     style: SpanStyle = SpanStyle(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
 ) {
-    val annotatedString = remember(text, style) {
-        buildAnnotatedString {
-            val regex = "(<b>|</b>|<i>|</i>)".toRegex()
-            var lastIndex = 0
-            var bold = 0
-            var italic = 0
-
-            regex.findAll(text).forEach { match ->
-                val startIndex = match.range.first
-                if (startIndex > lastIndex) {
-                    append(text.substring(lastIndex, startIndex))
-                }
-                when (match.value) {
-                    "<b>" -> bold++
-                    "</b>" -> bold--
-                    "<i>" -> italic++
-                    "</i>" -> italic--
-                }
-
-                val currentStyle = SpanStyle(
-                    fontWeight = if (bold > 0) style.fontWeight else null,
-                    color = if (bold > 0) style.color else Color.Unspecified,
-                    fontStyle = if (italic > 0) FontStyle.Italic else null
-                )
-                pushStyle(currentStyle)
-                lastIndex = match.range.last + 1
-            }
-            if (lastIndex < text.length) {
-                append(text.substring(lastIndex))
-            }
-        }
+    val annotated = remember(text, style) {
+        // CORREÇÃO: Usa o método padrão do Android para parsear HTML
+        htmlToAnnotatedString(text, style.color)
     }
+
     Text(
-        text = annotatedString,
+        text = annotated,
         style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 24.sp),
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = modifier.semantics {
             contentDescription = text.replace(Regex("<[^>]*>"), "")
         }
     )
+}
+
+/**
+ * Converte uma string HTML simples para um AnnotatedString do Compose.
+ * Usa HtmlCompat para robustez.
+ */
+private fun htmlToAnnotatedString(html: String, primaryColor: Color): AnnotatedString {
+    val spanned = HtmlCompat.fromHtml(html, HtmlCompat.FROM_HTML_MODE_LEGACY)
+    return buildAnnotatedString {
+        append(spanned.toString())
+        spanned.getSpans(0, spanned.length, Any::class.java).forEach { span ->
+            val start = spanned.getSpanStart(span)
+            val end = spanned.getSpanEnd(span)
+            when (span) {
+                is StyleSpan -> when (span.style) {
+                    android.graphics.Typeface.BOLD -> addStyle(SpanStyle(fontWeight = FontWeight.Bold), start, end)
+                    android.graphics.Typeface.ITALIC -> addStyle(SpanStyle(fontStyle = FontStyle.Italic), start, end)
+                    android.graphics.Typeface.BOLD_ITALIC -> addStyle(SpanStyle(fontWeight = FontWeight.Bold, fontStyle = FontStyle.Italic), start, end)
+                }
+                is UnderlineSpan -> addStyle(SpanStyle(textDecoration = TextDecoration.Underline), start, end)
+                is ForegroundColorSpan -> addStyle(SpanStyle(color = Color(span.foregroundColor)), start, end)
+            }
+        }
+    }
 }
 
 @Composable
@@ -172,7 +175,7 @@ fun LegalInfoContent(modifier: Modifier = Modifier) {
         InfoListItem(icon = Icons.Default.Gavel, text = stringResource(R.string.about_legal_item2))
         InfoListItem(icon = Icons.Default.Gavel, text = stringResource(R.string.about_legal_item3))
         Spacer(Modifier.height(8.dp))
-        FormattedText(text = stringResource(R.string.about_legal_footer), style = SpanStyle(fontWeight = FontWeight.Bold))
+        FormattedText(text = stringResource(R.string.about_legal_footer), style = SpanStyle(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface))
     }
 }
 
@@ -235,6 +238,7 @@ fun InfoListItem(
             modifier = Modifier.padding(top = if (description == null) 0.dp else 4.dp)
         )
         Column {
+            // Usando FormattedText para lidar com as tags HTML
             FormattedText(text = text)
             if (description != null) {
                 Text(

@@ -80,9 +80,9 @@ class UserPreferencesRepositoryImpl @Inject constructor(
             try {
                 context.dataStore.edit { preferences ->
                     val currentHistory = preferences[DYNAMIC_HISTORY_KEY] ?: emptySet()
-                    val validEntries = newHistoryEntries.filter { entry ->
-                        entry.matches(Regex("\\d+ - [\\d,]+"))
-                    }.toSet()
+                    
+                    // Validação simplificada: apenas garante que não está vazio
+                    val validEntries = newHistoryEntries.filter { it.isNotBlank() }.toSet()
 
                     if (validEntries.isNotEmpty()) {
                         preferences[DYNAMIC_HISTORY_KEY] = currentHistory + validEntries

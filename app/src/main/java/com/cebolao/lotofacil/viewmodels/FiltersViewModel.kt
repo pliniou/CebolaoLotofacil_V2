@@ -7,6 +7,7 @@ import com.cebolao.lotofacil.data.FilterState
 import com.cebolao.lotofacil.data.FilterType
 import com.cebolao.lotofacil.domain.repository.GameRepository
 import com.cebolao.lotofacil.domain.repository.HistoryRepository
+import com.cebolao.lotofacil.domain.service.GameGenerationException
 import com.cebolao.lotofacil.domain.service.GameGenerator
 import com.cebolao.lotofacil.domain.usecase.GenerateGamesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -81,6 +82,7 @@ class FiltersViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
+            // Tenta obter o último sorteio para que o filtro 'Repetidas' possa ser ativado
             _lastDraw.value = historyRepository.getLastDraw()?.numbers
         }
     }
@@ -94,7 +96,8 @@ class FiltersViewModel @Inject constructor(
                 val last = historyRepository.getLastDraw()
                 _lastDraw.value = last?.numbers
                 if (last == null) {
-                    _eventFlow.emit(NavigationEvent.ShowSnackbar("Histórico indisponível para 'Repetidas'."))
+                    // O GameGenerator falhará na próxima tentativa, mas avisamos o usuário agora.
+                    _eventFlow.emit(NavigationEvent.ShowSnackbar("Histórico indisponível para 'Repetidas'. Tente sincronizar."))
                 }
             }
         }
@@ -133,7 +136,13 @@ class FiltersViewModel @Inject constructor(
             val filtersSnapshot = _filterStates.value
             generateGamesUseCase(quantity, filtersSnapshot)
                 .catch { e ->
-                    _eventFlow.emit(NavigationEvent.ShowSnackbar(e.message ?: "Erro desconhecido na geração."))
+                    // Captura a GameGenerationException e a exibe na Snackbar
+                    val message = if (e is GameGenerationException) {
+                        e.message ?: "Erro de validação na geração."
+                    } else {
+                        "Erro desconhecido na geração: ${e.message}"
+                    }
+                    _eventFlow.emit(NavigationEvent.ShowSnackbar(message))
                     _generationState.value = GenerationUiState.Idle
                 }
                 .collect { progress ->
@@ -152,6 +161,7 @@ class FiltersViewModel @Inject constructor(
                             _generationState.value = GenerationUiState.Idle
                         }
                         is GameGenerator.ProgressType.Failed -> {
+                            // Este caso é para falhas dentro do Gerador (como filtro impossível após X tentativas)
                             _eventFlow.emit(NavigationEvent.ShowSnackbar(type.reason))
                             _generationState.value = GenerationUiState.Idle
                         }

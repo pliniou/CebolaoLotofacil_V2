@@ -87,7 +87,6 @@ fun CheckerScreen(checkerViewModel: CheckerViewModel = hiltViewModel()) {
     }
 
     Scaffold(
-        modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars),
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             BottomActionsBar(
@@ -103,7 +102,8 @@ fun CheckerScreen(checkerViewModel: CheckerViewModel = hiltViewModel()) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
+                .padding(innerPadding) // Aplica o padding para a bottomBar
+                .windowInsetsPadding(WindowInsets.statusBars), // CORREÇÃO: Aplica o padding da status bar aqui
             contentPadding = PaddingValues(top = 16.dp, bottom = 120.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {

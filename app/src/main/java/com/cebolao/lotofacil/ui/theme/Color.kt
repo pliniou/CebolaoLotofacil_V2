@@ -4,7 +4,7 @@ import androidx.compose.ui.graphics.Color
 
 
 // Tema Claro
-val LightPrimary = Color(0xFF930089) // Roxo oficial da Lotofácil, cor de destaque principal.
+val LightPrimary = LotofacilPurple // CORREÇÃO: Usa a constante da marca para consistência
 val LightOnPrimary = Color(0xFFFFFFFF)
 val LightPrimaryContainer = Color(0xFFFFD7F3) // Tom claro para fundos de elementos primários.
 val LightOnPrimaryContainer = Color(0xFF30002D)

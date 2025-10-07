@@ -73,6 +73,7 @@ fun BarChart(
     }
 
     Canvas(modifier = modifier.height(chartHeight)) {
+        val animated = animatedProgress.value
         val yAxisLabelWidth = 36.dp.toPx()
         val xAxisLabelHeight = 36.dp.toPx()
         val valueLabelHeight = 18.dp.toPx()
@@ -93,7 +94,7 @@ fun BarChart(
         val barWidth = (chartAreaWidth - totalSpacing).coerceAtLeast(0f) / data.size
 
         data.forEachIndexed { index, (label, value) ->
-            val barHeight = (value.toFloat() / maxValue) * chartAreaHeight * animatedProgress.value
+            val barHeight = (value.toFloat() / maxValue) * chartAreaHeight * animated
             val left = yAxisLabelWidth + barSpacing + index * (barWidth + barSpacing)
             val barCenterX = left + barWidth / 2
 

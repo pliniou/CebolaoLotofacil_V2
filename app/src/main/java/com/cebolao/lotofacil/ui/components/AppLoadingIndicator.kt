@@ -10,12 +10,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -46,18 +46,20 @@ fun AppLoadingIndicator(
     ) {
         Box(contentAlignment = Alignment.Center) {
             CircularProgressIndicator(
-                progress = { 1f },
-                modifier = Modifier.size(64.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                strokeWidth = 5.dp,
-                strokeCap = StrokeCap.Round
+            progress = { 1f },
+            modifier = Modifier.size(64.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            strokeWidth = 5.dp,
+            trackColor = ProgressIndicatorDefaults.circularTrackColor,
+            strokeCap = ProgressIndicatorDefaults.CircularDeterminateStrokeCap,
             )
             CircularProgressIndicator(
-                progress = { animatedProgress },
-                modifier = Modifier.size(64.dp),
-                color = MaterialTheme.colorScheme.primary,
-                strokeWidth = 5.dp,
-                strokeCap = StrokeCap.Round
+            progress = { animatedProgress },
+            modifier = Modifier.size(64.dp),
+            color = MaterialTheme.colorScheme.primary,
+            strokeWidth = 5.dp,
+            trackColor = ProgressIndicatorDefaults.circularTrackColor,
+            strokeCap = ProgressIndicatorDefaults.CircularDeterminateStrokeCap,
             )
             Text(
                 text = "${(animatedProgress * 100).toInt()}%",

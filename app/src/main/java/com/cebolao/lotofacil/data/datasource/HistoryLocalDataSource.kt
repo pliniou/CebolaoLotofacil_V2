@@ -34,9 +34,11 @@ class HistoryLocalDataSourceImpl @Inject constructor(
         val savedHistoryStrings = userPreferencesRepository.getHistory()
         val savedHistory = savedHistoryStrings.mapNotNull { HistoryParser.parseLine(it) }
 
+        // Junta as listas, agrupa por número de concurso e pega o primeiro (removendo duplicatas),
+        // e ordena pela data mais recente (maior número de concurso).
         val allDraws = (assetHistory + savedHistory)
             .groupBy { it.contestNumber }
-            .mapValues { (_, draws) -> draws.maxByOrNull { it.date?.isNotEmpty() ?: false } ?: draws.first() }
+            .mapValues { (_, draws) -> draws.first() } // Apenas desduplica.
             .values
             .sortedByDescending { it.contestNumber }
 
@@ -48,6 +50,8 @@ class HistoryLocalDataSourceImpl @Inject constructor(
         if (newDraws.isEmpty()) return
 
         val newHistoryEntries = newDraws.map { draw ->
+            // A data só vem do remote, mas é melhor não salvar no DataStore se for nula
+            // A estrutura de salvamento local deve ser compatível com o parser local
             "${draw.contestNumber} - ${draw.numbers.sorted().joinToString(",")}"
         }.toSet()
 
