@@ -3,9 +3,10 @@ package com.cebolao.lotofacil.domain.usecase
 import com.cebolao.lotofacil.data.HistoricalDraw
 import com.cebolao.lotofacil.data.StatisticsReport
 import com.cebolao.lotofacil.di.DefaultDispatcher
+import com.cebolao.lotofacil.domain.model.HomeScreenData
+import com.cebolao.lotofacil.domain.model.LastDrawStats
 import com.cebolao.lotofacil.domain.repository.HistoryRepository
 import com.cebolao.lotofacil.domain.service.StatisticsAnalyzer
-import com.cebolao.lotofacil.viewmodels.LastDrawStats
 import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
@@ -14,11 +15,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
-
-data class HomeScreenData(
-    val lastDrawStats: LastDrawStats?,
-    val initialStats: StatisticsReport
-)
 
 class GetHomeScreenDataUseCase @Inject constructor(
     private val historyRepository: HistoryRepository,

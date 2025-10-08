@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.cebolao.lotofacil.ui.theme.Padding
 
 @Composable
 fun StandardScreenHeader(
@@ -31,13 +32,13 @@ fun StandardScreenHeader(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 16.dp),
+            .padding(horizontal = Padding.Screen, vertical = Padding.Card), // <-- PADRONIZADO
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(Padding.Card), // <-- PADRONIZADO
             modifier = Modifier.weight(1f)
         ) {
             when {

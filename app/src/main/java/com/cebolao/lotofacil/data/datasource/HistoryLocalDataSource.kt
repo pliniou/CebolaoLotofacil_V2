@@ -34,12 +34,10 @@ class HistoryLocalDataSourceImpl @Inject constructor(
         val savedHistoryStrings = userPreferencesRepository.getHistory()
         val savedHistory = savedHistoryStrings.mapNotNull { HistoryParser.parseLine(it) }
 
-        // Junta as listas, agrupa por número de concurso e pega o primeiro (removendo duplicatas),
-        // e ordena pela data mais recente (maior número de concurso).
-        val allDraws = (assetHistory + savedHistory)
-            .groupBy { it.contestNumber }
-            .mapValues { (_, draws) -> draws.first() } // Apenas desduplica.
-            .values
+        // CORREÇÃO: Junta as listas dando prioridade ao histórico salvo (mais recente/remoto)
+        // e usa distinctBy para uma desduplicação clara e eficiente.
+        val allDraws = (savedHistory + assetHistory)
+            .distinctBy { it.contestNumber }
             .sortedByDescending { it.contestNumber }
 
         Log.d(TAG, "Loaded ${allDraws.size} contests from local sources (Assets: ${assetHistory.size}, DataStore: ${savedHistory.size})")

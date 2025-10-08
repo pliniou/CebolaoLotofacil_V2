@@ -48,6 +48,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.cebolao.lotofacil.data.FilterState
 import com.cebolao.lotofacil.data.FilterType
+import com.cebolao.lotofacil.ui.theme.Padding
 
 @Composable
 private fun mapTypeToIcon(type: FilterType): ImageVector {
@@ -87,7 +88,7 @@ fun FilterCard(
         colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceColorAtElevation(elevation)),
         border = BorderStroke(1.dp, border)
     ) {
-        Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = Padding.Medium)) {
             FilterHeader(
                 filterState,
                 dataAvailable,
@@ -121,7 +122,7 @@ private fun FilterHeader(
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(Padding.Small)
     ) {
         Icon(
             imageVector = mapTypeToIcon(filterState.type),
@@ -157,7 +158,7 @@ private fun FilterContent(
     onRangeFinished: () -> Unit
 ) {
     Column(
-        modifier = Modifier.padding(top = 12.dp),
+        modifier = Modifier.padding(top = Padding.Medium),
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         Row(

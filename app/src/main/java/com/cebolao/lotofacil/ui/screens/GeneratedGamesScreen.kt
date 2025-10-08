@@ -58,6 +58,7 @@ import com.cebolao.lotofacil.ui.components.GameAnalysisDialog
 import com.cebolao.lotofacil.ui.components.GameCard
 import com.cebolao.lotofacil.ui.components.LoadingDialog
 import com.cebolao.lotofacil.ui.components.StandardScreenHeader
+import com.cebolao.lotofacil.ui.theme.Padding
 import com.cebolao.lotofacil.viewmodels.GameAnalysisUiState
 import com.cebolao.lotofacil.viewmodels.GameViewModel
 import kotlinx.collections.immutable.ImmutableList
@@ -66,7 +67,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun GeneratedGamesScreen(
     gameViewModel: GameViewModel = hiltViewModel(),
-    onNavigateToCheckScreen: (Set<Int>) -> Unit
+    onNavigateToCheckScreen: (Set<Int>) -> Unit,
+    onNavigateToFilters: () -> Unit
 ) {
     val games by gameViewModel.generatedGames.collectAsStateWithLifecycle()
     val uiState by gameViewModel.uiState.collectAsStateWithLifecycle()
@@ -170,7 +172,7 @@ fun GeneratedGamesScreen(
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
-                EmptyState()
+                EmptyState(onActionClick = onNavigateToFilters)
             }
             AnimatedVisibility(
                 visible = games.isNotEmpty(),
@@ -186,7 +188,6 @@ fun GeneratedGamesScreen(
                     onShareClick = { game ->
                         val numbersFormatted = game.numbers.sorted().joinToString(", ")
                         val shareTemplate = context.getString(R.string.share_game_message_template, numbersFormatted)
-                        // Use Html.fromHtml to correctly handle the <b> tag for bolding.
                         val shareText = Html.fromHtml(shareTemplate, Html.FROM_HTML_MODE_COMPACT).toString()
 
                         val intent = Intent(Intent.ACTION_SEND).apply {
@@ -208,7 +209,7 @@ fun GeneratedGamesScreen(
             text = {
                 Column {
                     Text(stringResource(R.string.games_export_dialog_message))
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                    HorizontalDivider(modifier = Modifier.padding(vertical = Padding.Small))
                     Text(exportedText, style = MaterialTheme.typography.bodySmall)
                 }
             },
@@ -248,7 +249,7 @@ fun GeneratedGamesScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(140.dp)
-                            .padding(top = 8.dp),
+                            .padding(top = Padding.Small),
                         label = { Text(stringResource(R.string.games_import_dialog_textfield_label)) }
                     )
                 }
@@ -282,8 +283,8 @@ private fun GamesList(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 120.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        contentPadding = PaddingValues(start = Padding.Screen, end = Padding.Screen, top = Padding.Card, bottom = 120.dp),
+        verticalArrangement = Arrangement.spacedBy(Padding.Card)
     ) {
         items(
             items = games,

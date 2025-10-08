@@ -1,10 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+ Este layer-list é usado para o ícone da splash screen.
+ - A primeira camada <item> define uma cor de fundo sólida para garantir que
+   não haja transparências inesperadas. A cor deve ser a mesma do
+   `windowSplashScreenBackground` definido no seu tema de splash.
+ - A segunda camada <item> posiciona o ícone principal. O `android:inset` é usado
+   em vez de `android:width`/`android:height` para garantir que o ícone se ajuste
+   corretamente dentro da máscara circular em APIs mais recentes (Android 12+),
+   evitando que suas bordas sejam cortadas.
+-->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Camada de fundo para garantir opacidade. -->
+    <item android:drawable="@android:color/black" />
+
+    <!-- Camada do ícone com preenchimento (inset) para se ajustar à máscara. -->
     <item
-        android:width="240dp"
-        android:height="240dp"
         android:drawable="@drawable/ic_splash_logo"
-        android:gravity="center" />
+        android:gravity="center"
+        android:inset="48dp" />
 
 </layer-list>

@@ -45,7 +45,8 @@ class HistoryRemoteDataSourceImpl @Inject constructor(
                     async {
                         try {
                             val result = apiService.getResultByContest(contestNumber)
-                            parseApiResult(result)
+                            // Usa a função de parse centralizada
+                            HistoricalDraw.fromApiResult(result)
                         } catch (e: Exception) {
                             Log.w(TAG, "Failed to fetch contest $contestNumber", e)
                             null
@@ -53,27 +54,6 @@ class HistoryRemoteDataSourceImpl @Inject constructor(
                     }
                 }.awaitAll().filterNotNull()
             }
-        }
-    }
-
-    private fun parseApiResult(apiResult: LotofacilApiResult): HistoricalDraw? {
-        return try {
-            val contest = apiResult.numero
-            val numbers = apiResult.listaDezenas.mapNotNull { it.toIntOrNull() }.toSet()
-
-            if (contest > 0 && numbers.size >= 15) {
-                HistoricalDraw(
-                    contestNumber = contest,
-                    numbers = numbers,
-                    date = apiResult.dataApuracao
-                )
-            } else {
-                Log.w(TAG, "Invalid API result for contest $contest: insufficient numbers or missing data")
-                null
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to parse API result", e)
-            null
         }
     }
 }

@@ -58,6 +58,7 @@ import com.cebolao.lotofacil.ui.components.BarChart
 import com.cebolao.lotofacil.ui.components.CheckResultCard
 import com.cebolao.lotofacil.ui.components.NumberGrid
 import com.cebolao.lotofacil.ui.components.StandardScreenHeader
+import com.cebolao.lotofacil.ui.theme.Padding
 import com.cebolao.lotofacil.viewmodels.CheckerUiEvent
 import com.cebolao.lotofacil.viewmodels.CheckerUiState
 import com.cebolao.lotofacil.viewmodels.CheckerViewModel
@@ -105,8 +106,8 @@ fun CheckerScreen(checkerViewModel: CheckerViewModel = hiltViewModel()) {
                 .fillMaxSize()
                 .padding(innerPadding)
                 .windowInsetsPadding(WindowInsets.statusBars),
-            contentPadding = PaddingValues(top = 16.dp, bottom = 120.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            contentPadding = PaddingValues(top = Padding.Card, bottom = 120.dp),
+            verticalArrangement = Arrangement.spacedBy(Padding.Screen)
         ) {
             item {
                 StandardScreenHeader(
@@ -117,8 +118,8 @@ fun CheckerScreen(checkerViewModel: CheckerViewModel = hiltViewModel()) {
             }
             item {
                 Column(
-                    modifier = Modifier.padding(horizontal = 20.dp),
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                    modifier = Modifier.padding(horizontal = Padding.Screen),
+                    verticalArrangement = Arrangement.spacedBy(Padding.Screen)
                 ) {
                     SelectionProgress(selectedNumbers.size)
                     AnimateOnEntry {
@@ -133,7 +134,7 @@ fun CheckerScreen(checkerViewModel: CheckerViewModel = hiltViewModel()) {
                 AnimatedContent(
                     targetState = checkerState,
                     label = "result-content",
-                    modifier = Modifier.padding(horizontal = 20.dp)
+                    modifier = Modifier.padding(horizontal = Padding.Screen)
                 ) { state ->
                     when (state) {
                         is CheckerUiState.Success -> ResultSection(state)
@@ -147,7 +148,10 @@ fun CheckerScreen(checkerViewModel: CheckerViewModel = hiltViewModel()) {
 }
 
 @Composable
-private fun NumberSelectionCard(selectedNumbers: Set<Int>, onNumberClick: (Int) -> Unit) {
+private fun NumberSelectionCard(
+    selectedNumbers: Set<Int>,
+    onNumberClick: (Int) -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
@@ -155,11 +159,12 @@ private fun NumberSelectionCard(selectedNumbers: Set<Int>, onNumberClick: (Int) 
             containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
         )
     ) {
-        Box(Modifier.padding(16.dp)) {
+        Box(Modifier.padding(vertical = Padding.Card, horizontal = Padding.Small)) {
             NumberGrid(
                 selectedNumbers = selectedNumbers,
                 onNumberClick = onNumberClick,
-                maxSelection = LotofacilConstants.GAME_SIZE
+                maxSelection = LotofacilConstants.GAME_SIZE,
+                numberSize = 36.dp // <-- TAMANHO REDUZIDO
             )
         }
     }
@@ -167,7 +172,7 @@ private fun NumberSelectionCard(selectedNumbers: Set<Int>, onNumberClick: (Int) 
 
 @Composable
 private fun ResultSection(state: CheckerUiState.Success) {
-    Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(Padding.Screen)) {
         AnimateOnEntry { CheckResultCard(state.result) }
         AnimateOnEntry(delayMillis = 100) { SimpleStatsCard(state.simpleStats) }
         AnimateOnEntry(delayMillis = 200) { BarChartCard(state.result) }
@@ -184,8 +189,8 @@ private fun SimpleStatsCard(stats: ImmutableList<Pair<String, String>>) {
         )
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier.padding(Padding.Card),
+            verticalArrangement = Arrangement.spacedBy(Padding.Medium)
         ) {
             Text(stringResource(R.string.checker_simple_stats_title), style = MaterialTheme.typography.titleMedium)
             HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
@@ -217,7 +222,7 @@ private fun BarChartCard(result: CheckResult) {
             containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
         )
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.padding(Padding.Card), verticalArrangement = Arrangement.spacedBy(Padding.Small)) {
             Text(stringResource(R.string.checker_recent_hits_chart_title), style = MaterialTheme.typography.titleMedium)
             val chartData = result.recentHits.map { it.first.toString().takeLast(4) to it.second }
             val maxValue = (chartData.maxOfOrNull { it.second }?.coerceAtLeast(10) ?: 10)
@@ -238,7 +243,7 @@ private fun SelectionProgress(count: Int) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(Padding.Small)
     ) {
         LinearProgressIndicator(
             progress = { progress },
@@ -269,9 +274,9 @@ private fun BottomActionsBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .padding(horizontal = Padding.Card, vertical = Padding.Medium)
                 .windowInsetsPadding(WindowInsets.navigationBars),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(Padding.Medium),
             verticalAlignment = Alignment.CenterVertically
         ) {
             OutlinedButton(
@@ -318,7 +323,7 @@ private fun ErrorCard(messageResId: Int) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
     ) {
         Column(
-            modifier = Modifier.padding(24.dp),
+            modifier = Modifier.padding(Padding.Large),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(

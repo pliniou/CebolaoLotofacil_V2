@@ -113,6 +113,9 @@ fun MainScreen(mainViewModel: MainViewModel = hiltViewModel()) {
                 GeneratedGamesScreen(
                     onNavigateToCheckScreen = { numbers ->
                         navController.navigate(Screen.Checker.createRoute(numbers))
+                    },
+                    onNavigateToFilters = {
+                        navController.navigate(Screen.Filters.route)
                     }
                 )
             }

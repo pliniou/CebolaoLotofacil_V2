@@ -1,11 +1,9 @@
 package com.cebolao.lotofacil
 
-import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
-import android.os.Build
 import android.os.Bundle
 import android.view.View
-import android.view.animation.AccelerateInterpolator
+import android.view.animation.AnticipateInterpolator
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -41,28 +39,37 @@ class MainActivity : ComponentActivity() {
 
         splash.setKeepOnScreenCondition { !isAppReady }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            splash.setOnExitAnimationListener { splashView ->
-                val slideUp = ObjectAnimator.ofFloat(
-                    splashView.view,
-                    View.TRANSLATION_Y,
-                    0f,
-                    -splashView.view.height.toFloat()
-                )
-                val fadeOut = ObjectAnimator.ofFloat(
-                    splashView.view,
-                    View.ALPHA,
-                    1f,
-                    0f
-                )
-                AnimatorSet().apply {
-                    interpolator = AccelerateInterpolator()
-                    duration = 400L
-                    playTogether(slideUp, fadeOut)
-                    doOnEnd { splashView.remove() }
-                    start()
-                }
+        // CORREÇÃO: Adiciona uma animação de saída customizada para a splash screen.
+        splash.setOnExitAnimationListener { splashScreenViewProvider ->
+            val splashView = splashScreenViewProvider.view
+            val iconView = splashScreenViewProvider.iconView
+
+            // Animação de fade-out para a tela inteira
+            val alphaAnimator = ObjectAnimator.ofFloat(
+                splashView,
+                View.ALPHA,
+                1f,
+                0f
+            ).apply {
+                interpolator = AnticipateInterpolator()
+                duration = 400L
+                doOnEnd { splashScreenViewProvider.remove() }
             }
+
+            // Animação de escala para o ícone
+            val scaleXAnimator = ObjectAnimator.ofFloat(iconView, View.SCALE_X, 1f, 0.5f).apply {
+                interpolator = AnticipateInterpolator()
+                duration = 400L
+            }
+            val scaleYAnimator = ObjectAnimator.ofFloat(iconView, View.SCALE_Y, 1f, 0.5f).apply {
+                interpolator = AnticipateInterpolator()
+                duration = 400L
+            }
+
+            // Inicia as animações
+            scaleXAnimator.start()
+            scaleYAnimator.start()
+            alphaAnimator.start()
         }
 
         setContent {
@@ -85,8 +92,6 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     if (uiState.isReady) {
-                        // A lógica de navegação agora é gerenciada dentro do MainScreen
-                        // com um startDestination dinâmico.
                         MainScreen(mainViewModel = mainViewModel)
                     }
                 }

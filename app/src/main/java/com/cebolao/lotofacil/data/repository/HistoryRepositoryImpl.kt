@@ -76,7 +76,7 @@ class HistoryRepositoryImpl @Inject constructor(
             val remoteResult = remoteDataSource.getLatestDraw()
             if (remoteResult != null) {
                 latestApiResultCache = remoteResult
-                val historicalDraw = parseApiResultToHistoricalDraw(remoteResult)
+                val historicalDraw = HistoricalDraw.fromApiResult(remoteResult) // Usa a função centralizada
                 if (historicalDraw != null) {
                     cacheMutex.withLock {
                         historyCache[historicalDraw.contestNumber] = historicalDraw
@@ -99,8 +99,8 @@ class HistoryRepositoryImpl @Inject constructor(
         if (_syncStatus.value is SyncStatus.Syncing) return@launch
         _syncStatus.value = SyncStatus.Syncing
         try {
-            val localHistory = localDataSource.getLocalHistory()
-            val latestLocal = localHistory.maxByOrNull { it.contestNumber }?.contestNumber ?: 0
+            val currentHistory = getHistory()
+            val latestLocal = currentHistory.maxByOrNull { it.contestNumber }?.contestNumber ?: 0
             val latestRemote = remoteDataSource.getLatestDraw()
 
             if (latestRemote != null) {
@@ -125,23 +125,8 @@ class HistoryRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getLatestContestDetails(): LotofacilApiResult? {
-        // Return the cached full result, or fetch if null
         return latestApiResultCache ?: remoteDataSource.getLatestDraw()?.also {
             latestApiResultCache = it
-        }
-    }
-
-    private fun parseApiResultToHistoricalDraw(apiResult: LotofacilApiResult): HistoricalDraw? {
-        val contest = apiResult.numero
-        val numbers = apiResult.listaDezenas.mapNotNull { it.toIntOrNull() }.toSet()
-        return if (contest > 0 && numbers.size >= 15) {
-            HistoricalDraw(
-                contestNumber = contest,
-                numbers = numbers,
-                date = apiResult.dataApuracao
-            )
-        } else {
-            null
         }
     }
 }

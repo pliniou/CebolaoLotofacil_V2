@@ -53,6 +53,7 @@ import com.cebolao.lotofacil.ui.components.FilterStatsPanel
 import com.cebolao.lotofacil.ui.components.GenerationActionsPanel
 import com.cebolao.lotofacil.ui.components.InfoDialog
 import com.cebolao.lotofacil.ui.components.StandardScreenHeader
+import com.cebolao.lotofacil.ui.theme.Padding
 import com.cebolao.lotofacil.viewmodels.FiltersViewModel
 import com.cebolao.lotofacil.viewmodels.NavigationEvent
 import kotlinx.coroutines.flow.collectLatest
@@ -150,8 +151,8 @@ fun FiltersScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            contentPadding = PaddingValues(top = 16.dp, bottom = 120.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            contentPadding = PaddingValues(top = Padding.Card, bottom = 120.dp),
+            verticalArrangement = Arrangement.spacedBy(Padding.Card)
         ) {
             item {
                 StandardScreenHeader(
@@ -171,7 +172,7 @@ fun FiltersScreen(
                 )
             }
             item {
-                AnimateOnEntry(Modifier.padding(horizontal = 20.dp)) {
+                AnimateOnEntry(Modifier.padding(horizontal = Padding.Screen)) {
                     FilterStatsPanel(
                         activeFilters = uiState.filterStates.filter { it.isEnabled },
                         successProbability = uiState.successProbability
@@ -180,7 +181,7 @@ fun FiltersScreen(
             }
             items(uiState.filterStates, key = { it.type.name }) { filter ->
                 AnimateOnEntry(
-                    Modifier.padding(horizontal = 20.dp),
+                    Modifier.padding(horizontal = Padding.Screen),
                     delayMillis = (uiState.filterStates.indexOf(filter) * 40L).coerceAtMost(400L)
                 ) {
                     FilterCard(

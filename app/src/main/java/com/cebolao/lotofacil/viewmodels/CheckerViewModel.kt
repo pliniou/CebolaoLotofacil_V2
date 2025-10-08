@@ -73,6 +73,9 @@ class CheckerViewModel @Inject constructor(
         _selectedNumbers.value = _selectedNumbers.value.toMutableSet().apply {
             if (contains(number)) remove(number) else add(number)
         }
+        if (_uiState.value is CheckerUiState.Success) {
+            _uiState.value = CheckerUiState.Idle
+        }
     }
 
     fun clearSelection() {

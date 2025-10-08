@@ -9,7 +9,6 @@ import androidx.compose.material.icons.outlined.Grid4x4
 import androidx.compose.material.icons.outlined.LooksTwo
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.outlined.Timeline
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.ViewModel
@@ -19,11 +18,13 @@ import com.cebolao.lotofacil.data.HistoricalDraw
 import com.cebolao.lotofacil.data.StatisticsReport
 import com.cebolao.lotofacil.data.network.LotofacilApiResult
 import com.cebolao.lotofacil.di.DefaultDispatcher
+import com.cebolao.lotofacil.domain.model.LastDrawStats
+import com.cebolao.lotofacil.domain.model.NextDrawInfo
+import com.cebolao.lotofacil.domain.model.WinnerData
 import com.cebolao.lotofacil.domain.repository.HistoryRepository
 import com.cebolao.lotofacil.domain.repository.SyncStatus
 import com.cebolao.lotofacil.domain.service.StatisticsAnalyzer
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
@@ -44,36 +45,6 @@ enum class StatisticPattern(val title: String, val icon: ImageVector) {
     FIBONACCI("Fibonacci", Icons.Outlined.Timeline),
     MULTIPLES_OF_3("Múltiplos 3", Icons.Outlined.FormatListNumbered)
 }
-
-@Stable
-@Immutable
-data class LastDrawStats(
-    val contest: Int,
-    val numbers: ImmutableSet<Int>,
-    val sum: Int,
-    val evens: Int,
-    val odds: Int,
-    val primes: Int,
-    val frame: Int,
-    val portrait: Int,
-    val fibonacci: Int,
-    val multiplesOf3: Int
-)
-
-@Stable
-@Immutable
-data class NextDrawInfo(
-    val formattedDate: String,
-    val formattedPrize: String
-)
-
-@Stable
-@Immutable
-data class WinnerData(
-    val description: String,
-    val winnerCount: Int,
-    val prize: Double
-)
 
 @Stable
 data class HomeUiState(

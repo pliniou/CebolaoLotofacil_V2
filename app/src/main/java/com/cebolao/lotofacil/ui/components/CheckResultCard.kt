@@ -31,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.cebolao.lotofacil.R
 import com.cebolao.lotofacil.data.CheckResult
+import com.cebolao.lotofacil.ui.theme.Padding
 import kotlinx.collections.immutable.ImmutableMap
 
 @Composable
@@ -47,8 +48,8 @@ fun CheckResultCard(
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            modifier = Modifier.padding(Padding.Card),
+            verticalArrangement = Arrangement.spacedBy(Padding.Medium)
         ) {
             val totalWins = result.scoreCounts.values.sum()
             ResultHeader(totalWins, result.lastCheckedContest)
@@ -91,7 +92,7 @@ private fun ResultHeader(totalWins: Int, contestsChecked: Int) {
 
 @Composable
 private fun ScoreBreakdown(scoreCounts: ImmutableMap<Int, Int>) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(Padding.Small)) {
         (15 downTo 11).forEach { score ->
             scoreCounts[score]?.let { count ->
                 val animated by animateIntAsState(
@@ -125,7 +126,7 @@ private fun ScoreBreakdown(scoreCounts: ImmutableMap<Int, Int>) {
 private fun LastHitInfo(result: CheckResult) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(Padding.Small)
     ) {
         Icon(
             Icons.Default.CheckCircle,
@@ -150,7 +151,7 @@ private fun NoWinsMessage() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp),
+            .padding(vertical = Padding.Medium),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
@@ -160,7 +161,7 @@ private fun NoWinsMessage() {
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(20.dp)
         )
-        Spacer(Modifier.width(8.dp))
+        Spacer(Modifier.width(Padding.Small))
         Text(
             stringResource(R.string.checker_no_wins_message),
             style = MaterialTheme.typography.bodyMedium,

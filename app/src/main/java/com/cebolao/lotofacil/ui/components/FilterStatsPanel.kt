@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.cebolao.lotofacil.data.FilterState
 import com.cebolao.lotofacil.data.RestrictivenessCategory
+import com.cebolao.lotofacil.ui.theme.Padding
 
 @Composable
 fun FilterStatsPanel(
@@ -42,12 +43,11 @@ fun FilterStatsPanel(
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            modifier = Modifier.padding(Padding.Card),
+            verticalArrangement = Arrangement.spacedBy(Padding.Card)
         ) {
             Text("Análise dos Filtros", style = MaterialTheme.typography.titleMedium)
 
-            // ATUALIZAÇÃO: Usa a nova métrica de probabilidade
             FilterRestrictiveness(probability = successProbability)
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
@@ -73,7 +73,7 @@ private fun FilterRestrictiveness(probability: Float) {
     val animatedProgressColor by animateColorAsState(targetValue = progressColor, label = "progressColor")
     val animatedTextColor by animateColorAsState(targetValue = textColor, label = "textColor")
 
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(Padding.Small)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -101,7 +101,7 @@ private fun FilterRestrictiveness(probability: Float) {
 
 @Composable
 private fun FilterStatistics(filters: List<FilterState>) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(Padding.Medium)) {
         if (filters.none { it.isEnabled }) {
             Text(
                 "Nenhum filtro ativo.",
@@ -146,7 +146,7 @@ private fun RestrictivenessChip(category: RestrictivenessCategory) {
             text = text,
             style = MaterialTheme.typography.labelSmall,
             color = color,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+            modifier = Modifier.padding(horizontal = Padding.Small, vertical = Padding.ExtraSmall)
         )
     }
 }

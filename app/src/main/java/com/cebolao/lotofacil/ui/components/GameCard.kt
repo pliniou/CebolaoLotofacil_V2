@@ -42,6 +42,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.cebolao.lotofacil.R
 import com.cebolao.lotofacil.data.LotofacilGame
+import com.cebolao.lotofacil.ui.theme.Padding
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -72,8 +73,8 @@ fun GameCard(
         colors = CardDefaults.cardColors(containerColor = containerColor)
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier.padding(horizontal = Padding.Card, vertical = Padding.Medium),
+            verticalArrangement = Arrangement.spacedBy(Padding.Medium)
         ) {
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
@@ -126,7 +127,7 @@ private fun GameCardActions(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(Padding.ExtraSmall)) {
             IconButton(onClick = onPinClick) {
                 Icon(
                     imageVector = if (isPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
@@ -142,7 +143,7 @@ private fun GameCardActions(
                 Icon(Icons.Filled.Share, stringResource(R.string.games_share_game_description), tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(Padding.ExtraSmall)) {
             TextButton(onClick = onAnalyzeClick) {
                 Icon(Icons.Filled.Analytics, null, modifier = Modifier.size(ButtonDefaults.IconSize))
                 Spacer(Modifier.size(ButtonDefaults.IconSpacing))

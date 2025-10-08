@@ -14,7 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.cebolao.lotofacil.ui.theme.Padding
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -23,7 +25,8 @@ fun NumberGrid(
     allNumbers: List<Int> = (1..25).toList(),
     selectedNumbers: Set<Int>,
     onNumberClick: (Int) -> Unit,
-    maxSelection: Int? = null
+    maxSelection: Int? = null,
+    numberSize: Dp = 40.dp // <-- NOVO PARÂMETRO
 ) {
     val haptic = LocalHapticFeedback.current
     val selectionFull = maxSelection != null && selectedNumbers.size >= maxSelection
@@ -31,9 +34,9 @@ fun NumberGrid(
     FlowRow(
         modifier = modifier
             .fillMaxWidth()
-            .padding(8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+            .padding(Padding.Small),
+        horizontalArrangement = Arrangement.spacedBy(Padding.Small, Alignment.CenterHorizontally),
+        verticalArrangement = Arrangement.spacedBy(Padding.Small),
         maxItemsInEachRow = 5
     ) {
         allNumbers.forEach { number ->
@@ -50,13 +53,13 @@ fun NumberGrid(
                             onNumberClick(number)
                         }
                     )
-                    .padding(2.dp)
+                    .padding(Padding.ExtraSmall)
             ) {
                 NumberBall(
                     number = number,
                     isSelected = isSelected,
                     isDisabled = !isClickable,
-                    size = 40.dp,
+                    size = numberSize, // <-- USA O NOVO PARÂMETRO
                     variant = NumberBallVariant.Primary
                 )
             }
