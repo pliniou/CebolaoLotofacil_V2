@@ -1,0 +1,154 @@
+[versions]
+# Build & Plugins
+#noinspection AndroidGradlePluginVersion
+agp = "8.6.0"
+kotlin = "2.0.0"
+ksp = "2.0.0-1.0.22"
+# AndroidX Core
+coreKtx = "1.13.1"
+lifecycle = "2.8.2"
+activityCompose = "1.9.0"
+navigationCompose = "2.7.7"
+workRuntimeKtx = "2.9.0"
+lifecycleCompose = "2.8.2"
+# Compose
+composeBom = "2024.06.00"
+composeAnimation = "1.6.8"
+material = "1.13.0"
+# Dependency Injection
+hilt = "2.51.1"
+hiltNavigationCompose = "1.2.0"
+hiltWork = "1.2.0"
+# Storage & Preferences
+datastore = "1.1.1"
+# Networking
+retrofit = "2.11.0"
+okhttp = "4.12.0"
+retrofitKotlinxConverter = "1.0.0"
+# Kotlin Libraries
+kotlinxCollectionsImmutable = "0.3.7"
+kotlinxSerialization = "1.7.1"
+kotlinxCoroutines = "1.8.1"
+# Utilities
+interpolator = "1.0.0"
+coreSplashScreen = "1.0.1"
+# Desugaring
+desugarJdkLibs = "2.0.4"
+# Testing
+junit = "4.13.2"
+androidxJunit = "1.2.0"
+espressoCore = "3.6.0"
+coroutinesTest = "1.8.1"
+archCoreTesting = "2.2.0"
+mockitoCore = "5.12.0"
+mockitoKotlin = "5.3.1"
+turbine = "1.1.0"
+workTesting = "2.9.0"
+animation = "1.9.3"
+generativeai = "0.9.0"
+
+[libraries]
+# AndroidX Core
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "coreSplashScreen" }
+androidx-interpolator = { group = "androidx.interpolator", name = "interpolator", version.ref = "interpolator" }
+# Lifecycle & ViewModel
+androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }
+androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycle" }
+androidx-lifecycle-runtime-compose-lifecycle = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycleCompose" }
+# Activity & Navigation
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
+androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+# WorkManager
+androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workRuntimeKtx" }
+# Compose
+androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+androidx-ui = { group = "androidx.compose.ui", name = "ui" }
+androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+google-material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+androidx-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
+#noinspection SimilarGradleDependency
+androidx-compose-animation = { group = "androidx.compose.animation", name = "animation", version.ref = "composeAnimation" }
+# Hilt
+hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
+hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "hilt" }
+hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
+hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hiltWork" }
+hilt-compiler-androidx = { group = "androidx.hilt", name = "hilt-compiler", version.ref = "hiltWork" }
+hilt-android-testing = { group = "com.google.dagger", name = "hilt-android-testing", version.ref = "hilt" }
+# DataStore
+androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
+# Networking
+retrofit-core = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
+retrofit-converter-kotlinx-serialization = { group = "com.jakewharton.retrofit", name = "retrofit2-kotlinx-serialization-converter", version.ref = "retrofitKotlinxConverter" }
+okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
+okhttp-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
+# Kotlin Libraries
+kotlinx-collections-immutable = { group = "org.jetbrains.kotlinx", name = "kotlinx-collections-immutable", version.ref = "kotlinxCollectionsImmutable" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+# Desugaring
+android-desugarJdkLibs = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "desugarJdkLibs" }
+# Testing - Unit
+testing-unit-junit = { group = "junit", name = "junit", version.ref = "junit" }
+testing-unit-coroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutinesTest" }
+testing-unit-arch-core = { group = "androidx.arch.core", name = "core-testing", version.ref = "archCoreTesting" }
+testing-unit-mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockitoCore" }
+testing-unit-mockito-kotlin = { group = "org.mockito.kotlin", name = "mockito-kotlin", version.ref = "mockitoKotlin" }
+testing-unit-turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
+# Testing - Android
+testing-android-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxJunit" }
+testing-android-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+testing-android-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+testing-android-work = { group = "androidx.work", name = "work-testing", version.ref = "workTesting" }
+# Debug Tools
+androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
+#noinspection SimilarGradleDependency
+androidx-animation = { group = "androidx.compose.animation", name = "animation", version.ref = "animation" }
+generativeai = { group = "com.google.ai.client.generativeai", name = "generativeai", version.ref = "generativeai" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+
+[bundles]
+androidx-compose = [
+    "androidx-ui",
+    "androidx-ui-graphics",
+    "androidx-ui-tooling-preview",
+    "androidx-material3",
+    "androidx-material-icons-extended",
+    "androidx-compose-animation"
+]
+androidx-lifecycle = [
+    "androidx-lifecycle-runtime-ktx",
+    "androidx-lifecycle-viewmodel-compose",
+    "androidx-lifecycle-runtime-compose-lifecycle"
+]
+networking = [
+    "retrofit-core",
+    "retrofit-converter-kotlinx-serialization",
+    "okhttp",
+    "okhttp-logging-interceptor"
+]
+testing-unit = [
+    "testing-unit-junit",
+    "testing-unit-coroutines",
+    "testing-unit-arch-core",
+    "testing-unit-mockito-core",
+    "testing-unit-mockito-kotlin",
+    "testing-unit-turbine"
+]
+testing-android = [
+    "testing-android-junit",
+    "testing-android-espresso-core",
+    "testing-android-ui-test-junit4",
+    "testing-android-work",
+    "hilt-android-testing"
+]

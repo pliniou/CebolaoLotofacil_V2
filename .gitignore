@@ -1,0 +1,19 @@
+# Arquivos gerados pelo IntelliJ e Android Studio
+*.iml
+.idea/
+.gradle/
+local.properties
+.DS_Store
+ConsolidarKotlin.ps1
+
+# Arquivos gerados pelo Kotlin
+.kotlin/
+
+# Pastas de Build
+/build
+/app/build
+
+# Capturas de tela e arquivos de profiling do Android Studio
+captures/
+.cxx/
+*.hprof

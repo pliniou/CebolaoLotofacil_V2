@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <!--
+        Usa a cor de superfície do sistema (@android:color/system_neutral2_100),
+        que se adapta automaticamente aos temas claro e escuro.
+        O alpha é definido como 80% (CC em hexadecimal) para um efeito translúcido.
+    -->
+    <solid android:color="#CCFAFAFA" />
+
+    <!--
+        Raio dos cantos para widgets, seguindo as diretrizes do Material 3 (geralmente 28dp).
+    -->
+    <corners android:radius="28dp" />
+
+</shape>
