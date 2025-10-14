@@ -16,6 +16,10 @@ import javax.inject.Singleton
 import kotlin.coroutines.coroutineContext
 import kotlin.random.Random
 
+private const val MAX_RANDOM_ATTEMPTS = 250_000
+private const val HEURISTIC_ATTEMPTS_MULTIPLIER = 50
+private const val PROGRESS_UPDATE_FREQUENCY = 5
+
 @Singleton
 class GameGenerator @Inject constructor(
     @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher
@@ -23,14 +27,8 @@ class GameGenerator @Inject constructor(
     private val secureRandom: SecureRandom = SecureRandom()
     private val allNumbers = LotofacilConstants.ALL_NUMBERS.toList()
 
-    private companion object {
-        const val MAX_RANDOM_ATTEMPTS = 250_000
-        const val HEURISTIC_ATTEMPTS_MULTIPLIER = 50
-        const val PROGRESS_UPDATE_FREQUENCY = 5
-    }
-
     sealed class ProgressType {
-        object Started : ProgressType()
+        data object Started : ProgressType()
         data class HeuristicStep(val message: String) : ProgressType()
         data class Attempt(val attemptNumber: Int, val found: Int) : ProgressType()
         data class Finished(val games: List<LotofacilGame>) : ProgressType()
@@ -60,7 +58,7 @@ class GameGenerator @Inject constructor(
             return@flow
         }
 
-        if (repeatsFilter != null && repeatsFilter.isEnabled) {
+        if (repeatsFilter?.isEnabled == true) {
             emit(GenerationProgress(ProgressType.HeuristicStep("Iniciando fase heurística..."), 0, count))
 
             val heuristicLimit = HEURISTIC_ATTEMPTS_MULTIPLIER * count
@@ -80,7 +78,7 @@ class GameGenerator @Inject constructor(
             }
         }
 
-        val initialMessage = if (repeatsFilter?.isEnabled == true) "Fase heurística finalizada. [cite_start]Buscando aleatoriamente..." else "Buscando jogos aleatórios..."
+        val initialMessage = if (repeatsFilter?.isEnabled == true) "Fase heurística finalizada. Buscando aleatoriamente..." else "Buscando jogos aleatórios..."
         emit(GenerationProgress(ProgressType.HeuristicStep(initialMessage), validGames.size, count))
 
         var attempts = 0

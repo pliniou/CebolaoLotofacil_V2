@@ -57,36 +57,37 @@ object NetworkModule {
     @Named(RATE_LIMIT_INTERCEPTOR)
     fun provideRateLimitingInterceptor(): Interceptor {
         return object : Interceptor {
+            @Throws(IOException::class)
             override fun intercept(chain: Interceptor.Chain): Response {
                 val request = chain.request()
                 var response: Response? = null
+                var exception: IOException? = null
                 var tryCount = 0
-                var successful = false
 
-                while (!successful && tryCount < Constants.MAX_RETRIES) {
+                while (tryCount < Constants.MAX_RETRIES) {
                     try {
-                        response?.close() // Close previous response body if it exists
                         response = chain.proceed(request)
-                        if (response.code == 429) { // Too Many Requests
-                            tryCount++
-                            val delay = Constants.INITIAL_DELAY_MS * tryCount
-                            Thread.sleep(delay)
-                        } else {
-                            successful = true
+                        // Sai do loop se a resposta for bem-sucedida ou um erro diferente de 429
+                        if (response.code != 429) {
+                            return response
                         }
-                    } catch (e: Exception) {
-                        tryCount++
-                        if (tryCount >= Constants.MAX_RETRIES) {
-                            throw e
+                        // Prepara para re-tentativa se o código for 429
+                        val delay = Constants.INITIAL_DELAY_MS * (tryCount + 1)
+                        Thread.sleep(delay)
+
+                    } catch (e: IOException) {
+                        exception = e // Guarda a exceção para relançar se todas as tentativas falharem
+                    } finally {
+                        // Fecha o corpo da resposta apenas se for uma resposta 429, para permitir a re-tentativa
+                        if (response?.code == 429) {
+                            response.body?.close()
                         }
                     }
+                    tryCount++
                 }
 
-                if (response == null) {
-                    throw IOException("Failed to execute request after ${Constants.MAX_RETRIES} attempts")
-                }
-
-                return response
+                // Se todas as tentativas falharem, retorna a última resposta ou lança a última exceção
+                return response ?: throw exception ?: IOException("Request failed after ${Constants.MAX_RETRIES} attempts")
             }
         }
     }

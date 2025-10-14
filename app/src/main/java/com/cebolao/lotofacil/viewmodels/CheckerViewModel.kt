@@ -8,9 +8,9 @@ import com.cebolao.lotofacil.R
 import com.cebolao.lotofacil.data.CheckResult
 import com.cebolao.lotofacil.data.LotofacilConstants
 import com.cebolao.lotofacil.data.LotofacilGame
-import com.cebolao.lotofacil.domain.repository.GameRepository
 import com.cebolao.lotofacil.domain.usecase.CheckGameUseCase
 import com.cebolao.lotofacil.domain.usecase.GetGameSimpleStatsUseCase
+import com.cebolao.lotofacil.domain.usecase.SaveGameUseCase
 import com.cebolao.lotofacil.navigation.Screen.Checker.CHECKER_NUMBERS_ARG
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
@@ -45,9 +45,13 @@ sealed interface CheckerUiEvent {
 class CheckerViewModel @Inject constructor(
     private val checkGameUseCase: CheckGameUseCase,
     private val getGameSimpleStatsUseCase: GetGameSimpleStatsUseCase,
-    private val gameRepository: GameRepository,
+    private val saveGameUseCase: SaveGameUseCase,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
+    private companion object {
+        const val NAV_ARG_DELIMITER = ","
+    }
 
     private val _selectedNumbers = MutableStateFlow<Set<Int>>(emptySet())
     val selectedNumbers: StateFlow<Set<Int>> = _selectedNumbers.asStateFlow()
@@ -60,7 +64,7 @@ class CheckerViewModel @Inject constructor(
 
     init {
         savedStateHandle.get<String>(CHECKER_NUMBERS_ARG)?.let { numbersArg ->
-            val numbers = numbersArg.split(",").mapNotNull { it.toIntOrNull() }.toSet()
+            val numbers = numbersArg.split(NAV_ARG_DELIMITER).mapNotNull { it.toIntOrNull() }.toSet()
             if (numbers.size == LotofacilConstants.GAME_SIZE) {
                 _selectedNumbers.value = numbers
                 onCheckGameClicked()
@@ -130,8 +134,9 @@ class CheckerViewModel @Inject constructor(
 
         viewModelScope.launch {
             val newGame = LotofacilGame(numbers = numbersToSave)
-            gameRepository.addGeneratedGames(listOf(newGame))
-            _eventFlow.emit(CheckerUiEvent.ShowSnackbar(R.string.checker_save_success_message))
+            saveGameUseCase(newGame)
+                .onSuccess { _eventFlow.emit(CheckerUiEvent.ShowSnackbar(R.string.checker_save_success_message)) }
+                .onFailure { _eventFlow.emit(CheckerUiEvent.ShowSnackbar(R.string.checker_save_fail_message)) }
         }
     }
 }

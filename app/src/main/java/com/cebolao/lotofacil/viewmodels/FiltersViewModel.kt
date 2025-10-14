@@ -7,10 +7,10 @@ import com.cebolao.lotofacil.data.FilterPreset
 import com.cebolao.lotofacil.data.FilterState
 import com.cebolao.lotofacil.data.FilterType
 import com.cebolao.lotofacil.domain.repository.GameRepository
-import com.cebolao.lotofacil.domain.repository.HistoryRepository
 import com.cebolao.lotofacil.domain.service.FilterSuccessCalculator
 import com.cebolao.lotofacil.domain.service.GameGenerator
 import com.cebolao.lotofacil.domain.usecase.GenerateGamesUseCase
+import com.cebolao.lotofacil.domain.usecase.GetLastDrawUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -54,7 +54,7 @@ class FiltersViewModel @Inject constructor(
     private val gameRepository: GameRepository,
     private val generateGamesUseCase: GenerateGamesUseCase,
     private val filterSuccessCalculator: FilterSuccessCalculator,
-    historyRepository: HistoryRepository
+    private val getLastDrawUseCase: GetLastDrawUseCase
 ) : ViewModel() {
 
     private val _filterStates = MutableStateFlow(FilterType.entries.map { FilterState(type = it) })
@@ -84,7 +84,9 @@ class FiltersViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            _lastDraw.value = historyRepository.getLastDraw()?.numbers
+            getLastDrawUseCase().onSuccess {
+                _lastDraw.value = it?.numbers
+            }
         }
     }
 
@@ -106,13 +108,7 @@ class FiltersViewModel @Inject constructor(
     }
 
     fun onRangeAdjust(type: FilterType, newRange: ClosedFloatingPointRange<Float>) {
-        val full = type.fullRange
-        val correctedStart = min(newRange.start, newRange.endInclusive)
-        val correctedEnd = max(newRange.start, newRange.endInclusive)
-        val snappedStart = correctedStart.toInt().toFloat().coerceIn(full.start, full.endInclusive)
-        val snappedEnd = correctedEnd.toInt().toFloat().coerceIn(full.start, full.endInclusive)
-        val snappedRange = snappedStart..snappedEnd
-
+        val snappedRange = newRange.snapToStep(type.fullRange)
         _filterStates.update { currentStates ->
             currentStates.map { filterState ->
                 if (filterState.type == type && filterState.selectedRange != snappedRange) {
@@ -181,5 +177,15 @@ class FiltersViewModel @Inject constructor(
 
     fun dismissFilterInfo() {
         _filterInfoToShow.value = null
+    }
+
+    private fun ClosedFloatingPointRange<Float>.snapToStep(
+        fullRange: ClosedFloatingPointRange<Float>
+    ): ClosedFloatingPointRange<Float> {
+        val correctedStart = min(start, endInclusive)
+        val correctedEnd = max(start, endInclusive)
+        val snappedStart = correctedStart.toInt().toFloat().coerceIn(fullRange.start, fullRange.endInclusive)
+        val snappedEnd = correctedEnd.toInt().toFloat().coerceIn(fullRange.start, fullRange.endInclusive)
+        return snappedStart..snappedEnd
     }
 }

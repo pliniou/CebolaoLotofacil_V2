@@ -16,8 +16,9 @@ import com.cebolao.lotofacil.domain.model.StatisticPattern
 import com.cebolao.lotofacil.domain.model.WinnerData
 import com.cebolao.lotofacil.domain.repository.HistoryRepository
 import com.cebolao.lotofacil.domain.repository.SyncStatus
-import com.cebolao.lotofacil.domain.service.StatisticsAnalyzer
+import com.cebolao.lotofacil.domain.usecase.AnalyzeHistoryUseCase
 import com.cebolao.lotofacil.domain.usecase.GetHomeScreenDataUseCase
+import com.cebolao.lotofacil.domain.usecase.SyncHistoryUseCase
 import com.cebolao.lotofacil.widget.WidgetUpdateWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
@@ -57,8 +58,9 @@ data class HomeUiState(
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val historyRepository: HistoryRepository,
-    private val statisticsAnalyzer: StatisticsAnalyzer,
     private val getHomeScreenDataUseCase: GetHomeScreenDataUseCase,
+    private val analyzeHistoryUseCase: AnalyzeHistoryUseCase,
+    private val syncHistoryUseCase: SyncHistoryUseCase,
     private val workManager: WorkManager,
     @DefaultDispatcher private val dispatcher: CoroutineDispatcher
 ) : ViewModel() {
@@ -93,7 +95,7 @@ class HomeViewModel @Inject constructor(
     fun onSyncSuccessMessageShown() = _uiState.update { it.copy(showSyncSuccessMessage = false) }
     fun retryInitialLoad() = loadInitialData()
     fun forceSync() {
-        if (!_uiState.value.isSyncing) historyRepository.syncHistory()
+        if (!_uiState.value.isSyncing) syncHistoryUseCase()
     }
 
     private fun loadInitialData() = viewModelScope.launch(dispatcher) {
@@ -136,8 +138,14 @@ class HomeViewModel @Inject constructor(
         analysisJob = viewModelScope.launch(dispatcher) {
             _uiState.update { it.copy(isStatsLoading = true, selectedTimeWindow = window) }
             val drawsToAnalyze = if (window > ALL_CONTESTS_WINDOW) fullHistory.take(window) else fullHistory
-            val newStats = statisticsAnalyzer.analyze(drawsToAnalyze)
-            _uiState.update { it.copy(statistics = newStats, isStatsLoading = false) }
+            
+            analyzeHistoryUseCase(drawsToAnalyze)
+                .onSuccess { newStats ->
+                    _uiState.update { it.copy(statistics = newStats, isStatsLoading = false) }
+                }
+                .onFailure {
+                     _uiState.update { it.copy(isStatsLoading = false) }
+                }
         }
     }
 

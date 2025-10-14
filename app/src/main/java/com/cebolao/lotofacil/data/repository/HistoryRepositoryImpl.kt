@@ -19,16 +19,14 @@ import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 import javax.inject.Singleton
 
+private const val TAG = "HistoryRepositoryImpl"
+
 @Singleton
 class HistoryRepositoryImpl @Inject constructor(
     private val localDataSource: HistoryLocalDataSource,
     private val remoteDataSource: HistoryRemoteDataSource,
     @ApplicationScope private val applicationScope: CoroutineScope
 ) : HistoryRepository {
-
-    private companion object {
-        private const val TAG = "HistoryRepositoryImpl"
-    }
 
     private val cacheMutex = Mutex()
     private val historyCache = mutableMapOf<Int, HistoricalDraw>()
@@ -75,7 +73,8 @@ class HistoryRepositoryImpl @Inject constructor(
     override fun syncHistory(): Job = applicationScope.launch {
         if (_syncStatus.value is SyncStatus.Syncing) return@launch
         _syncStatus.value = SyncStatus.Syncing
-        try {
+        
+        val syncResult = runCatching {
             val latestLocal = getHistory().maxOfOrNull { it.contestNumber } ?: 0
             val latestRemoteResult = remoteDataSource.getLatestDraw()
 
@@ -93,8 +92,11 @@ class HistoryRepositoryImpl @Inject constructor(
                     }
                 }
             }
+        }
+
+        syncResult.onSuccess {
             _syncStatus.value = SyncStatus.Success
-        } catch (e: Exception) {
+        }.onFailure { e ->
             Log.e(TAG, "Failed to sync history", e)
             _syncStatus.value = SyncStatus.Failed("Failed to sync history: ${e.message}")
         }

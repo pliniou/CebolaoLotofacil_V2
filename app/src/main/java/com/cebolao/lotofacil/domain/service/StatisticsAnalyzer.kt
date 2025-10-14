@@ -13,18 +13,16 @@ import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
+private const val TOP_NUMBERS_COUNT = 5
+private const val CACHE_MAX_SIZE = 50
+private const val CACHE_EVICTION_FACTOR = 0.25 // Evict 25% of the cache when full
+
 @Singleton
 class StatisticsAnalyzer @Inject constructor(
     @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher
 ) {
 
     private val analysisCache = ConcurrentHashMap<String, StatisticsReport>()
-
-    private companion object {
-        private const val TOP_NUMBERS_COUNT = 5
-        private const val CACHE_MAX_SIZE = 50
-        private const val CACHE_EVICTION_FACTOR = 0.25 // Evict 25% of the cache when full
-    }
 
     suspend fun analyze(draws: List<HistoricalDraw>): StatisticsReport = withContext(defaultDispatcher) {
         if (draws.isEmpty()) return@withContext StatisticsReport()

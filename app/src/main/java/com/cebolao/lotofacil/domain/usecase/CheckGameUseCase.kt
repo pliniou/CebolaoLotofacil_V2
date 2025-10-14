@@ -12,14 +12,12 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
 
+private const val RECENT_CONTESTS_COUNT = 15
+
 class CheckGameUseCase @Inject constructor(
     private val historyRepository: HistoryRepository,
     @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher
 ) {
-    private companion object {
-        const val RECENT_CONTESTS_COUNT = 15
-    }
-
     operator fun invoke(gameNumbers: Set<Int>): Flow<Result<CheckResult>> = flow {
         val history = historyRepository.getHistory()
         if (history.isEmpty()) {

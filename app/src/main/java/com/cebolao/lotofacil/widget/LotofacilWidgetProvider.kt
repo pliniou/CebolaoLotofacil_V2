@@ -12,6 +12,8 @@ import androidx.work.WorkManager
 import com.cebolao.lotofacil.R
 import dagger.hilt.android.AndroidEntryPoint
 
+private const val ACTION_REFRESH = "com.cebolao.lotofacil.ACTION_REFRESH"
+
 @AndroidEntryPoint
 class LotofacilWidgetProvider : AppWidgetProvider() {
 
@@ -74,9 +76,5 @@ class LotofacilWidgetProvider : AppWidgetProvider() {
             intent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
-    }
-
-    private companion object {
-        const val ACTION_REFRESH = "com.cebolao.lotofacil.ACTION_REFRESH"
     }
 }

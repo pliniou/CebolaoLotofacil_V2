@@ -13,6 +13,9 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
+private const val TAG = "HistoryRemoteDataSource"
+private const val API_REQUEST_BATCH_SIZE = 50
+
 interface HistoryRemoteDataSource {
     suspend fun getLatestDraw(): LotofacilApiResult?
     suspend fun getDrawsInRange(range: IntRange): List<HistoricalDraw>
@@ -23,11 +26,6 @@ class HistoryRemoteDataSourceImpl @Inject constructor(
     private val apiService: ApiService,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : HistoryRemoteDataSource {
-
-    private companion object {
-        private const val TAG = "HistoryRemoteDataSource"
-        private const val API_REQUEST_BATCH_SIZE = 50
-    }
 
     override suspend fun getLatestDraw(): LotofacilApiResult? = withContext(ioDispatcher) {
         try {

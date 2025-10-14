@@ -10,7 +10,10 @@ import com.cebolao.lotofacil.data.LotofacilConstants
 import com.cebolao.lotofacil.data.LotofacilGame
 import com.cebolao.lotofacil.domain.repository.GameRepository
 import com.cebolao.lotofacil.domain.usecase.CheckGameUseCase
+import com.cebolao.lotofacil.domain.usecase.ClearUnpinnedGamesUseCase
+import com.cebolao.lotofacil.domain.usecase.DeleteGameUseCase
 import com.cebolao.lotofacil.domain.usecase.GetGameSimpleStatsUseCase
+import com.cebolao.lotofacil.domain.usecase.TogglePinStateUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -60,7 +63,10 @@ sealed interface GameAnalysisUiState {
 class GameViewModel @Inject constructor(
     private val gameRepository: GameRepository,
     private val checkGameUseCase: CheckGameUseCase,
-    private val getGameSimpleStatsUseCase: GetGameSimpleStatsUseCase
+    private val getGameSimpleStatsUseCase: GetGameSimpleStatsUseCase,
+    private val clearUnpinnedGamesUseCase: ClearUnpinnedGamesUseCase,
+    private val togglePinStateUseCase: TogglePinStateUseCase,
+    private val deleteGameUseCase: DeleteGameUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(GameScreenUiState())
@@ -92,11 +98,11 @@ class GameViewModel @Inject constructor(
     }
 
     fun clearUnpinned() = viewModelScope.launch {
-        gameRepository.clearUnpinnedGames()
+        clearUnpinnedGamesUseCase()
     }
 
     fun togglePinState(gameToToggle: LotofacilGame) = viewModelScope.launch {
-        gameRepository.togglePinState(gameToToggle)
+        togglePinStateUseCase(gameToToggle)
     }
 
     fun requestDeleteGame(game: LotofacilGame) {
@@ -106,7 +112,7 @@ class GameViewModel @Inject constructor(
     fun confirmDeleteGame() {
         viewModelScope.launch {
             _uiState.value.gameToDelete?.let { game ->
-                gameRepository.deleteGame(game)
+                deleteGameUseCase(game)
                 _uiState.update { it.copy(gameToDelete = null) }
             }
         }

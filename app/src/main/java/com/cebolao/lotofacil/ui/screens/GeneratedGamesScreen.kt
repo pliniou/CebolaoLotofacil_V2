@@ -1,7 +1,6 @@
 package com.cebolao.lotofacil.ui.screens
 
 import android.content.Intent
-import android.text.Html
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +37,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.core.text.HtmlCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -108,8 +108,8 @@ fun GeneratedGamesScreen(
                     onShareClick = { game ->
                         val numbersFormatted = game.numbers.sorted().joinToString(", ")
                         val shareTemplate = context.getString(R.string.share_game_message_template, numbersFormatted)
-                        @Suppress("DEPRECATION")
-                        val shareText = Html.fromHtml(shareTemplate, Html.FROM_HTML_MODE_COMPACT).toString()
+                        // Uso do HtmlCompat para compatibilidade e segurança.
+                        val shareText = HtmlCompat.fromHtml(shareTemplate, HtmlCompat.FROM_HTML_MODE_COMPACT).toString()
                         val intent = Intent(Intent.ACTION_SEND).apply {
                             type = "text/plain"
                             putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.share_game_subject))

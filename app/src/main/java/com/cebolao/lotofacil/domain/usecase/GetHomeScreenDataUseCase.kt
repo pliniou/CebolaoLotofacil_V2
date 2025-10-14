@@ -17,16 +17,14 @@ import java.text.NumberFormat
 import java.util.Locale
 import javax.inject.Inject
 
+private const val LOCALE_LANGUAGE = "pt"
+private const val LOCALE_COUNTRY = "BR"
+
 class GetHomeScreenDataUseCase @Inject constructor(
     private val historyRepository: HistoryRepository,
     private val statisticsAnalyzer: StatisticsAnalyzer,
     @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher
 ) {
-    private companion object {
-        private const val LOCALE_LANGUAGE = "pt"
-        private const val LOCALE_COUNTRY = "BR"
-    }
-
     operator fun invoke(): Flow<Result<HomeScreenData>> = flow {
         try {
             val history = historyRepository.getHistory()

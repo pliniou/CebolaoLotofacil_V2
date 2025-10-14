@@ -7,6 +7,13 @@ import kotlin.math.ln
 import kotlin.math.max
 import kotlin.math.exp
 
+// Fração mínima de range para evitar anulação da probabilidade (5%)
+private const val MIN_RANGE_FRACTION = 0.05f
+// Valor mínimo para a força de um filtro para evitar log(0)
+private const val MIN_FILTER_STRENGTH = 0.0001f
+// Probabilidade máxima (100%)
+private const val MAX_PROBABILITY = 1.0f
+
 /**
  * Calcula a probabilidade de sucesso estimada com base em um conjunto de filtros ativos.
  * A lógica utiliza a média geométrica das taxas de sucesso históricas de cada filtro,
@@ -14,15 +21,6 @@ import kotlin.math.exp
  */
 @Singleton
 class FilterSuccessCalculator @Inject constructor() {
-
-    private companion object {
-        // Fração mínima de range para evitar anulação da probabilidade (5%)
-        const val MIN_RANGE_FRACTION = 0.05f
-        // Valor mínimo para a força de um filtro para evitar log(0)
-        const val MIN_FILTER_STRENGTH = 0.0001f
-        // Probabilidade máxima (100%)
-        const val MAX_PROBABILITY = 1.0f
-    }
 
     /**
      * @param activeFilters A lista de filtros que estão atualmente ativos.

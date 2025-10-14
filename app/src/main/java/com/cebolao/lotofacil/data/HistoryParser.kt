@@ -2,8 +2,9 @@ package com.cebolao.lotofacil.data
 
 import android.util.Log
 
+private const val TAG = "HistoryParser"
+
 object HistoryParser {
-    private const val TAG = "HistoryParser"
     private val lineRegex = """^\s*(\d+)\s*-\s*([\d,\s]+)$""".toRegex()
 
     fun parseLine(line: String): HistoricalDraw? {

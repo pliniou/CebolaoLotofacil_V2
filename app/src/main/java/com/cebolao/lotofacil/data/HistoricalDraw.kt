@@ -9,6 +9,8 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.serialization.Serializable
 
+private const val TAG = "HistoricalDraw"
+
 @Immutable
 @Serializable
 data class HistoricalDraw(
@@ -18,8 +20,6 @@ data class HistoricalDraw(
 ) : GameStatisticsProvider {
 
     companion object {
-        private const val TAG = "HistoricalDraw"
-
         /**
          * Centraliza a conversão de um resultado da API para o modelo de dados do app.
          * Retorna null se o resultado da API for inválido.

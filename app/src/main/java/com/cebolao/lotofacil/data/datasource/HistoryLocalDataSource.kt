@@ -13,6 +13,9 @@ import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 
+private const val TAG = "HistoryLocalDataSource"
+private const val ASSET_HISTORY_FILENAME = "lotofacil_resultados.txt"
+
 interface HistoryLocalDataSource {
     suspend fun getLocalHistory(): List<HistoricalDraw>
     suspend fun saveNewContests(newDraws: List<HistoricalDraw>)
@@ -26,11 +29,6 @@ class HistoryLocalDataSourceImpl @Inject constructor(
 ) : HistoryLocalDataSource {
 
     private var assetHistoryCache: List<HistoricalDraw>? = null
-
-    companion object {
-        private const val TAG = "HistoryLocalDataSource"
-        private const val ASSET_HISTORY_FILENAME = "lotofacil_resultados.txt"
-    }
 
     override suspend fun getLocalHistory(): List<HistoricalDraw> = withContext(ioDispatcher) {
         val assetHistory = parseHistoryFromAssets()

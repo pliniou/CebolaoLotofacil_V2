@@ -26,22 +26,22 @@ import javax.inject.Singleton
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "user_prefs")
 
+private const val TAG = "UserPreferencesRepo"
+private const val DEFAULT_THEME_MODE = "auto"
+
+private object PreferenceKeys {
+    val PINNED_GAMES = stringSetPreferencesKey("pinned_games")
+    val DYNAMIC_HISTORY = stringSetPreferencesKey("dynamic_history")
+    val THEME_MODE = stringPreferencesKey("theme_mode")
+    val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
+    val ACCENT_PALETTE = stringPreferencesKey("accent_palette")
+}
+
 @Singleton
 class UserPreferencesRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : UserPreferencesRepository {
-
-    private companion object {
-        const val TAG = "UserPreferencesRepo"
-        const val DEFAULT_THEME_MODE = "auto"
-
-        val PINNED_GAMES_KEY = stringSetPreferencesKey("pinned_games")
-        val DYNAMIC_HISTORY_KEY = stringSetPreferencesKey("dynamic_history")
-        val THEME_MODE_KEY = stringPreferencesKey("theme_mode")
-        val ONBOARDING_COMPLETED_KEY = booleanPreferencesKey("onboarding_completed")
-        val ACCENT_PALETTE_KEY = stringPreferencesKey("accent_palette")
-    }
 
     override val pinnedGames: Flow<Set<String>> = context.dataStore.data
         .catch { exception ->
@@ -49,14 +49,14 @@ class UserPreferencesRepositoryImpl @Inject constructor(
             emit(emptyPreferences())
         }
         .map { preferences ->
-            preferences[PINNED_GAMES_KEY] ?: emptySet()
+            preferences[PreferenceKeys.PINNED_GAMES] ?: emptySet()
         }
 
     override suspend fun savePinnedGames(games: Set<String>) {
         withContext(ioDispatcher) {
             try {
                 context.dataStore.edit { preferences ->
-                    preferences[PINNED_GAMES_KEY] = games
+                    preferences[PreferenceKeys.PINNED_GAMES] = games
                 }
                 Log.d(TAG, "Saved ${games.size} pinned games")
             } catch (e: IOException) {
@@ -68,7 +68,7 @@ class UserPreferencesRepositoryImpl @Inject constructor(
     override suspend fun getHistory(): Set<String> = withContext(ioDispatcher) {
         try {
             val preferences = context.dataStore.data.firstOrNull() ?: emptyPreferences()
-            preferences[DYNAMIC_HISTORY_KEY] ?: emptySet()
+            preferences[PreferenceKeys.DYNAMIC_HISTORY] ?: emptySet()
         } catch (e: Exception) {
             handleError(e, "getting history")
             emptySet()
@@ -82,8 +82,8 @@ class UserPreferencesRepositoryImpl @Inject constructor(
 
             try {
                 context.dataStore.edit { preferences ->
-                    val currentHistory = preferences[DYNAMIC_HISTORY_KEY] ?: emptySet()
-                    preferences[DYNAMIC_HISTORY_KEY] = currentHistory + validEntries
+                    val currentHistory = preferences[PreferenceKeys.DYNAMIC_HISTORY] ?: emptySet()
+                    preferences[PreferenceKeys.DYNAMIC_HISTORY] = currentHistory + validEntries
                     Log.d(TAG, "Added ${validEntries.size} valid history entries")
                 }
             } catch (e: IOException) {
@@ -98,14 +98,14 @@ class UserPreferencesRepositoryImpl @Inject constructor(
             emit(emptyPreferences())
         }
         .map { preferences ->
-            preferences[THEME_MODE_KEY] ?: DEFAULT_THEME_MODE
+            preferences[PreferenceKeys.THEME_MODE] ?: DEFAULT_THEME_MODE
         }
 
     override suspend fun setThemeMode(mode: String) {
         withContext(ioDispatcher) {
             try {
                 context.dataStore.edit { preferences ->
-                    preferences[THEME_MODE_KEY] = mode
+                    preferences[PreferenceKeys.THEME_MODE] = mode
                 }
             } catch (e: IOException) {
                 handleError(e, "setting theme mode")
@@ -119,7 +119,7 @@ class UserPreferencesRepositoryImpl @Inject constructor(
             emit(emptyPreferences())
         }
         .map { preferences ->
-            preferences[ONBOARDING_COMPLETED_KEY] ?: false
+            preferences[PreferenceKeys.ONBOARDING_COMPLETED] ?: false
         }
 
 
@@ -127,7 +127,7 @@ class UserPreferencesRepositoryImpl @Inject constructor(
         withContext(ioDispatcher) {
             try {
                 context.dataStore.edit { preferences ->
-                    preferences[ONBOARDING_COMPLETED_KEY] = completed
+                    preferences[PreferenceKeys.ONBOARDING_COMPLETED] = completed
                 }
             } catch (e: IOException) {
                 handleError(e, "setting onboarding status")
@@ -141,14 +141,14 @@ class UserPreferencesRepositoryImpl @Inject constructor(
             emit(emptyPreferences())
         }
         .map { preferences ->
-            preferences[ACCENT_PALETTE_KEY] ?: AccentPalette.DEFAULT.name
+            preferences[PreferenceKeys.ACCENT_PALETTE] ?: AccentPalette.DEFAULT.name
         }
 
     override suspend fun setAccentPalette(paletteName: String) {
         withContext(ioDispatcher) {
             try {
                 context.dataStore.edit { preferences ->
-                    preferences[ACCENT_PALETTE_KEY] = paletteName
+                    preferences[PreferenceKeys.ACCENT_PALETTE] = paletteName
                 }
             } catch (e: IOException) {
                 handleError(e, "setting accent palette")
