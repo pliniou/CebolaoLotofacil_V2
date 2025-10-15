@@ -55,7 +55,8 @@ class GetHomeScreenDataUseCase @Inject constructor(
     }.flowOn(defaultDispatcher)
 
     private fun processApiResult(apiResult: LotofacilApiResult?): Pair<NextDrawInfo?, List<WinnerData>> {
-        val currencyFormat = NumberFormat.getCurrencyInstance(Locale(LOCALE_LANGUAGE, LOCALE_COUNTRY))
+        val currencyFormat =
+            NumberFormat.getCurrencyInstance(Locale(LOCALE_LANGUAGE, LOCALE_COUNTRY))
         val nextDrawInfo = apiResult?.takeIf { it.dataProximoConcurso != null }
             ?.let {
                 NextDrawInfo(

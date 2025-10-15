@@ -23,19 +23,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import com.cebolao.lotofacil.data.FilterState
 import com.cebolao.lotofacil.data.RestrictivenessCategory
-import com.cebolao.lotofacil.ui.theme.Padding
-import com.cebolao.lotofacil.ui.theme.Sizes
+import com.cebolao.lotofacil.ui.theme.AppConfig
+import com.cebolao.lotofacil.ui.theme.Dimen
 
 private object FilterStatsPanelConstants {
-    const val PROBABILITY_ANIMATION_MS = 500
-    val PANEL_ELEVATION = 2.dp
-    const val OUTLINE_ALPHA = 0.1f
     const val PROBABILITY_THRESHOLD_LOW = 0.1f
     const val PROBABILITY_THRESHOLD_MEDIUM = 0.4f
-    const val CHIP_BACKGROUND_ALPHA = 0.12f
 }
 
 @Composable
@@ -48,17 +43,17 @@ fun FilterStatsPanel(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(FilterStatsPanelConstants.PANEL_ELEVATION)
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(Dimen.Elevation.Level1)
         ),
-        elevation = CardDefaults.cardElevation(FilterStatsPanelConstants.PANEL_ELEVATION)
+        elevation = CardDefaults.cardElevation(Dimen.Elevation.Level1)
     ) {
         Column(
-            modifier = Modifier.padding(Padding.Card),
-            verticalArrangement = Arrangement.spacedBy(Padding.Card)
+            modifier = Modifier.padding(Dimen.CardPadding),
+            verticalArrangement = Arrangement.spacedBy(Dimen.CardPadding)
         ) {
             Text("Análise dos Filtros", style = MaterialTheme.typography.titleMedium)
             FilterRestrictiveness(probability = successProbability)
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = FilterStatsPanelConstants.OUTLINE_ALPHA))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = AppConfig.UI.FilterPanelOutlineAlpha))
             FilterStatistics(activeFilters)
         }
     }
@@ -68,7 +63,7 @@ fun FilterStatsPanel(
 private fun FilterRestrictiveness(probability: Float) {
     val animatedProbability by animateFloatAsState(
         targetValue = probability,
-        animationSpec = tween(FilterStatsPanelConstants.PROBABILITY_ANIMATION_MS),
+        animationSpec = tween(AppConfig.Animation.MediumDuration),
         label = "probabilityAnimation"
     )
 
@@ -78,10 +73,13 @@ private fun FilterRestrictiveness(probability: Float) {
         else -> MaterialTheme.colorScheme.primary to MaterialTheme.colorScheme.primary
     }
 
-    val animatedProgressColor by animateColorAsState(targetValue = progressColor, label = "progressColor")
+    val animatedProgressColor by animateColorAsState(
+        targetValue = progressColor,
+        label = "progressColor"
+    )
     val animatedTextColor by animateColorAsState(targetValue = textColor, label = "textColor")
 
-    Column(verticalArrangement = Arrangement.spacedBy(Padding.Small)) {
+    Column(verticalArrangement = Arrangement.spacedBy(Dimen.SmallPadding)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -99,7 +97,7 @@ private fun FilterRestrictiveness(probability: Float) {
             progress = { animatedProbability },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(Sizes.ProgressBar)
+                .height(Dimen.ProgressBarHeight)
                 .clip(MaterialTheme.shapes.small),
             color = animatedProgressColor,
             trackColor = animatedProgressColor.copy(alpha = 0.2f)
@@ -109,7 +107,7 @@ private fun FilterRestrictiveness(probability: Float) {
 
 @Composable
 private fun FilterStatistics(filters: List<FilterState>) {
-    Column(verticalArrangement = Arrangement.spacedBy(Padding.Medium)) {
+    Column(verticalArrangement = Arrangement.spacedBy(Dimen.MediumPadding)) {
         if (filters.none { it.isEnabled }) {
             Text(
                 "Nenhum filtro ativo.",
@@ -147,14 +145,17 @@ private fun RestrictivenessChip(category: RestrictivenessCategory) {
         RestrictivenessCategory.DISABLED -> MaterialTheme.colorScheme.outline to "Desabilitado"
     }
     Surface(
-        color = color.copy(alpha = FilterStatsPanelConstants.CHIP_BACKGROUND_ALPHA),
+        color = color.copy(alpha = AppConfig.UI.FilterPanelChipBgAlpha),
         shape = MaterialTheme.shapes.small
     ) {
         Text(
             text = text,
             style = MaterialTheme.typography.labelSmall,
             color = color,
-            modifier = Modifier.padding(horizontal = Padding.Small, vertical = Padding.ExtraSmall)
+            modifier = Modifier.padding(
+                horizontal = Dimen.SmallPadding,
+                vertical = Dimen.ExtraSmallPadding
+            )
         )
     }
 }

@@ -16,9 +16,10 @@ class AnalyzeHistoryUseCase @Inject constructor(
     private val statisticsAnalyzer: StatisticsAnalyzer,
     @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher
 ) {
-    suspend operator fun invoke(draws: List<HistoricalDraw>): Result<StatisticsReport> = withContext(defaultDispatcher) {
-        runCatching {
-            statisticsAnalyzer.analyze(draws)
+    suspend operator fun invoke(draws: List<HistoricalDraw>): Result<StatisticsReport> =
+        withContext(defaultDispatcher) {
+            runCatching {
+                statisticsAnalyzer.analyze(draws)
+            }
         }
-    }
 }

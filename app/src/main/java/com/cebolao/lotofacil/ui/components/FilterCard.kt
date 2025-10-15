@@ -32,21 +32,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import com.cebolao.lotofacil.data.FilterState
 import com.cebolao.lotofacil.data.FilterType
-import com.cebolao.lotofacil.ui.theme.Padding
-import com.cebolao.lotofacil.ui.theme.Sizes
+import com.cebolao.lotofacil.ui.theme.AppConfig
+import com.cebolao.lotofacil.ui.theme.Dimen
 import com.cebolao.lotofacil.ui.theme.filterIcon
-
-private val ELEVATION_ENABLED = 3.dp
-private val ELEVATION_DISABLED = 1.dp
-private val BORDER_WIDTH = 1.dp
-private const val BORDER_ANIMATION_DURATION_MS = 300
 
 @Composable
 fun FilterCard(
@@ -63,13 +56,15 @@ fun FilterCard(
     val enabled = filterState.isEnabled && dataAvailable
 
     val elevation by animateDpAsState(
-        if (enabled) ELEVATION_ENABLED else ELEVATION_DISABLED,
+        if (enabled) Dimen.Elevation.Level2 else Dimen.Elevation.Level1,
         spring(stiffness = Spring.StiffnessMedium),
         label = "elevation"
     )
     val borderColor by animateColorAsState(
-        if (enabled) MaterialTheme.colorScheme.primary else Color.Transparent,
-        tween(BORDER_ANIMATION_DURATION_MS),
+        targetValue = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface.copy(
+            alpha = 0f
+        ),
+        animationSpec = tween(AppConfig.Animation.MediumDuration),
         label = "borderColor"
     )
 
@@ -78,9 +73,14 @@ fun FilterCard(
         shape = MaterialTheme.shapes.large,
         elevation = CardDefaults.cardElevation(elevation),
         colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceColorAtElevation(elevation)),
-        border = BorderStroke(BORDER_WIDTH, borderColor)
+        border = BorderStroke(Dimen.Border.Default, borderColor)
     ) {
-        Column(modifier = Modifier.padding(horizontal = Padding.Card, vertical = Padding.Medium)) {
+        Column(
+            modifier = Modifier.padding(
+                horizontal = Dimen.CardPadding,
+                vertical = Dimen.MediumPadding
+            )
+        ) {
             FilterHeader(
                 filterState = filterState,
                 dataAvailable = dataAvailable,
@@ -114,13 +114,13 @@ private fun FilterHeader(
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Padding.Small)
+        horizontalArrangement = Arrangement.spacedBy(Dimen.SmallPadding)
     ) {
         Icon(
             imageVector = filterState.type.filterIcon,
             contentDescription = filterState.type.title,
             tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(Sizes.IconMedium)
+            modifier = Modifier.size(Dimen.MediumIcon)
         )
         Column(modifier = Modifier.weight(1f)) {
             Text(filterState.type.title, style = MaterialTheme.typography.titleSmall)
@@ -133,7 +133,10 @@ private fun FilterHeader(
             }
         }
         IconButton(onClick = onInfoClick) {
-            Icon(Icons.Outlined.Info, contentDescription = "Mais informações sobre o filtro ${filterState.type.title}")
+            Icon(
+                Icons.Outlined.Info,
+                contentDescription = "Mais informações sobre o filtro ${filterState.type.title}"
+            )
         }
         Switch(
             checked = filterState.isEnabled,
@@ -150,8 +153,8 @@ private fun FilterContent(
     onRangeFinished: () -> Unit
 ) {
     Column(
-        modifier = Modifier.padding(top = Padding.Medium),
-        verticalArrangement = Arrangement.spacedBy(Padding.ExtraSmall)
+        modifier = Modifier.padding(top = Dimen.MediumPadding),
+        verticalArrangement = Arrangement.spacedBy(Dimen.ExtraSmallPadding)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -171,7 +174,11 @@ private fun FilterContent(
 }
 
 @Composable
-private fun ValueIndicator(label: String, value: Int, alignment: Alignment.Horizontal = Alignment.Start) {
+private fun ValueIndicator(
+    label: String,
+    value: Int,
+    alignment: Alignment.Horizontal = Alignment.Start
+) {
     Column(horizontalAlignment = alignment) {
         Text(
             label,

@@ -33,9 +33,10 @@ class WidgetUpdateWorker @AssistedInject constructor(
                     setTextViewText(R.id.widget_title, "Concurso #${lastDraw.contestNumber}")
                     removeAllViews(R.id.widget_numbers_grid)
                     lastDraw.numbers.sorted().forEach { number ->
-                        val numberView = RemoteViews(context.packageName, R.layout.widget_number_ball).apply {
-                            setTextViewText(R.id.widget_ball_text, "%02d".format(number))
-                        }
+                        val numberView =
+                            RemoteViews(context.packageName, R.layout.widget_number_ball).apply {
+                                setTextViewText(R.id.widget_ball_text, "%02d".format(number))
+                            }
                         addView(R.id.widget_numbers_grid, numberView)
                     }
                     setViewVisibility(R.id.widget_loading_text, View.GONE)

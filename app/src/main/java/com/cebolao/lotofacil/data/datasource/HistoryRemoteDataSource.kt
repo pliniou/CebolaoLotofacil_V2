@@ -10,11 +10,13 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
 import javax.inject.Singleton
 
 private const val TAG = "HistoryRemoteDataSource"
 private const val API_REQUEST_BATCH_SIZE = 50
+private const val NETWORK_TIMEOUT_MS = 30000L // 30 segundos por requisição
 
 interface HistoryRemoteDataSource {
     suspend fun getLatestDraw(): LotofacilApiResult?
@@ -27,32 +29,40 @@ class HistoryRemoteDataSourceImpl @Inject constructor(
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : HistoryRemoteDataSource {
 
-    override suspend fun getLatestDraw(): LotofacilApiResult? = withContext(ioDispatcher) {
-        try {
-            apiService.getLatestResult()
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to fetch latest draw", e)
-            null
-        }
-    }
-
-    override suspend fun getDrawsInRange(range: IntRange): List<HistoricalDraw> = withContext(ioDispatcher) {
-        if (range.isEmpty()) return@withContext emptyList()
-
-        coroutineScope {
-            range.chunked(API_REQUEST_BATCH_SIZE).flatMap { batch ->
-                batch.map { contestNumber ->
-                    async {
-                        try {
-                            val result = apiService.getResultByContest(contestNumber)
-                            HistoricalDraw.fromApiResult(result)
-                        } catch (e: Exception) {
-                            Log.w(TAG, "Failed to fetch contest $contestNumber", e)
-                            null
-                        }
-                    }
-                }.awaitAll().filterNotNull()
+    override suspend fun getLatestDraw(): LotofacilApiResult? = 
+        withContext(ioDispatcher) {
+            try {
+                withTimeout(NETWORK_TIMEOUT_MS) {
+                    apiService.getLatestResult()
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to fetch latest draw: ${e.message}", e)
+                null
             }
         }
-    }
+
+    override suspend fun getDrawsInRange(range: IntRange): List<HistoricalDraw> =
+        withContext(ioDispatcher) {
+            if (range.isEmpty()) {
+                return@withContext emptyList()
+            }
+
+            coroutineScope {
+                range.chunked(API_REQUEST_BATCH_SIZE).flatMap { batch ->
+                    batch.map { contestNumber ->
+                        async {
+                            try {
+                                withTimeout(NETWORK_TIMEOUT_MS) {
+                                    val result = apiService.getResultByContest(contestNumber)
+                                    HistoricalDraw.fromApiResult(result)
+                                }
+                            } catch (e: Exception) {
+                                Log.w(TAG, "Failed to fetch contest $contestNumber: ${e.message}")
+                                null
+                            }
+                        }
+                    }.awaitAll().filterNotNull()
+                }
+            }
+        }
 }

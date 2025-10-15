@@ -43,18 +43,21 @@ fun lightColorSchemeFor(palette: AccentPalette): ColorScheme {
             tertiaryContainer = LightTertiaryContainer,
             onTertiaryContainer = LightOnTertiaryContainer,
         )
+
         AccentPalette.FOREST -> base.copy(
             secondary = Color(0xFF4C662B),
             secondaryContainer = Color(0xFFCDECA2),
             tertiary = Color(0xFF386668),
             tertiaryContainer = Color(0xFFBBECEF),
         )
+
         AccentPalette.OCEAN -> base.copy(
             secondary = Color(0xFF00658E),
             secondaryContainer = Color(0xFFC7E7FF),
             tertiary = Color(0xFF00677F),
             tertiaryContainer = Color(0xFFB6EBFF),
         )
+
         AccentPalette.SUNSET -> base.copy(
             secondary = Color(0xFF8F4C00),
             secondaryContainer = Color(0xFFFFDCC2),
@@ -95,18 +98,21 @@ fun darkColorSchemeFor(palette: AccentPalette): ColorScheme {
             tertiaryContainer = DarkTertiaryContainer,
             onTertiaryContainer = DarkOnTertiaryContainer,
         )
+
         AccentPalette.FOREST -> base.copy(
             secondary = Color(0xFFB2D088),
             secondaryContainer = Color(0xFF354E16),
             tertiary = Color(0xFFA0CFD2),
             tertiaryContainer = Color(0xFF1E4E50),
         )
+
         AccentPalette.OCEAN -> base.copy(
             secondary = Color(0xFF85CFFF),
             secondaryContainer = Color(0xFF004C6C),
             tertiary = Color(0xFF5AD5FA),
             tertiaryContainer = Color(0xFF004D63),
         )
+
         AccentPalette.SUNSET -> base.copy(
             secondary = Color(0xFFFFB77C),
             secondaryContainer = Color(0xFF6B3900),

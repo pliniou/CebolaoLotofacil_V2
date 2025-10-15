@@ -10,19 +10,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
-import com.cebolao.lotofacil.ui.theme.Padding
-import com.cebolao.lotofacil.ui.theme.Sizes
+import com.cebolao.lotofacil.ui.theme.Dimen
 
 @Composable
 fun AppLoadingIndicator(
     modifier: Modifier = Modifier,
-    size: Dp = Sizes.IconMedium,
+    size: Dp = Dimen.MediumIcon,
     message: String? = null,
 ) {
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Padding.Small)
+        horizontalArrangement = Arrangement.spacedBy(Dimen.SmallPadding)
     ) {
         CircularProgressIndicator(
             modifier = Modifier.size(size),

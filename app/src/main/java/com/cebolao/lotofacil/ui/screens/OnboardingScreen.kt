@@ -35,8 +35,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.cebolao.lotofacil.R
-import com.cebolao.lotofacil.ui.theme.Padding
-import com.cebolao.lotofacil.ui.theme.Sizes
+import com.cebolao.lotofacil.ui.theme.Dimen
 import kotlinx.coroutines.launch
 
 private data class OnboardingPage(
@@ -64,7 +63,7 @@ fun OnboardingScreen(onOnboardingComplete: () -> Unit) {
         modifier = Modifier
             .fillMaxSize()
             .windowInsetsPadding(WindowInsets.statusBars)
-            .padding(horizontal = Padding.Screen, vertical = Padding.Card)
+            .padding(horizontal = Dimen.ScreenPadding, vertical = Dimen.CardPadding)
     ) {
         HorizontalPager(
             state = pagerState,
@@ -94,9 +93,9 @@ private fun OnboardingPageContent(page: OnboardingPage) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(Padding.Screen),
+            .padding(Dimen.ScreenPadding),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(Padding.Card)
+        verticalArrangement = Arrangement.spacedBy(Dimen.CardPadding)
     ) {
         Image(
             painter = painterResource(id = page.imageResId),
@@ -124,7 +123,7 @@ private fun OnboardingControls(
     Row(
         modifier = Modifier
             .navigationBarsPadding()
-            .padding(horizontal = Padding.Screen, vertical = Padding.Large)
+            .padding(horizontal = Dimen.ScreenPadding, vertical = Dimen.LargePadding)
             .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -167,15 +166,15 @@ private fun PagerIndicator(
         repeat(pageCount) { iteration ->
             val isSelected = currentPage == iteration
             val width by animateDpAsState(
-                targetValue = if (isSelected) Sizes.IndicatorActiveWidth else Padding.Small,
+                targetValue = if (isSelected) Dimen.ActiveIndicatorWidth else Dimen.SmallPadding,
                 label = "indicatorWidth"
             )
             val color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
 
             Box(
                 modifier = Modifier
-                    .padding(horizontal = Padding.IndicatorSpacing)
-                    .height(Padding.IndicatorHeight)
+                    .padding(horizontal = Dimen.IndicatorSpacing)
+                    .height(Dimen.IndicatorHeight)
                     .width(width)
                     .clip(CircleShape)
                     .background(color)

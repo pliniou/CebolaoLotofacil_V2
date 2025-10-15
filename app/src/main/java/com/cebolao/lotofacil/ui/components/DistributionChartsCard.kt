@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MultiChoiceSegmentedButtonRow
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.Text
@@ -13,8 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.cebolao.lotofacil.data.StatisticsReport
 import com.cebolao.lotofacil.domain.model.StatisticPattern
-import com.cebolao.lotofacil.ui.theme.Padding
-import com.cebolao.lotofacil.ui.theme.Sizes
+import com.cebolao.lotofacil.ui.theme.Dimen
 import kotlinx.collections.immutable.toImmutableList
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,15 +38,15 @@ fun DistributionChartsCard(
     val maxValue = chartData.maxOfOrNull { it.second } ?: 0
 
     SectionCard(modifier = modifier) {
-        Column(verticalArrangement = Arrangement.spacedBy(Padding.Card)) {
-            Text(text = "Distribuição de Padrões", style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
+        Column(verticalArrangement = Arrangement.spacedBy(Dimen.CardPadding)) {
+            Text(text = "Distribuição de Padrões", style = MaterialTheme.typography.titleLarge)
 
             MultiChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                 StatisticPattern.entries.forEach { pattern ->
                     SegmentedButton(
                         checked = selectedPattern == pattern,
                         onCheckedChange = { onPatternSelected(pattern) },
-                        shape = androidx.compose.material3.MaterialTheme.shapes.medium,
+                        shape = MaterialTheme.shapes.medium,
                         icon = { Icon(imageVector = pattern.icon, contentDescription = null) },
                         label = { Text(pattern.title) }
                     )
@@ -58,7 +58,7 @@ fun DistributionChartsCard(
                 maxValue = maxValue,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(Sizes.BarChartHeight)
+                    .height(Dimen.BarChartHeight)
             )
         }
     }

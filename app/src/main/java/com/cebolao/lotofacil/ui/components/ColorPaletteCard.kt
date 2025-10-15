@@ -26,10 +26,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.unit.dp
 import com.cebolao.lotofacil.ui.theme.AccentPalette
-import com.cebolao.lotofacil.ui.theme.Padding
-import com.cebolao.lotofacil.ui.theme.Sizes
+import com.cebolao.lotofacil.ui.theme.Dimen
 import com.cebolao.lotofacil.ui.theme.darkColorSchemeFor
 import com.cebolao.lotofacil.ui.theme.lightColorSchemeFor
 
@@ -46,11 +44,13 @@ fun ColorPaletteCard(
 
     SectionCard(modifier = modifier) {
         TitleWithIcon(text = "Paleta de Cores", icon = Icons.Default.Palette)
-        Column(verticalArrangement = Arrangement.spacedBy(Padding.ExtraSmall)) {
+        Column(verticalArrangement = Arrangement.spacedBy(Dimen.ExtraSmallPadding)) {
             for (palette in palettes) {
                 PaletteRowItem(
                     palette = palette,
-                    colorScheme = if (isDarkTheme) darkColorSchemeFor(palette) else lightColorSchemeFor(palette),
+                    colorScheme = if (isDarkTheme) darkColorSchemeFor(palette) else lightColorSchemeFor(
+                        palette
+                    ),
                     isSelected = currentPalette == palette,
                     onClick = { onPaletteChange(palette) }
                 )
@@ -76,9 +76,9 @@ private fun PaletteRowItem(
                 onClick = onClick,
                 role = Role.RadioButton
             )
-            .padding(vertical = Padding.ExtraSmall),
+            .padding(vertical = Dimen.ExtraSmallPadding),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Padding.Medium)
+        horizontalArrangement = Arrangement.spacedBy(Dimen.MediumPadding)
     ) {
         RadioButton(selected = isSelected, onClick = onClick)
         ColorSwatch(colorScheme.primary)
@@ -90,10 +90,10 @@ private fun PaletteRowItem(
 private fun ColorSwatch(color: Color, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .size(Sizes.IconMedium)
+            .size(Dimen.MediumIcon)
             .background(color, CircleShape)
             .border(
-                width = 1.dp,
+                width = Dimen.Border.Default,
                 color = MaterialTheme.colorScheme.outline.copy(alpha = COLOR_SWATCH_BORDER_ALPHA),
                 shape = CircleShape
             )

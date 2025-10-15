@@ -20,11 +20,10 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cebolao.lotofacil.ui.screens.MainScreen
 import com.cebolao.lotofacil.ui.theme.AccentPalette
+import com.cebolao.lotofacil.ui.theme.AppConfig
 import com.cebolao.lotofacil.ui.theme.CebolaoLotofacilTheme
 import com.cebolao.lotofacil.viewmodels.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
-
-private const val SPLASH_EXIT_ANIMATION_DURATION_MS = 400L
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -45,17 +44,17 @@ class MainActivity : ComponentActivity() {
                 splashView, View.ALPHA, 1f, 0f
             ).apply {
                 interpolator = AnticipateInterpolator()
-                duration = SPLASH_EXIT_ANIMATION_DURATION_MS
+                duration = AppConfig.Animation.SplashExitDuration.toLong()
                 doOnEnd { splashScreenViewProvider.remove() }
             }
 
             val scaleXAnimator = ObjectAnimator.ofFloat(iconView, View.SCALE_X, 1f, 0.5f).apply {
                 interpolator = AnticipateInterpolator()
-                duration = SPLASH_EXIT_ANIMATION_DURATION_MS
+                duration = AppConfig.Animation.SplashExitDuration.toLong()
             }
             val scaleYAnimator = ObjectAnimator.ofFloat(iconView, View.SCALE_Y, 1f, 0.5f).apply {
                 interpolator = AnticipateInterpolator()
-                duration = SPLASH_EXIT_ANIMATION_DURATION_MS
+                duration = AppConfig.Animation.SplashExitDuration.toLong()
             }
 
             scaleXAnimator.start()

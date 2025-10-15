@@ -19,11 +19,12 @@ class GenerateGamesUseCase @Inject constructor(
     ): Flow<GameGenerator.GenerationProgress> = flow {
         // A responsabilidade de obter o último sorteio é do UseCase.
         // Ele só busca o dado se o filtro de Repetidas estiver ativo.
-        val lastDraw = if (activeFilters.any { it.type == FilterType.REPETIDAS_CONCURSO_ANTERIOR && it.isEnabled }) {
-            historyRepository.getLastDraw()?.numbers
-        } else {
-            null
-        }
+        val lastDraw =
+            if (activeFilters.any { it.type == FilterType.REPETIDAS_CONCURSO_ANTERIOR && it.isEnabled }) {
+                historyRepository.getLastDraw()?.numbers
+            } else {
+                null
+            }
 
         // Delega a geração para o GameGenerator, que já lida com a validação
         // caso 'lastDraw' seja nulo e o filtro esteja ativo.

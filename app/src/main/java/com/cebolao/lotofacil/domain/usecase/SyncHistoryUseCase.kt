@@ -3,7 +3,6 @@ package com.cebolao.lotofacil.domain.usecase
 import com.cebolao.lotofacil.di.IoDispatcher
 import com.cebolao.lotofacil.domain.repository.HistoryRepository
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 /**

@@ -2,6 +2,7 @@ package com.cebolao.lotofacil.data.repository
 
 import com.cebolao.lotofacil.data.LotofacilGame
 import com.cebolao.lotofacil.di.ApplicationScope
+import com.cebolao.lotofacil.di.STATE_IN_TIMEOUT_MS
 import com.cebolao.lotofacil.domain.repository.GameRepository
 import com.cebolao.lotofacil.domain.repository.UserPreferencesRepository
 import kotlinx.collections.immutable.ImmutableList
@@ -23,8 +24,6 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import javax.inject.Singleton
-
-private const val STATE_IN_TIMEOUT_MS = 5_000L
 
 @Singleton
 class GameRepositoryImpl @Inject constructor(

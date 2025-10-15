@@ -57,6 +57,13 @@
     @androidx.compose.runtime.Composable <methods>;
 }
 
+# Regras para Kotlinx Serialization
+-keepclassmembers class kotlinx.serialization.internal.* { *; }
+-keep class **$$serializer { *; }
+-keepclassmembers class * {
+    @kotlinx.serialization.Serializable <fields>;
+}
+
 # Manter nomes de classes de dados (data classes) para evitar problemas com serialização ou reflection
 -keep class com.cebolao.lotofacil.data.** { *; }
 
@@ -71,6 +78,3 @@
 -keepclassmembers class androidx.compose.runtime.snapshots.SnapshotStateList {
     *;
 }
-
-# LIMPEZA: Removidas regras desnecessárias para 'j$.util.*' que causavam avisos no build,
-# pois o desugaring moderno (coreLibraryDesugaring) não as requer mais.

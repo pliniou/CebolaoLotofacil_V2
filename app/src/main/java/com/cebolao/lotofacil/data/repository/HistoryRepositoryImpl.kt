@@ -60,7 +60,7 @@ class HistoryRepositoryImpl @Inject constructor(
                 return historyCache.values.sortedByDescending { it.contestNumber }
             }
         }
-        
+
         loadInitialHistory()
         return historyCache.values.sortedByDescending { it.contestNumber }
     }
@@ -73,7 +73,7 @@ class HistoryRepositoryImpl @Inject constructor(
     override fun syncHistory(): Job = applicationScope.launch {
         if (_syncStatus.value is SyncStatus.Syncing) return@launch
         _syncStatus.value = SyncStatus.Syncing
-        
+
         val syncResult = runCatching {
             val latestLocal = getHistory().maxOfOrNull { it.contestNumber } ?: 0
             val latestRemoteResult = remoteDataSource.getLatestDraw()

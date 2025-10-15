@@ -14,19 +14,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
-import com.cebolao.lotofacil.ui.theme.Padding
+import com.cebolao.lotofacil.ui.theme.Dimen
 
 @Composable
 fun SectionCard(
     modifier: Modifier = Modifier,
     shape: Shape = MaterialTheme.shapes.large,
     colors: CardColors = CardDefaults.cardColors(
-        containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
+        containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(Dimen.Elevation.Level1)
     ),
-    elevation: CardElevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+    elevation: CardElevation = CardDefaults.cardElevation(defaultElevation = Dimen.Elevation.Level1),
     border: BorderStroke? = null,
-    contentSpacing: Dp = Padding.Card,
+    contentSpacing: Dp = Dimen.CardPadding,
     content: @Composable () -> Unit
 ) {
     Card(

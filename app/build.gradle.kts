@@ -9,13 +9,12 @@ plugins {
 
 android {
     namespace = "com.cebolao.lotofacil"
-    compileSdk = 35
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.cebolao.lotofacil"
         minSdk = 26
-        //noinspection OldTargetApi
-        targetSdk = 35
+        targetSdk = 34
         versionCode = 2
         versionName = "2.0"
         testInstrumentationRunner = "com.cebolao.lotofacil.HiltTestRunner"
@@ -73,8 +72,6 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.animation)
-    implementation(libs.generativeai)
     // Core Library Desugaring
     coreLibraryDesugaring(libs.android.desugarJdkLibs)
 
@@ -83,6 +80,7 @@ dependencies {
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.activity.compose)
     implementation(libs.bundles.androidx.lifecycle)
+    implementation(libs.material)
 
     // WorkManager for background tasks
     implementation(libs.androidx.work.runtime.ktx)
@@ -90,9 +88,9 @@ dependencies {
     // Compose BOM and dependencies
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.bundles.androidx.compose)
-    implementation(libs.google.material)
 
-    // Collections & Serialization
+    // Kotlin libs
+    implementation(libs.kotlin.reflect)
     implementation(libs.kotlinx.collections.immutable)
     implementation(libs.kotlinx.serialization.json)
 

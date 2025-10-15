@@ -8,14 +8,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.cebolao.lotofacil.R
-import com.cebolao.lotofacil.ui.theme.Padding
+import com.cebolao.lotofacil.ui.theme.Dimen
 
 @Composable
 fun StatisticsExplanationCard(
     modifier: Modifier = Modifier
 ) {
     SectionCard(modifier = modifier) {
-        Column(verticalArrangement = Arrangement.spacedBy(Padding.Medium)) {
+        Column(verticalArrangement = Arrangement.spacedBy(Dimen.MediumPadding)) {
             TitleWithIcon(
                 text = stringResource(R.string.home_understanding_stats),
                 icon = Icons.AutoMirrored.Outlined.HelpOutline

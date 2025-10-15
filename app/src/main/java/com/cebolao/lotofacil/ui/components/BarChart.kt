@@ -26,31 +26,22 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
-import com.cebolao.lotofacil.ui.theme.Padding
-import com.cebolao.lotofacil.ui.theme.Sizes
+import com.cebolao.lotofacil.ui.theme.AppConfig
+import com.cebolao.lotofacil.ui.theme.Dimen
 import kotlinx.collections.immutable.ImmutableList
 import kotlin.math.roundToInt
 
-private object BarChartConstants {
-    val Y_AXIS_LABEL_WIDTH = Sizes.IconLarge
-    val X_AXIS_LABEL_HEIGHT = Sizes.IconLarge
-    val VALUE_LABEL_HEIGHT = Padding.Card
-    val TOOLTIP_WIDTH = 60.dp
-    val TOOLTIP_HEIGHT = Padding.Large
-    val TOOLTIP_CORNER_RADIUS = Padding.ExtraSmall
-    const val ANIMATION_DURATION_MS = 700
-    const val Y_AXIS_GRID_LINES = 4
-    val Y_AXIS_DASH_EFFECT = PathEffect.dashPathEffect(floatArrayOf(4f, 4f))
-    val BAR_CORNER_RADIUS = CornerRadius(Padding.ExtraSmall.value)
-}
+private val DASH_PATH_EFFECT = PathEffect.dashPathEffect(floatArrayOf(4f, 4f), 0f)
+private val BAR_CORNER_RADIUS = CornerRadius(Dimen.ExtraSmallPadding.value)
 
 @Composable
 fun BarChart(
     data: ImmutableList<Pair<String, Int>>,
     modifier: Modifier = Modifier,
-    chartHeight: Dp = 200.dp,
+    chartHeight: Dp = Dimen.BarChartHeight,
     maxValue: Int
 ) {
     val animatedProgress = remember { Animatable(0f) }
@@ -59,7 +50,7 @@ fun BarChart(
     LaunchedEffect(data) {
         selectedBar = null
         animatedProgress.snapTo(0f)
-        animatedProgress.animateTo(1f, animationSpec = tween(BarChartConstants.ANIMATION_DURATION_MS))
+        animatedProgress.animateTo(1f, animationSpec = tween(AppConfig.Animation.LongDuration))
     }
 
     val primaryColor = MaterialTheme.colorScheme.primary
@@ -73,8 +64,6 @@ fun BarChart(
     val labelSmallFontSize = MaterialTheme.typography.labelSmall.fontSize
     val labelMediumFontSize = MaterialTheme.typography.labelMedium.fontSize
 
-    // Correção: Os valores do tema são lidos aqui no escopo @Composable
-    // e passados como chaves para o `remember`.
     val textPaint = remember(density, onSurfaceVariant, labelSmallFontSize) {
         Paint().apply {
             isAntiAlias = true
@@ -115,8 +104,8 @@ fun BarChart(
             .height(chartHeight)
             .pointerInput(data) {
                 detectTapGestures { offset ->
-                    val yAxisLabelWidthPx = BarChartConstants.Y_AXIS_LABEL_WIDTH.toPx()
-                    val barSpacingPx = Padding.ExtraSmall.toPx()
+                    val yAxisLabelWidthPx = Dimen.BarChartYAxisLabelWidth.toPx()
+                    val barSpacingPx = Dimen.ExtraSmallPadding.toPx()
                     val chartAreaWidth = size.width - yAxisLabelWidthPx
                     val totalSpacing = barSpacingPx * (data.size + 1)
                     val barWidth = (chartAreaWidth - totalSpacing).coerceAtLeast(0f) / data.size
@@ -129,17 +118,28 @@ fun BarChart(
                     selectedBar = if (selectedBar == tappedBarIndex) null else tappedBarIndex
                 }
             }
+            .semantics {
+                contentDescription =
+                    "Gráfico de barras mostrando distribuição de dados. Toque em uma barra para ver o valor."
+            }
     ) {
         val animated = animatedProgress.value
-        val yAxisLabelWidthPx = BarChartConstants.Y_AXIS_LABEL_WIDTH.toPx()
-        val xAxisLabelHeightPx = BarChartConstants.X_AXIS_LABEL_HEIGHT.toPx()
-        val valueLabelHeightPx = BarChartConstants.VALUE_LABEL_HEIGHT.toPx()
+        val yAxisLabelWidthPx = Dimen.BarChartYAxisLabelWidth.toPx()
+        val xAxisLabelHeightPx = Dimen.BarChartXAxisLabelHeight.toPx()
+        val valueLabelHeightPx = Dimen.CardPadding.toPx()
         val chartAreaWidth = size.width - yAxisLabelWidthPx
         val chartAreaHeight = size.height - xAxisLabelHeightPx - valueLabelHeightPx
 
-        drawGrid(yAxisLabelWidthPx, chartAreaHeight, valueLabelHeightPx, maxValue, textPaint, outlineVariant)
+        drawGrid(
+            yAxisLabelWidthPx,
+            chartAreaHeight,
+            valueLabelHeightPx,
+            maxValue,
+            textPaint,
+            outlineVariant
+        )
 
-        val barSpacingPx = Padding.ExtraSmall.toPx()
+        val barSpacingPx = Dimen.ExtraSmallPadding.toPx()
         val totalSpacing = barSpacingPx * (data.size + 1)
         val barWidth = (chartAreaWidth - totalSpacing).coerceAtLeast(0f) / data.size
         val barRects = mutableListOf<Rect>()
@@ -148,26 +148,43 @@ fun BarChart(
             val barHeight = (value.toFloat() / maxValue) * chartAreaHeight * animated
             val left = yAxisLabelWidthPx + barSpacingPx + index * (barWidth + barSpacingPx)
             val top = valueLabelHeightPx + chartAreaHeight - barHeight
-            barRects.add(Rect(left = left, top = top, right = left + barWidth, bottom = top + barHeight))
+            barRects.add(
+                Rect(
+                    left = left,
+                    top = top,
+                    right = left + barWidth,
+                    bottom = top + barHeight
+                )
+            )
 
             if (barHeight > 0) {
                 drawRoundRect(
                     brush = Brush.verticalGradient(listOf(primaryColor, secondaryColor)),
                     topLeft = Offset(left, top),
                     size = Size(barWidth, barHeight),
-                    cornerRadius = BarChartConstants.BAR_CORNER_RADIUS
+                    cornerRadius = BAR_CORNER_RADIUS
                 )
             }
 
-            val valueTextY = top - Padding.ExtraSmall.toPx()
+            val valueTextY = top - Dimen.ExtraSmallPadding.toPx()
             if (selectedBar != index) {
-                drawContext.canvas.nativeCanvas.drawText(value.toString(), barRects[index].center.x, valueTextY, valuePaint)
+                drawContext.canvas.nativeCanvas.drawText(
+                    value.toString(),
+                    barRects[index].center.x,
+                    valueTextY,
+                    valuePaint
+                )
             }
 
-            val labelTextY = size.height - xAxisLabelHeightPx + Padding.Medium.toPx()
+            val labelTextY = size.height - xAxisLabelHeightPx + Dimen.MediumPadding.toPx()
             drawContext.canvas.nativeCanvas.save()
             drawContext.canvas.nativeCanvas.rotate(45f, barRects[index].center.x, labelTextY)
-            drawContext.canvas.nativeCanvas.drawText(label, barRects[index].center.x, labelTextY, labelPaint)
+            drawContext.canvas.nativeCanvas.drawText(
+                label,
+                barRects[index].center.x,
+                labelTextY,
+                labelPaint
+            )
             drawContext.canvas.nativeCanvas.restore()
         }
 
@@ -185,10 +202,10 @@ private fun DrawScope.drawTooltip(
     tooltipColor: Color,
     textPaint: Paint
 ) {
-    val tooltipWidthPx = BarChartConstants.TOOLTIP_WIDTH.toPx()
-    val tooltipHeightPx = BarChartConstants.TOOLTIP_HEIGHT.toPx()
-    val cornerRadiusPx = BarChartConstants.TOOLTIP_CORNER_RADIUS.toPx()
-    val tooltipMarginPx = Padding.Small.toPx()
+    val tooltipWidthPx = Dimen.BarChartTooltipWidth.toPx()
+    val tooltipHeightPx = Dimen.BarChartTooltipHeight.toPx()
+    val cornerRadiusPx = Dimen.ExtraSmallPadding.toPx()
+    val tooltipMarginPx = Dimen.SmallPadding.toPx()
 
     val tooltipRect = Rect(
         left = barRect.center.x - tooltipWidthPx / 2,
@@ -216,7 +233,7 @@ private fun DrawScope.drawGrid(
     textPaint: Paint,
     lineColor: Color
 ) {
-    val gridLines = BarChartConstants.Y_AXIS_GRID_LINES
+    val gridLines = AppConfig.UI.BarChartGridLines
     (0..gridLines).forEach { i ->
         val y = topPadding + chartAreaHeight * (1f - i.toFloat() / gridLines)
         val value = (maxValue * i.toFloat() / gridLines).roundToInt()
@@ -224,13 +241,13 @@ private fun DrawScope.drawGrid(
             color = lineColor.copy(alpha = 0.5f),
             start = Offset(yAxisLabelWidth, y),
             end = Offset(size.width, y),
-            strokeWidth = 1.dp.toPx(),
-            pathEffect = BarChartConstants.Y_AXIS_DASH_EFFECT
+            strokeWidth = Dimen.Border.Default.toPx(),
+            pathEffect = DASH_PATH_EFFECT
         )
         val textY = y + (textPaint.descent() - textPaint.ascent()) / 2 - textPaint.descent()
         drawContext.canvas.nativeCanvas.drawText(
             value.toString(),
-            yAxisLabelWidth - Padding.ExtraSmall.toPx(),
+            yAxisLabelWidth - Dimen.ExtraSmallPadding.toPx(),
             textY,
             textPaint
         )

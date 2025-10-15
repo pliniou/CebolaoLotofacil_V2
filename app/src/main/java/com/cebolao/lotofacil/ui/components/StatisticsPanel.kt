@@ -21,10 +21,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.cebolao.lotofacil.R
 import com.cebolao.lotofacil.data.StatisticsReport
-import com.cebolao.lotofacil.ui.theme.Padding
+import com.cebolao.lotofacil.ui.theme.Dimen
+import kotlinx.collections.immutable.toImmutableList
 
 private val TIME_WINDOWS = listOf(0, 25, 50, 75, 100, 200)
 
@@ -40,7 +40,7 @@ fun StatisticsPanel(
         modifier = modifier.fillMaxWidth()
     ) {
         Box {
-            Column(verticalArrangement = Arrangement.spacedBy(Padding.Card)) {
+            Column(verticalArrangement = Arrangement.spacedBy(Dimen.CardPadding)) {
                 Text(
                     text = stringResource(id = R.string.home_statistics_center),
                     style = MaterialTheme.typography.headlineSmall
@@ -54,7 +54,7 @@ fun StatisticsPanel(
 
                 StatRow(
                     title = stringResource(R.string.home_hot_numbers),
-                    numbers = stats.mostFrequentNumbers,
+                    numbers = stats.mostFrequentNumbers.toImmutableList(),
                     icon = Icons.Filled.LocalFireDepartment,
                     suffix = stringResource(R.string.home_suffix_times)
                 )
@@ -63,7 +63,7 @@ fun StatisticsPanel(
 
                 StatRow(
                     title = stringResource(R.string.home_overdue_numbers),
-                    numbers = stats.mostOverdueNumbers,
+                    numbers = stats.mostOverdueNumbers.toImmutableList(),
                     icon = Icons.Filled.HourglassEmpty,
                     suffix = stringResource(R.string.home_suffix_ago)
                 )
@@ -77,7 +77,7 @@ fun StatisticsPanel(
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier.background(
-                        MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp).copy(alpha = 0.7f)
+                        MaterialTheme.colorScheme.surfaceColorAtElevation(Dimen.Elevation.Level1).copy(alpha = 0.7f)
                     )
                 ) {
                     CircularProgressIndicator()
@@ -92,10 +92,10 @@ private fun TimeWindowSelector(
     selectedWindow: Int,
     onTimeWindowSelected: (Int) -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(Padding.Small)) {
+    Column(verticalArrangement = Arrangement.spacedBy(Dimen.SmallPadding)) {
         Text(stringResource(R.string.home_analysis_period), style = MaterialTheme.typography.titleMedium)
         LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(Padding.Small)
+            horizontalArrangement = Arrangement.spacedBy(Dimen.SmallPadding)
         ) {
             items(TIME_WINDOWS) { window ->
                 val label = if (window == 0) {

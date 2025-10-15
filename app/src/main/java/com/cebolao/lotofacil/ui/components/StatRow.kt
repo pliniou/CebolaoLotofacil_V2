@@ -12,24 +12,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.cebolao.lotofacil.data.model.NumberFrequency
-import com.cebolao.lotofacil.ui.theme.Padding
-import com.cebolao.lotofacil.ui.theme.Sizes
+import com.cebolao.lotofacil.ui.theme.Dimen
+import kotlinx.collections.immutable.ImmutableList
 
 @Composable
 fun StatRow(
     title: String,
-    numbers: List<NumberFrequency>,
+    numbers: ImmutableList<NumberFrequency>,
     icon: ImageVector,
     suffix: String,
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(Padding.Medium)
+        verticalArrangement = Arrangement.spacedBy(Dimen.MediumPadding)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Padding.Small)
+            horizontalArrangement = Arrangement.spacedBy(Dimen.SmallPadding)
         ) {
             Icon(
                 imageVector = icon,
@@ -45,9 +45,9 @@ fun StatRow(
             numbers.forEach { (number, frequency) ->
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(Padding.ExtraSmall)
+                    verticalArrangement = Arrangement.spacedBy(Dimen.ExtraSmallPadding)
                 ) {
-                    NumberBall(number = number, size = Sizes.NumberBall)
+                    NumberBall(number = number, size = Dimen.NumberBall)
                     Text(text = "$frequency $suffix", style = MaterialTheme.typography.bodySmall)
                 }
             }

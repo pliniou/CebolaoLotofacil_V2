@@ -47,7 +47,7 @@ import com.cebolao.lotofacil.ui.components.FormattedText
 import com.cebolao.lotofacil.ui.components.GenerationActionsPanel
 import com.cebolao.lotofacil.ui.components.InfoDialog
 import com.cebolao.lotofacil.ui.components.SectionCard
-import com.cebolao.lotofacil.ui.theme.Padding
+import com.cebolao.lotofacil.ui.theme.Dimen
 import com.cebolao.lotofacil.viewmodels.FiltersScreenState
 import com.cebolao.lotofacil.viewmodels.FiltersViewModel
 import com.cebolao.lotofacil.viewmodels.NavigationEvent
@@ -91,7 +91,7 @@ fun FiltersScreen(
     AppScreen(
         title = stringResource(R.string.filters_title),
         subtitle = stringResource(R.string.filters_subtitle),
-        navigationIcon = { Icon(Icons.Filled.Tune, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+        navigationIcon = { Icon(Icons.Filled.Tune, contentDescription = stringResource(R.string.filters_title), tint = MaterialTheme.colorScheme.primary) },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         actions = {
             IconButton(onClick = { viewModel.requestResetFilters() }) {
@@ -125,12 +125,12 @@ private fun FiltersList(
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(Padding.Card),
+        verticalArrangement = Arrangement.spacedBy(Dimen.CardPadding),
         contentPadding = PaddingValues(
-            start = Padding.Screen,
-            end = Padding.Screen,
-            top = Padding.Card,
-            bottom = Padding.Large
+            start = Dimen.ScreenPadding,
+            end = Dimen.ScreenPadding,
+            top = Dimen.CardPadding,
+            bottom = Dimen.BottomBarOffset
         )
     ) {
         item {
@@ -174,7 +174,7 @@ private fun FilterPresetSelector(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(Padding.Small)) {
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(Dimen.SmallPadding)) {
             items(filterPresets) { preset ->
                 FilterPresetItem(preset = preset, onClick = { onPresetSelected(preset) })
             }
@@ -192,7 +192,7 @@ private fun FilterPresetItem(preset: FilterPreset, onClick: () -> Unit) {
         ),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
-        Column(Modifier.padding(Padding.Medium)) {
+        Column(Modifier.padding(Dimen.MediumPadding)) {
             Text(preset.name, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
             Text(preset.description, style = MaterialTheme.typography.labelSmall)
         }

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Widget.Text" parent="android:Widget.TextView">
+        <item name="android:fontFamily">@font/gabarito_regular</item>
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+    </style>
+
+    <style name="Widget.Text.Title">
+        <item name="android:fontFamily">@font/gabarito_bold</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="Widget.Text.NumberBall">
+        <item name="android:fontFamily">@font/gabarito_semibold</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+    </style>
+
+    <style name="Widget.Text.Loading">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">?android:attr/textColorSecondary</item>
+    </style>
+</resources>

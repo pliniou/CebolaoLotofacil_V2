@@ -32,22 +32,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.cebolao.lotofacil.R
 import com.cebolao.lotofacil.data.LotofacilGame
-import com.cebolao.lotofacil.ui.theme.Padding
-import com.cebolao.lotofacil.ui.theme.Sizes
+import com.cebolao.lotofacil.ui.theme.AppConfig
+import com.cebolao.lotofacil.ui.theme.Dimen
 
-private object GameCardConstants {
-    val ELEVATION_PINNED = 4.dp
-    val ELEVATION_DEFAULT = 2.dp
-    val BORDER_PINNED = 1.5.dp
-    val BORDER_DEFAULT = 0.dp
-    const val ANIMATION_DURATION_MS = 250
+/**
+ * Define as ações que um usuário pode realizar em um GameCard.
+ * Usar uma sealed class simplifica o callback do componente.
+ */
+sealed class GameCardAction {
+    data object Analyze : GameCardAction()
+    data object Pin : GameCardAction()
+    data object Delete : GameCardAction()
+    data object Check : GameCardAction()
+    data object Share : GameCardAction()
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -55,23 +57,21 @@ private object GameCardConstants {
 fun GameCard(
     game: LotofacilGame,
     modifier: Modifier = Modifier,
-    onAnalyzeClick: () -> Unit,
-    onPinClick: () -> Unit,
-    onDeleteClick: () -> Unit,
-    onCheckClick: () -> Unit,
-    onShareClick: () -> Unit
+    onAction: (GameCardAction) -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
     val isPinned = game.isPinned
 
     val elevation by animateDpAsState(
-        targetValue = if (isPinned) GameCardConstants.ELEVATION_PINNED else GameCardConstants.ELEVATION_DEFAULT,
+        targetValue = if (isPinned) Dimen.Elevation.Level2 else Dimen.Elevation.Level1,
         animationSpec = spring(stiffness = Spring.StiffnessMedium),
         label = "elevation"
     )
     val borderColor by animateColorAsState(
-        targetValue = if (isPinned) MaterialTheme.colorScheme.primary else Color.Transparent,
-        animationSpec = tween(GameCardConstants.ANIMATION_DURATION_MS),
+        targetValue = if (isPinned) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface.copy(
+            alpha = 0f
+        ),
+        animationSpec = tween(AppConfig.Animation.ShortDuration),
         label = "borderColor"
     )
     val containerColor by animateColorAsState(
@@ -80,7 +80,7 @@ fun GameCard(
         } else {
             MaterialTheme.colorScheme.surfaceColorAtElevation(elevation)
         },
-        animationSpec = tween(GameCardConstants.ANIMATION_DURATION_MS),
+        animationSpec = tween(AppConfig.Animation.ShortDuration),
         label = "containerColor"
     )
 
@@ -88,21 +88,24 @@ fun GameCard(
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(elevation),
         border = BorderStroke(
-            width = if (isPinned) GameCardConstants.BORDER_PINNED else GameCardConstants.BORDER_DEFAULT,
+            width = if (isPinned) Dimen.Border.Thick else Dimen.Elevation.Level0,
             color = borderColor
         ),
         colors = CardDefaults.cardColors(containerColor = containerColor)
     ) {
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(Padding.ExtraSmall, Alignment.CenterHorizontally),
-            verticalArrangement = Arrangement.spacedBy(Padding.ExtraSmall),
+            horizontalArrangement = Arrangement.spacedBy(
+                Dimen.ExtraSmallPadding,
+                Alignment.CenterHorizontally
+            ),
+            verticalArrangement = Arrangement.spacedBy(Dimen.ExtraSmallPadding),
             maxItemsInEachRow = 5
         ) {
             game.numbers.sorted().forEach { number ->
                 NumberBall(
                     number = number,
-                    size = Sizes.NumberBall,
+                    size = Dimen.NumberBall,
                     variant = NumberBallVariant.Secondary
                 )
             }
@@ -112,25 +115,13 @@ fun GameCard(
 
         GameCardActions(
             isPinned = isPinned,
-            onAnalyzeClick = {
-                haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
-                onAnalyzeClick()
-            },
-            onCheckClick = {
-                haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
-                onCheckClick()
-            },
-            onPinClick = {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                onPinClick()
-            },
-            onDeleteClick = {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                onDeleteClick()
-            },
-            onShareClick = {
-                haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
-                onShareClick()
+            onAction = { action ->
+                val feedback = when (action) {
+                    GameCardAction.Pin, GameCardAction.Delete -> HapticFeedbackType.LongPress
+                    else -> HapticFeedbackType.TextHandleMove
+                }
+                haptic.performHapticFeedback(feedback)
+                onAction(action)
             }
         )
     }
@@ -139,19 +130,15 @@ fun GameCard(
 @Composable
 private fun GameCardActions(
     isPinned: Boolean,
-    onAnalyzeClick: () -> Unit,
-    onCheckClick: () -> Unit,
-    onPinClick: () -> Unit,
-    onDeleteClick: () -> Unit,
-    onShareClick: () -> Unit
+    onAction: (GameCardAction) -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(Padding.ExtraSmall)) {
-            IconButton(onClick = onPinClick) {
+        Row(horizontalArrangement = Arrangement.spacedBy(Dimen.ExtraSmallPadding)) {
+            IconButton(onClick = { onAction(GameCardAction.Pin) }) {
                 Icon(
                     imageVector = if (isPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
                     contentDescription = if (isPinned)
@@ -162,14 +149,14 @@ private fun GameCardActions(
                     else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            IconButton(onClick = onDeleteClick) {
+            IconButton(onClick = { onAction(GameCardAction.Delete) }) {
                 Icon(
                     imageVector = Icons.Filled.Delete,
                     contentDescription = stringResource(R.string.games_delete_game_description),
                     tint = MaterialTheme.colorScheme.error
                 )
             }
-            IconButton(onClick = onShareClick) {
+            IconButton(onClick = { onAction(GameCardAction.Share) }) {
                 Icon(
                     imageVector = Icons.Filled.Share,
                     contentDescription = stringResource(R.string.games_share_game_description),
@@ -177,8 +164,8 @@ private fun GameCardActions(
                 )
             }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(Padding.ExtraSmall)) {
-            TextButton(onClick = onAnalyzeClick) {
+        Row(horizontalArrangement = Arrangement.spacedBy(Dimen.ExtraSmallPadding)) {
+            TextButton(onClick = { onAction(GameCardAction.Analyze) }) {
                 Icon(
                     imageVector = Icons.Filled.Analytics,
                     contentDescription = null,
@@ -187,7 +174,7 @@ private fun GameCardActions(
                 Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
                 Text(text = stringResource(R.string.games_analyze_button))
             }
-            TextButton(onClick = onCheckClick) {
+            TextButton(onClick = { onAction(GameCardAction.Check) }) {
                 Icon(
                     imageVector = Icons.Filled.Check,
                     contentDescription = null,

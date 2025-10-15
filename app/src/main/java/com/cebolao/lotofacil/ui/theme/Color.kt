@@ -2,6 +2,8 @@ package com.cebolao.lotofacil.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
+// Cor Primária da Marca
+val LotofacilPurple = Color(0xFF930089)
 
 // Tema Claro
 val LightPrimary = LotofacilPurple
@@ -30,7 +32,7 @@ val LightOutline = Color(0xFF80747B)
 val LightOutlineVariant = Color(0xFFD2C2CB)
 
 // Tema Escuro
-val DarkPrimary = Color(0xFFFFAAF0)
+val DarkPrimary = Color(0xFF88347A)
 val DarkOnPrimary = Color(0xFF5C0056)
 val DarkPrimaryContainer = Color(0xFF7A0071)
 val DarkOnPrimaryContainer = Color(0xFFFFD7F3)

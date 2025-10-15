@@ -25,11 +25,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import com.cebolao.lotofacil.R
 import com.cebolao.lotofacil.data.CheckResult
-import com.cebolao.lotofacil.ui.theme.Padding
-import com.cebolao.lotofacil.ui.theme.Sizes
+import com.cebolao.lotofacil.ui.theme.Dimen
 import kotlinx.collections.immutable.ImmutableMap
 
 @Composable
@@ -40,9 +38,9 @@ fun CheckResultCard(
     SectionCard(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(Dimen.Elevation.Level1)
         ),
-        contentSpacing = Padding.Medium
+        contentSpacing = Dimen.MediumPadding
     ) {
         val totalWins = result.scoreCounts.values.sum()
         ResultHeader(totalWins = totalWins, contestsChecked = result.lastCheckedContest)
@@ -62,17 +60,18 @@ fun CheckResultCard(
 @Composable
 private fun ResultHeader(totalWins: Int, contestsChecked: Int) {
     val icon = if (totalWins > 0) Icons.Filled.Celebration else Icons.Filled.Analytics
-    val color = if (totalWins > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+    val color =
+        if (totalWins > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Padding.Small)
+        horizontalArrangement = Arrangement.spacedBy(Dimen.SmallPadding)
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
             tint = color,
-            modifier = Modifier.size(Sizes.IconMedium)
+            modifier = Modifier.size(Dimen.MediumIcon)
         )
         Column {
             Text(
@@ -82,7 +81,10 @@ private fun ResultHeader(totalWins: Int, contestsChecked: Int) {
                 color = color
             )
             Text(
-                text = stringResource(R.string.checker_results_analysis_in_contests, contestsChecked),
+                text = stringResource(
+                    R.string.checker_results_analysis_in_contests,
+                    contestsChecked
+                ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -92,7 +94,7 @@ private fun ResultHeader(totalWins: Int, contestsChecked: Int) {
 
 @Composable
 private fun ScoreBreakdown(scoreCounts: ImmutableMap<Int, Int>) {
-    Column(verticalArrangement = Arrangement.spacedBy(Padding.Small)) {
+    Column(verticalArrangement = Arrangement.spacedBy(Dimen.SmallPadding)) {
         scoreCounts.entries.sortedByDescending { it.key }.forEach { (score, count) ->
             if (score >= 11) {
                 val animated by animateIntAsState(
@@ -111,7 +113,11 @@ private fun ScoreBreakdown(scoreCounts: ImmutableMap<Int, Int>) {
                         fontWeight = FontWeight.Medium
                     )
                     Text(
-                        text = "$animated ${if (animated == 1) stringResource(R.string.checker_score_breakdown_times_format_one) else stringResource(R.string.checker_score_breakdown_times_format_other)}",
+                        text = "$animated ${
+                            if (animated == 1) stringResource(R.string.checker_score_breakdown_times_format_one) else stringResource(
+                                R.string.checker_score_breakdown_times_format_other
+                            )
+                        }",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -126,13 +132,13 @@ private fun ScoreBreakdown(scoreCounts: ImmutableMap<Int, Int>) {
 private fun LastHitInfo(result: CheckResult) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Padding.Small)
+        horizontalArrangement = Arrangement.spacedBy(Dimen.SmallPadding)
     ) {
         Icon(
             imageVector = Icons.Filled.CheckCircle,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.secondary,
-            modifier = Modifier.size(Sizes.IconSmall)
+            modifier = Modifier.size(Dimen.SmallIcon)
         )
         Text(
             text = stringResource(
@@ -151,7 +157,7 @@ private fun NoWinsMessage() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = Padding.Medium),
+            .padding(vertical = Dimen.MediumPadding),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
@@ -159,14 +165,14 @@ private fun NoWinsMessage() {
             imageVector = Icons.Outlined.ErrorOutline,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(Sizes.IconSmall)
+            modifier = Modifier.size(Dimen.SmallIcon)
         )
         Text(
             text = stringResource(R.string.checker_no_wins_message),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(start = Padding.Small)
+            modifier = Modifier.padding(start = Dimen.SmallPadding)
         )
     }
 }

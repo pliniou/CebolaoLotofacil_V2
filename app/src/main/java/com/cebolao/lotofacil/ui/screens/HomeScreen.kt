@@ -8,20 +8,16 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -49,15 +45,17 @@ import com.cebolao.lotofacil.domain.model.WinnerData
 import com.cebolao.lotofacil.ui.components.AnimateOnEntry
 import com.cebolao.lotofacil.ui.components.AppDivider
 import com.cebolao.lotofacil.ui.components.DistributionChartsCard
+import com.cebolao.lotofacil.ui.components.MessageState
 import com.cebolao.lotofacil.ui.components.NumberBall
 import com.cebolao.lotofacil.ui.components.NumberBallVariant
 import com.cebolao.lotofacil.ui.components.SectionCard
 import com.cebolao.lotofacil.ui.components.StatisticsExplanationCard
 import com.cebolao.lotofacil.ui.components.StatisticsPanel
-import com.cebolao.lotofacil.ui.theme.Padding
-import com.cebolao.lotofacil.ui.theme.Sizes
+import com.cebolao.lotofacil.ui.theme.Dimen
 import com.cebolao.lotofacil.viewmodels.HomeScreenState
 import com.cebolao.lotofacil.viewmodels.HomeViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -108,14 +106,8 @@ fun HomeScreen(homeViewModel: HomeViewModel = hiltViewModel()) {
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         actions = {
-            AnimatedContent(targetState = uiState.isSyncing, label = "SyncButton") { isSyncing ->
-                if (isSyncing && !pullToRefreshState.isRefreshing) {
-                    CircularProgressIndicator(modifier = Modifier.size(Sizes.IconMedium))
-                } else {
-                    IconButton(onClick = { homeViewModel.forceSync() }) {
-                        Icon(Icons.Default.Refresh, stringResource(R.string.home_sync_button_description))
-                    }
-                }
+            if (uiState.isSyncing && !pullToRefreshState.isRefreshing) {
+                CircularProgressIndicator(modifier = Modifier.size(Dimen.MediumIcon))
             }
         }
     ) { innerPadding ->
@@ -135,20 +127,25 @@ fun HomeScreen(homeViewModel: HomeViewModel = hiltViewModel()) {
                     }
                 } else {
                     LazyColumn(
-                        contentPadding = PaddingValues(bottom = Padding.Large),
-                        verticalArrangement = Arrangement.spacedBy(Padding.Large)
+                        contentPadding = PaddingValues(bottom = Dimen.LargePadding),
+                        verticalArrangement = Arrangement.spacedBy(Dimen.LargePadding)
                     ) {
                         when (val screenState = uiState.screenState) {
                             is HomeScreenState.Error -> item {
-                                ErrorState(
-                                    messageResId = screenState.messageResId,
-                                    onRetry = { homeViewModel.retryInitialLoad() }
+                                MessageState(
+                                    modifier = Modifier.padding(horizontal = Dimen.ScreenPadding),
+                                    icon = Icons.Default.ErrorOutline,
+                                    title = stringResource(R.string.general_failed_to_load_data),
+                                    message = stringResource(screenState.messageResId),
+                                    actionLabel = stringResource(R.string.general_retry),
+                                    onActionClick = { homeViewModel.retryInitialLoad() },
+                                    iconTint = MaterialTheme.colorScheme.error
                                 )
                             }
                             is HomeScreenState.Success -> {
                                 item(key = "next_draw") {
                                     AnimateOnEntry(
-                                        modifier = Modifier.padding(horizontal = Padding.Screen),
+                                        modifier = Modifier.padding(horizontal = Dimen.ScreenPadding),
                                         delayMillis = HomeScreenConstants.NEXT_DRAW_ANIM_DELAY
                                     ) {
                                         screenState.nextDrawInfo?.let { NextDrawInfoCard(it) }
@@ -157,17 +154,17 @@ fun HomeScreen(homeViewModel: HomeViewModel = hiltViewModel()) {
                                 item(key = "last_draw") {
                                     screenState.lastDraw?.let {
                                         AnimateOnEntry(
-                                            modifier = Modifier.padding(horizontal = Padding.Screen),
+                                            modifier = Modifier.padding(horizontal = Dimen.ScreenPadding),
                                             delayMillis = HomeScreenConstants.LAST_DRAW_ANIM_DELAY
                                         ) {
-                                            LastDrawSection(it, screenState.winnerData)
+                                            LastDrawSection(it, screenState.winnerData.toImmutableList())
                                         }
                                     }
                                 }
                                 item(key = "statistics") {
                                     uiState.statistics?.let {
                                         AnimateOnEntry(
-                                            modifier = Modifier.padding(horizontal = Padding.Screen),
+                                            modifier = Modifier.padding(horizontal = Dimen.ScreenPadding),
                                             delayMillis = HomeScreenConstants.STATS_PANEL_ANIM_DELAY
                                         ) {
                                             StatisticsPanel(
@@ -182,7 +179,7 @@ fun HomeScreen(homeViewModel: HomeViewModel = hiltViewModel()) {
                                 item(key = "charts") {
                                     uiState.statistics?.let {
                                         AnimateOnEntry(
-                                            modifier = Modifier.padding(horizontal = Padding.Screen),
+                                            modifier = Modifier.padding(horizontal = Dimen.ScreenPadding),
                                             delayMillis = HomeScreenConstants.CHARTS_ANIM_DELAY
                                         ) {
                                             DistributionChartsCard(
@@ -195,7 +192,7 @@ fun HomeScreen(homeViewModel: HomeViewModel = hiltViewModel()) {
                                 }
                                 item(key = "explanation") {
                                     AnimateOnEntry(
-                                        modifier = Modifier.padding(horizontal = Padding.Screen),
+                                        modifier = Modifier.padding(horizontal = Dimen.ScreenPadding),
                                         delayMillis = HomeScreenConstants.EXPLANATION_CARD_ANIM_DELAY
                                     ) {
                                         StatisticsExplanationCard()
@@ -239,9 +236,9 @@ private fun InfoRow(label: String, value: String) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun LastDrawSection(lastDraw: HistoricalDraw, winnerData: List<WinnerData>) {
+private fun LastDrawSection(lastDraw: HistoricalDraw, winnerData: ImmutableList<WinnerData>) {
     SectionCard(modifier = Modifier.fillMaxWidth()) {
-        Column(verticalArrangement = Arrangement.spacedBy(Padding.Card)) {
+        Column(verticalArrangement = Arrangement.spacedBy(Dimen.CardPadding)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -261,11 +258,11 @@ private fun LastDrawSection(lastDraw: HistoricalDraw, winnerData: List<WinnerDat
             }
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(Padding.Small, Alignment.CenterHorizontally),
-                verticalArrangement = Arrangement.spacedBy(Padding.Small)
+                horizontalArrangement = Arrangement.spacedBy(Dimen.SmallPadding, Alignment.CenterHorizontally),
+                verticalArrangement = Arrangement.spacedBy(Dimen.SmallPadding)
             ) {
                 lastDraw.numbers.sorted().forEach {
-                    NumberBall(it, size = Sizes.NumberBall, variant = NumberBallVariant.Lotofacil)
+                    NumberBall(it, size = Dimen.NumberBall, variant = NumberBallVariant.Lotofacil)
                 }
             }
 
@@ -278,10 +275,10 @@ private fun LastDrawSection(lastDraw: HistoricalDraw, winnerData: List<WinnerDat
 }
 
 @Composable
-private fun WinnerInfoSection(winnerData: List<WinnerData>) {
+private fun WinnerInfoSection(winnerData: ImmutableList<WinnerData>) {
     val currencyFormat = remember { NumberFormat.getCurrencyInstance(Locale("pt", "BR")) }
 
-    Column(verticalArrangement = Arrangement.spacedBy(Padding.Medium)) {
+    Column(verticalArrangement = Arrangement.spacedBy(Dimen.MediumPadding)) {
         Text(
             text = "Ganhadores do Último Concurso",
             style = MaterialTheme.typography.titleMedium
@@ -312,30 +309,6 @@ private fun WinnerInfoSection(winnerData: List<WinnerData>) {
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
-            }
-        }
-    }
-}
-
-
-@Composable
-private fun ErrorState(messageResId: Int, onRetry: () -> Unit) {
-    SectionCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = Padding.Screen)
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(Padding.Card),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(stringResource(R.string.general_failed_to_load_data), style = MaterialTheme.typography.titleLarge)
-            Text(stringResource(messageResId), style = MaterialTheme.typography.bodyMedium)
-            Button(onClick = onRetry) {
-                Icon(Icons.Default.Refresh, contentDescription = null)
-                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                Text(stringResource(R.string.general_retry))
             }
         }
     }

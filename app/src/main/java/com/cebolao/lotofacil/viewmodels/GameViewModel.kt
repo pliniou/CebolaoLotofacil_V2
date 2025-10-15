@@ -8,6 +8,7 @@ import com.cebolao.lotofacil.R
 import com.cebolao.lotofacil.data.CheckResult
 import com.cebolao.lotofacil.data.LotofacilConstants
 import com.cebolao.lotofacil.data.LotofacilGame
+import com.cebolao.lotofacil.di.STATE_IN_TIMEOUT_MS
 import com.cebolao.lotofacil.domain.repository.GameRepository
 import com.cebolao.lotofacil.domain.usecase.CheckGameUseCase
 import com.cebolao.lotofacil.domain.usecase.ClearUnpinnedGamesUseCase
@@ -28,8 +29,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import javax.inject.Inject
-
-private const val STATE_IN_TIMEOUT_MS = 5_000L
 
 @Stable
 data class GameSummary(
@@ -85,6 +84,10 @@ class GameViewModel @Inject constructor(
     private var analyzeJob: Job? = null
 
     init {
+        observeGamesAndUpdateSummary()
+    }
+
+    private fun observeGamesAndUpdateSummary() {
         viewModelScope.launch {
             generatedGames.collect { games ->
                 val summary = GameSummary(
@@ -97,12 +100,24 @@ class GameViewModel @Inject constructor(
         }
     }
 
-    fun clearUnpinned() = viewModelScope.launch {
-        clearUnpinnedGamesUseCase()
+    fun clearUnpinned() {
+        viewModelScope.launch {
+            try {
+                clearUnpinnedGamesUseCase()
+            } catch (e: Exception) {
+                android.util.Log.e("GameViewModel", "Error clearing unpinned games", e)
+            }
+        }
     }
 
-    fun togglePinState(gameToToggle: LotofacilGame) = viewModelScope.launch {
-        togglePinStateUseCase(gameToToggle)
+    fun togglePinState(gameToToggle: LotofacilGame) {
+        viewModelScope.launch {
+            try {
+                togglePinStateUseCase(gameToToggle)
+            } catch (e: Exception) {
+                android.util.Log.e("GameViewModel", "Error toggling pin state", e)
+            }
+        }
     }
 
     fun requestDeleteGame(game: LotofacilGame) {
@@ -112,8 +127,13 @@ class GameViewModel @Inject constructor(
     fun confirmDeleteGame() {
         viewModelScope.launch {
             _uiState.value.gameToDelete?.let { game ->
-                deleteGameUseCase(game)
-                _uiState.update { it.copy(gameToDelete = null) }
+                try {
+                    deleteGameUseCase(game)
+                } catch (e: Exception) {
+                    android.util.Log.e("GameViewModel", "Error deleting game", e)
+                } finally {
+                    _uiState.update { it.copy(gameToDelete = null) }
+                }
             }
         }
     }
@@ -126,6 +146,7 @@ class GameViewModel @Inject constructor(
         analyzeJob?.cancel()
         analyzeJob = viewModelScope.launch {
             _analysisState.value = GameAnalysisUiState.Loading
+            
             try {
                 val checkResult = checkGameUseCase(game.numbers).single()
                 val simpleStats = getGameSimpleStatsUseCase(game).single()
@@ -140,7 +161,7 @@ class GameViewModel @Inject constructor(
                 } else {
                     _analysisState.value = GameAnalysisUiState.Error(R.string.error_analysis_failed)
                 }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
                 _analysisState.value = GameAnalysisUiState.Error(R.string.error_analysis_failed)
             }
         }

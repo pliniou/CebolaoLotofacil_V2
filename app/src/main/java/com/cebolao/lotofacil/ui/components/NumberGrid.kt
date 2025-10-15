@@ -1,5 +1,3 @@
-@file:Suppress("SameParameterValue")
-
 package com.cebolao.lotofacil.ui.components
 
 import androidx.compose.foundation.clickable
@@ -20,20 +18,22 @@ import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.Dp
-import com.cebolao.lotofacil.ui.theme.Padding
-import com.cebolao.lotofacil.ui.theme.Sizes
+import com.cebolao.lotofacil.ui.theme.Dimen
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
+private val ALL_LOTOFACIL_NUMBERS = (1..25).toImmutableList()
 private const val ITEMS_PER_ROW = 5
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun NumberGrid(
     modifier: Modifier = Modifier,
-    allNumbers: List<Int> = (1..25).toList(),
+    allNumbers: ImmutableList<Int> = ALL_LOTOFACIL_NUMBERS,
     selectedNumbers: Set<Int>,
     onNumberClick: (Int) -> Unit,
     maxSelection: Int? = null,
-    numberSize: Dp = Sizes.NumberBall
+    numberSize: Dp = Dimen.NumberBall
 ) {
     val haptic = LocalHapticFeedback.current
     val selectionFull = maxSelection != null && selectedNumbers.size >= maxSelection
@@ -41,9 +41,12 @@ fun NumberGrid(
     FlowRow(
         modifier = modifier
             .fillMaxWidth()
-            .padding(Padding.Small),
-        horizontalArrangement = Arrangement.spacedBy(Padding.Small, Alignment.CenterHorizontally),
-        verticalArrangement = Arrangement.spacedBy(Padding.Small),
+            .padding(Dimen.SmallPadding),
+        horizontalArrangement = Arrangement.spacedBy(
+            Dimen.SmallPadding,
+            Alignment.CenterHorizontally
+        ),
+        verticalArrangement = Arrangement.spacedBy(Dimen.SmallPadding),
         maxItemsInEachRow = ITEMS_PER_ROW
     ) {
         allNumbers.forEach { number ->
@@ -79,11 +82,11 @@ private fun NumberGridItem(
                 indication = null,
                 enabled = isClickable,
                 onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     onNumberClick(number)
                 }
             )
-            .padding(Padding.ExtraSmall)
+            .padding(Dimen.ExtraSmallPadding)
     ) {
         NumberBall(
             number = number,

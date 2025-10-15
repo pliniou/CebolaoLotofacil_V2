@@ -30,16 +30,17 @@ class LotofacilWidgetProvider : AppWidgetProvider() {
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
         if (intent.action == ACTION_REFRESH) {
-            val appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
+            val appWidgetId = intent.getIntExtra(
+                AppWidgetManager.EXTRA_APPWIDGET_ID,
+                AppWidgetManager.INVALID_APPWIDGET_ID
+            )
             if (appWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
-                // Show loading state
                 val views = RemoteViews(context.packageName, R.layout.widget_lotofacil).apply {
                     setViewVisibility(R.id.widget_loading_text, View.VISIBLE)
                     setViewVisibility(R.id.widget_numbers_grid, View.GONE)
                 }
                 AppWidgetManager.getInstance(context).updateAppWidget(appWidgetId, views)
 
-                // Enqueue a one-time worker to update
                 enqueueOneTimeWidgetUpdate(context)
             }
         }
@@ -51,7 +52,10 @@ class LotofacilWidgetProvider : AppWidgetProvider() {
         appWidgetId: Int
     ) {
         val views = RemoteViews(context.packageName, R.layout.widget_lotofacil).apply {
-            setOnClickPendingIntent(R.id.widget_refresh_button, getRefreshPendingIntent(context, appWidgetId))
+            setOnClickPendingIntent(
+                R.id.widget_refresh_button,
+                getRefreshPendingIntent(context, appWidgetId)
+            )
             setViewVisibility(R.id.widget_loading_text, View.VISIBLE)
             setViewVisibility(R.id.widget_numbers_grid, View.GONE)
         }

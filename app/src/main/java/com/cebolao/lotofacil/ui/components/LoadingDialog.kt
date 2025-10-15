@@ -17,7 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.cebolao.lotofacil.ui.theme.Padding
+import com.cebolao.lotofacil.ui.theme.Dimen
 
 @Composable
 fun LoadingDialog(
@@ -37,24 +37,24 @@ fun LoadingDialog(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = Padding.Large, vertical = Padding.Large),
+                .padding(horizontal = Dimen.LargePadding, vertical = Dimen.LargePadding),
             shape = MaterialTheme.shapes.extraLarge,
             elevation = CardDefaults.cardElevation()
         ) {
             Column(
-                modifier = Modifier.padding(Padding.Large),
-                verticalArrangement = Arrangement.spacedBy(Padding.Card),
+                modifier = Modifier.padding(Dimen.LargePadding),
+                verticalArrangement = Arrangement.spacedBy(Dimen.CardPadding),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(text = title, style = MaterialTheme.typography.titleSmall)
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(Padding.Medium)
+                    horizontalArrangement = Arrangement.spacedBy(Dimen.MediumPadding)
                 ) {
                     CircularProgressIndicator()
                     Text(text = message, style = MaterialTheme.typography.bodyMedium)
                 }
-                Spacer(Modifier.height(Padding.Small))
+                Spacer(Modifier.height(Dimen.SmallPadding))
             }
         }
     }

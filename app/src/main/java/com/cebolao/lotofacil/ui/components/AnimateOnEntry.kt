@@ -15,20 +15,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.cebolao.lotofacil.ui.theme.AppConfig
 import kotlinx.coroutines.delay
 
-private const val DEFAULT_ANIMATION_DURATION_MS = 400
 private const val INITIAL_OFFSET_DIVISOR = 8
 
 /**
  * Um wrapper que anima a entrada de seu conteúdo na tela.
- * A animação pode ser controlada globalmente através do `LocalAnimationEnabled`.
+ * A animação é consistente, utilizando as durações definidas no AppConfig.
  */
 @Composable
 fun AnimateOnEntry(
     modifier: Modifier = Modifier,
     delayMillis: Long = 0,
-    durationMillis: Int = DEFAULT_ANIMATION_DURATION_MS,
+    durationMillis: Int = AppConfig.Animation.MediumDuration,
     content: @Composable () -> Unit
 ) {
     var isVisible by remember { mutableStateOf(false) }

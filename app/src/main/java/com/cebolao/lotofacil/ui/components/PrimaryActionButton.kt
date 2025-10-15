@@ -12,8 +12,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.cebolao.lotofacil.ui.theme.Padding
-import com.cebolao.lotofacil.ui.theme.Sizes
+import com.cebolao.lotofacil.ui.theme.Dimen
 
 @Composable
 fun PrimaryActionButton(
@@ -33,12 +32,12 @@ fun PrimaryActionButton(
         shape = MaterialTheme.shapes.large,
         colors = colors
     ) {
-        Row(modifier = Modifier.padding(horizontal = Padding.ExtraSmall)) {
+        Row(modifier = Modifier.padding(horizontal = Dimen.ExtraSmallPadding)) {
             if (loading) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(Sizes.IconMedium),
+                    modifier = Modifier.size(Dimen.MediumIcon),
                     color = MaterialTheme.colorScheme.onPrimary,
-                    strokeWidth = Sizes.ProgressBarStroke
+                    strokeWidth = Dimen.ProgressBarStroke
                 )
                 Spacer(Modifier.width(ButtonDefaults.IconSpacing))
             } else if (leading != null) {

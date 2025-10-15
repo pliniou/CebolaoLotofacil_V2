@@ -31,18 +31,14 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import com.cebolao.lotofacil.R
 import com.cebolao.lotofacil.data.LotofacilConstants
-import com.cebolao.lotofacil.ui.theme.Padding
-import com.cebolao.lotofacil.ui.theme.Sizes
+import com.cebolao.lotofacil.ui.theme.Dimen
 import com.cebolao.lotofacil.viewmodels.GenerationUiState
 import java.text.NumberFormat
 import java.util.Locale
 
 private val GAME_QUANTITY_OPTIONS = listOf(1, 2, 3, 5, 7, 9, 10, 12, 15, 20)
-private val SURFACE_ELEVATION = 8.dp
-private val SURFACE_TONAL_ELEVATION = 3.dp
 
 @Composable
 fun GenerationActionsPanel(
@@ -59,29 +55,29 @@ fun GenerationActionsPanel(
 
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shadowElevation = SURFACE_ELEVATION,
-        tonalElevation = SURFACE_TONAL_ELEVATION
+        shadowElevation = Dimen.Elevation.Level4,
+        tonalElevation = Dimen.Elevation.Level2
     ) {
         Row(
             modifier = Modifier
                 .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(horizontal = Padding.Card, vertical = Padding.Small)
+                .padding(horizontal = Dimen.CardPadding, vertical = Dimen.SmallPadding)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Padding.Medium)
+            horizontalArrangement = Arrangement.spacedBy(Dimen.MediumPadding)
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 QuantitySelector(
                     quantity = quantity,
                     onDecrement = {
                         if (selectedIndex > 0) {
-                            haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             selectedIndex--
                         }
                     },
                     onIncrement = {
                         if (selectedIndex < GAME_QUANTITY_OPTIONS.lastIndex) {
-                            haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             selectedIndex++
                         }
                     },
@@ -98,7 +94,7 @@ fun GenerationActionsPanel(
             Row(
                 modifier = Modifier.weight(1f),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Padding.Small)
+                horizontalArrangement = Arrangement.spacedBy(Dimen.SmallPadding)
             ) {
                 if (isLoading) {
                     IconButton(onClick = {
@@ -115,7 +111,7 @@ fun GenerationActionsPanel(
                 PrimaryActionButton(
                     modifier = Modifier
                         .weight(1f)
-                        .height(Sizes.ButtonLarge),
+                        .height(Dimen.LargeButtonHeight),
                     enabled = !isLoading,
                     loading = isLoading,
                     onClick = {
@@ -155,7 +151,7 @@ private fun QuantitySelector(
     isDecrementEnabled: Boolean,
     isIncrementEnabled: Boolean
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Padding.ExtraSmall)) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Dimen.ExtraSmallPadding)) {
         IconButton(onClick = onDecrement, enabled = isDecrementEnabled) {
             Icon(imageVector = Icons.Filled.Remove, contentDescription = stringResource(R.string.filters_quantity_decrease))
         }

@@ -11,7 +11,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.cebolao.lotofacil.ui.theme.Padding
+import com.cebolao.lotofacil.ui.theme.Dimen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,7 +37,7 @@ fun StandardScreenHeader(
             }
         },
         navigationIcon = {
-            Box(modifier = Modifier.padding(start = Padding.Screen)) {
+            Box(modifier = Modifier.padding(start = Dimen.ScreenPadding)) {
                 navigationIcon()
             }
         },

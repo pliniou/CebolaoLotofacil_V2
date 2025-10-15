@@ -50,9 +50,7 @@ fun MainScreen(
 
     val bottomBarVisible by remember(currentDestination) {
         derivedStateOf {
-            bottomNavItems.any { item ->
-                currentDestination?.route?.substringBefore("?")?.startsWith(item.baseRoute) == true
-            }
+            bottomNavItems.any { it.baseRoute == currentDestination?.route?.substringBefore('?') }
         }
     }
 
@@ -66,7 +64,7 @@ fun MainScreen(
                 NavigationBar {
                     bottomNavItems.forEach { screen ->
                         val selected = currentDestination?.hierarchy?.any {
-                            it.route?.startsWith(screen.baseRoute) == true
+                            it.route?.substringBefore('?') == screen.baseRoute
                         } == true
                         NavigationBarItem(
                             selected = selected,
@@ -80,7 +78,8 @@ fun MainScreen(
                                 }
                             },
                             icon = {
-                                val icon = if (selected) screen.selectedIcon else screen.unselectedIcon
+                                val icon =
+                                    if (selected) screen.selectedIcon else screen.unselectedIcon
                                 if (icon != null) {
                                     Icon(
                                         imageVector = icon,

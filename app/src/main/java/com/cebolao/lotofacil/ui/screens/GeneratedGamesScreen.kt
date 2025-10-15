@@ -46,13 +46,14 @@ import com.cebolao.lotofacil.data.LotofacilGame
 import com.cebolao.lotofacil.navigation.Screen
 import com.cebolao.lotofacil.navigation.navigateToChecker
 import com.cebolao.lotofacil.ui.components.AnimateOnEntry
-import com.cebolao.lotofacil.ui.components.EmptyState
 import com.cebolao.lotofacil.ui.components.GameAnalysisDialog
 import com.cebolao.lotofacil.ui.components.GameCard
+import com.cebolao.lotofacil.ui.components.GameCardAction
 import com.cebolao.lotofacil.ui.components.LoadingDialog
+import com.cebolao.lotofacil.ui.components.MessageState
 import com.cebolao.lotofacil.ui.components.SectionCard
 import com.cebolao.lotofacil.ui.components.TitleWithIcon
-import com.cebolao.lotofacil.ui.theme.Padding
+import com.cebolao.lotofacil.ui.theme.Dimen
 import com.cebolao.lotofacil.viewmodels.GameAnalysisUiState
 import com.cebolao.lotofacil.viewmodels.GameSummary
 import com.cebolao.lotofacil.viewmodels.GameViewModel
@@ -89,33 +90,36 @@ fun GeneratedGamesScreen(
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             if (games.isEmpty()) {
-                EmptyState(
+                MessageState(
                     icon = Icons.AutoMirrored.Filled.ListAlt,
                     title = stringResource(R.string.games_empty_state_title),
                     message = stringResource(R.string.games_empty_state_description),
                     actionLabel = stringResource(R.string.filters_button_generate),
                     onActionClick = { navController.navigate(Screen.Filters.route) },
-                    modifier = Modifier.padding(horizontal = Padding.Screen)
+                    modifier = Modifier.padding(horizontal = Dimen.ScreenPadding)
                 )
             } else {
                 GamesList(
                     games = games,
                     summary = uiState.summary,
-                    onAnalyzeClick = { gameViewModel.analyzeGame(it) },
-                    onPinClick = { gameViewModel.togglePinState(it) },
-                    onDeleteClick = { gameViewModel.requestDeleteGame(it) },
-                    onCheckClick = { navController.navigateToChecker(it.numbers) },
-                    onShareClick = { game ->
-                        val numbersFormatted = game.numbers.sorted().joinToString(", ")
-                        val shareTemplate = context.getString(R.string.share_game_message_template, numbersFormatted)
-                        // Uso do HtmlCompat para compatibilidade e segurança.
-                        val shareText = HtmlCompat.fromHtml(shareTemplate, HtmlCompat.FROM_HTML_MODE_COMPACT).toString()
-                        val intent = Intent(Intent.ACTION_SEND).apply {
-                            type = "text/plain"
-                            putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.share_game_subject))
-                            putExtra(Intent.EXTRA_TEXT, shareText)
+                    onGameAction = { game, action ->
+                        when (action) {
+                            GameCardAction.Analyze -> gameViewModel.analyzeGame(game)
+                            GameCardAction.Pin -> gameViewModel.togglePinState(game)
+                            GameCardAction.Delete -> gameViewModel.requestDeleteGame(game)
+                            GameCardAction.Check -> navController.navigateToChecker(game.numbers)
+                            GameCardAction.Share -> {
+                                val numbersFormatted = game.numbers.sorted().joinToString(", ")
+                                val shareTemplate = context.getString(R.string.share_game_message_template, numbersFormatted)
+                                val shareText = HtmlCompat.fromHtml(shareTemplate, HtmlCompat.FROM_HTML_MODE_COMPACT).toString()
+                                val intent = Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/plain"
+                                    putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.share_game_subject))
+                                    putExtra(Intent.EXTRA_TEXT, shareText)
+                                }
+                                context.startActivity(Intent.createChooser(intent, context.getString(R.string.games_share_chooser_title)))
+                            }
                         }
-                        context.startActivity(Intent.createChooser(intent, context.getString(R.string.games_share_chooser_title)))
                     }
                 )
             }
@@ -188,21 +192,17 @@ private fun ScreenActions(
 private fun GamesList(
     games: ImmutableList<LotofacilGame>,
     summary: GameSummary,
-    onAnalyzeClick: (LotofacilGame) -> Unit,
-    onPinClick: (LotofacilGame) -> Unit,
-    onDeleteClick: (LotofacilGame) -> Unit,
-    onCheckClick: (LotofacilGame) -> Unit,
-    onShareClick: (LotofacilGame) -> Unit
+    onGameAction: (LotofacilGame, GameCardAction) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
-            start = Padding.Screen,
-            end = Padding.Screen,
-            top = Padding.Card,
-            bottom = Padding.Large
+            start = Dimen.ScreenPadding,
+            end = Dimen.ScreenPadding,
+            top = Dimen.CardPadding,
+            bottom = Dimen.LargePadding
         ),
-        verticalArrangement = Arrangement.spacedBy(Padding.Large)
+        verticalArrangement = Arrangement.spacedBy(Dimen.LargePadding)
     ) {
         item {
             AnimateOnEntry {
@@ -217,11 +217,7 @@ private fun GamesList(
             AnimateOnEntry {
                 GameCard(
                     game = game,
-                    onAnalyzeClick = { onAnalyzeClick(game) },
-                    onPinClick = { onPinClick(game) },
-                    onDeleteClick = { onDeleteClick(game) },
-                    onCheckClick = { onCheckClick(game) },
-                    onShareClick = { onShareClick(game) }
+                    onAction = { action -> onGameAction(game, action) }
                 )
             }
         }
@@ -250,12 +246,12 @@ private fun GameSummaryCard(summary: GameSummary, modifier: Modifier = Modifier)
 private fun SummaryItem(label: String, value: String, icon: ImageVector? = null) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Padding.ExtraSmall)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Dimen.ExtraSmallPadding)) {
             if (icon != null) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    modifier = Modifier.padding(end = Padding.ExtraSmall)
+                    modifier = Modifier.padding(end = Dimen.ExtraSmallPadding)
                 )
             }
             Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

@@ -17,8 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.cebolao.lotofacil.R
-import com.cebolao.lotofacil.ui.theme.Padding
-import com.cebolao.lotofacil.ui.theme.Sizes
+import com.cebolao.lotofacil.ui.theme.Dimen
 import com.cebolao.lotofacil.viewmodels.GameAnalysisResult
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -35,20 +34,20 @@ fun GameAnalysisDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(Padding.Card)
+                verticalArrangement = Arrangement.spacedBy(Dimen.CardPadding)
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(Padding.Small)) {
+                Column(verticalArrangement = Arrangement.spacedBy(Dimen.SmallPadding)) {
                     Text("Combinação", style = MaterialTheme.typography.titleMedium)
                     FlowRow(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(Padding.ExtraSmall, Alignment.CenterHorizontally),
-                        verticalArrangement = Arrangement.spacedBy(Padding.ExtraSmall),
+                        horizontalArrangement = Arrangement.spacedBy(Dimen.ExtraSmallPadding, Alignment.CenterHorizontally),
+                        verticalArrangement = Arrangement.spacedBy(Dimen.ExtraSmallPadding),
                         maxItemsInEachRow = 5
                     ) {
                         result.game.numbers.sorted().forEach {
                             NumberBall(
                                 number = it,
-                                size = Sizes.NumberBallDialog,
+                                size = Dimen.NumberBallDialog,
                                 variant = NumberBallVariant.Lotofacil
                             )
                         }
@@ -58,7 +57,7 @@ fun GameAnalysisDialog(
                 SimpleStatsCard(stats = result.simpleStats)
 
                 SectionCard {
-                    Column(verticalArrangement = Arrangement.spacedBy(Padding.Small)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Dimen.SmallPadding)) {
                         Text("Resumo de prêmios", style = MaterialTheme.typography.titleMedium)
                         AppDivider()
                         val totalPremios = result.checkResult.scoreCounts.values.sum()

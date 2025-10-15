@@ -21,8 +21,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.core.text.HtmlCompat
-import com.cebolao.lotofacil.ui.theme.Padding
-import com.cebolao.lotofacil.ui.theme.Sizes
+import com.cebolao.lotofacil.ui.theme.Dimen
 
 @Composable
 fun InfoPanel(
@@ -34,8 +33,8 @@ fun InfoPanel(
         Text(text = title, style = MaterialTheme.typography.titleMedium)
         AppDivider()
         Column(
-            verticalArrangement = Arrangement.spacedBy(Padding.Medium),
-            modifier = Modifier.padding(top = Padding.Small)
+            verticalArrangement = Arrangement.spacedBy(Dimen.MediumPadding),
+            modifier = Modifier.padding(top = Dimen.SmallPadding)
         ) {
             content()
         }
@@ -63,13 +62,13 @@ fun TitleWithIcon(text: String, icon: ImageVector, modifier: Modifier = Modifier
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Padding.Small)
+        horizontalArrangement = Arrangement.spacedBy(Dimen.SmallPadding)
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(Sizes.IconSmall)
+            modifier = Modifier.size(Dimen.SmallIcon)
         )
         Text(text, style = MaterialTheme.typography.titleMedium)
     }
@@ -79,7 +78,7 @@ fun TitleWithIcon(text: String, icon: ImageVector, modifier: Modifier = Modifier
 fun InfoPoint(title: String, description: String, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(Padding.ExtraSmall)
+        verticalArrangement = Arrangement.spacedBy(Dimen.ExtraSmallPadding)
     ) {
         FormattedText(text = title)
         FormattedText(text = description)

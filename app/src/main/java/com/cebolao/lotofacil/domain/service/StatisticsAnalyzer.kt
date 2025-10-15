@@ -24,53 +24,59 @@ class StatisticsAnalyzer @Inject constructor(
 
     private val analysisCache = ConcurrentHashMap<String, StatisticsReport>()
 
-    suspend fun analyze(draws: List<HistoricalDraw>): StatisticsReport = withContext(defaultDispatcher) {
-        if (draws.isEmpty()) return@withContext StatisticsReport()
+    suspend fun analyze(draws: List<HistoricalDraw>): StatisticsReport =
+        withContext(defaultDispatcher) {
+            if (draws.isEmpty()) return@withContext StatisticsReport()
 
-        val cacheKey = generateCacheKey(draws)
-        analysisCache[cacheKey]?.let { return@withContext it }
+            val cacheKey = generateCacheKey(draws)
+            analysisCache[cacheKey]?.let { return@withContext it }
 
-        val report = coroutineScope {
-            val mostFrequentDeferred = async { calculateMostFrequent(draws) }
-            val mostOverdueDeferred = async { calculateMostOverdue(draws) }
-            val distributionsDeferred = async { calculateAllDistributions(draws) }
-            val averageSumDeferred = async { calculateAverageSum(draws) }
+            val report = coroutineScope {
+                val mostFrequentDeferred = async { calculateMostFrequent(draws) }
+                val mostOverdueDeferred = async { calculateMostOverdue(draws) }
+                val distributionsDeferred = async { calculateAllDistributions(draws) }
+                val averageSumDeferred = async { calculateAverageSum(draws) }
 
-            val distributions = distributionsDeferred.await()
+                val distributions = distributionsDeferred.await()
 
-            StatisticsReport(
-                mostFrequentNumbers = mostFrequentDeferred.await(),
-                mostOverdueNumbers = mostOverdueDeferred.await(),
-                evenDistribution = distributions.evenDistribution,
-                primeDistribution = distributions.primeDistribution,
-                frameDistribution = distributions.frameDistribution,
-                portraitDistribution = distributions.portraitDistribution,
-                fibonacciDistribution = distributions.fibonacciDistribution,
-                multiplesOf3Distribution = distributions.multiplesOf3Distribution,
-                sumDistribution = distributions.sumDistribution,
-                averageSum = averageSumDeferred.await(),
-                totalDrawsAnalyzed = draws.size,
-                analysisDate = System.currentTimeMillis()
-            )
+                StatisticsReport(
+                    mostFrequentNumbers = mostFrequentDeferred.await(),
+                    mostOverdueNumbers = mostOverdueDeferred.await(),
+                    evenDistribution = distributions.evenDistribution,
+                    primeDistribution = distributions.primeDistribution,
+                    frameDistribution = distributions.frameDistribution,
+                    portraitDistribution = distributions.portraitDistribution,
+                    fibonacciDistribution = distributions.fibonacciDistribution,
+                    multiplesOf3Distribution = distributions.multiplesOf3Distribution,
+                    sumDistribution = distributions.sumDistribution,
+                    averageSum = averageSumDeferred.await(),
+                    totalDrawsAnalyzed = draws.size,
+                    analysisDate = System.currentTimeMillis()
+                )
+            }
+
+            manageCache(cacheKey, report)
+            report
         }
-
-        manageCache(cacheKey, report)
-        report
-    }
 
     private fun calculateMostFrequent(draws: List<HistoricalDraw>): List<NumberFrequency> {
-        val frequencies = IntArray(LotofacilConstants.VALID_NUMBER_RANGE.last + 1)
+        val frequencies = IntArray(26)  // 0-25, índice 25 é o maior número válido
+
         draws.forEach { draw ->
             draw.numbers.forEach { number ->
-                if (number in LotofacilConstants.VALID_NUMBER_RANGE) frequencies[number]++
+                if (number in LotofacilConstants.VALID_NUMBER_RANGE) {
+                    frequencies[number]++
+                }
             }
         }
-        return LotofacilConstants.VALID_NUMBER_RANGE.map { number ->
+
+        return (1..25).map { number ->
             NumberFrequency(number, frequencies[number])
         }
             .sortedByDescending { it.frequency }
             .take(TOP_NUMBERS_COUNT)
     }
+
 
     private fun calculateMostOverdue(draws: List<HistoricalDraw>): List<NumberFrequency> {
         if (draws.isEmpty()) return emptyList()
@@ -80,27 +86,36 @@ class StatisticsAnalyzer @Inject constructor(
 
         draws.forEach { draw ->
             draw.numbers.forEach { number ->
-                if (number in LotofacilConstants.VALID_NUMBER_RANGE && number !in lastSeenMap) {
+                if (number in 1..25 && number !in lastSeenMap) {  // SIMPLIFICADO
                     lastSeenMap[number] = draw.contestNumber
                 }
             }
         }
 
-        return LotofacilConstants.ALL_NUMBERS.map { number ->
+        return (1..25).map { number ->  // SIMPLIFICADO
             val lastSeen = lastSeenMap[number] ?: draws.last().contestNumber
             val overdue = lastContestNumber - lastSeen
             NumberFrequency(number, overdue)
-        }.sortedByDescending { it.frequency }.take(TOP_NUMBERS_COUNT)
+        }
+            .sortedByDescending { it.frequency }
+            .take(TOP_NUMBERS_COUNT)
     }
+
 
     private suspend fun calculateAllDistributions(draws: List<HistoricalDraw>): DistributionResults {
         return coroutineScope {
-            val evenDeferred = async { calculateDistribution(draws) { it.count { num -> num % 2 == 0 } } }
-            val primeDeferred = async { calculateDistribution(draws) { it.count { num -> num in LotofacilConstants.PRIMOS } } }
-            val frameDeferred = async { calculateDistribution(draws) { it.count { num -> num in LotofacilConstants.MOLDURA } } }
-            val portraitDeferred = async { calculateDistribution(draws) { it.count { num -> num in LotofacilConstants.MIOLO } } }
-            val fibonacciDeferred = async { calculateDistribution(draws) { it.count { num -> num in LotofacilConstants.FIBONACCI } } }
-            val multiplesOf3Deferred = async { calculateDistribution(draws) { it.count { num -> num % 3 == 0 } } }
+            val evenDeferred =
+                async { calculateDistribution(draws) { it.count { num -> num % 2 == 0 } } }
+            val primeDeferred =
+                async { calculateDistribution(draws) { it.count { num -> num in LotofacilConstants.PRIMOS } } }
+            val frameDeferred =
+                async { calculateDistribution(draws) { it.count { num -> num in LotofacilConstants.MOLDURA } } }
+            val portraitDeferred =
+                async { calculateDistribution(draws) { it.count { num -> num in LotofacilConstants.MIOLO } } }
+            val fibonacciDeferred =
+                async { calculateDistribution(draws) { it.count { num -> num in LotofacilConstants.FIBONACCI } } }
+            val multiplesOf3Deferred =
+                async { calculateDistribution(draws) { it.count { num -> num % 3 == 0 } } }
             val sumDeferred = async { calculateDistribution(draws, 10) { it.sum() } }
 
             DistributionResults(
@@ -115,7 +130,11 @@ class StatisticsAnalyzer @Inject constructor(
         }
     }
 
-    private fun calculateDistribution(draws: List<HistoricalDraw>, grouping: Int = 1, valueExtractor: (Set<Int>) -> Int): Map<Int, Int> {
+    private fun calculateDistribution(
+        draws: List<HistoricalDraw>,
+        grouping: Int = 1,
+        valueExtractor: (Set<Int>) -> Int
+    ): Map<Int, Int> {
         return draws.groupingBy { draw ->
             (valueExtractor(draw.numbers) / grouping) * grouping
         }.eachCount()

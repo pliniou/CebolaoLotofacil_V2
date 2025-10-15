@@ -6,16 +6,17 @@ import androidx.lifecycle.viewModelScope
 import com.cebolao.lotofacil.data.FilterPreset
 import com.cebolao.lotofacil.data.FilterState
 import com.cebolao.lotofacil.data.FilterType
-import com.cebolao.lotofacil.domain.repository.GameRepository
 import com.cebolao.lotofacil.domain.service.FilterSuccessCalculator
 import com.cebolao.lotofacil.domain.service.GameGenerator
 import com.cebolao.lotofacil.domain.usecase.GenerateGamesUseCase
 import com.cebolao.lotofacil.domain.usecase.GetLastDrawUseCase
+import com.cebolao.lotofacil.domain.usecase.SaveGeneratedGamesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onCompletion
@@ -23,11 +24,11 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.math.max
-import kotlin.math.min
+import kotlin.math.roundToInt
 
-private const val STATE_IN_TIMEOUT_MS = 5_000L
+private const val STATE_IN_TIMEOUT_MS = 5000L
 
+@Stable
 sealed interface NavigationEvent {
     data object NavigateToGeneratedGames : NavigationEvent
     data class ShowSnackbar(val message: String) : NavigationEvent
@@ -46,30 +47,40 @@ data class FiltersScreenState(
 @Stable
 sealed interface GenerationUiState {
     data object Idle : GenerationUiState
-    data class Loading(val message: String, val progress: Int = 0, val total: Int = 0) : GenerationUiState
+
+    data class Loading(
+        val message: String,
+        val progress: Int = 0,
+        val total: Int = 0
+    ) : GenerationUiState
 }
 
 @HiltViewModel
 class FiltersViewModel @Inject constructor(
-    private val gameRepository: GameRepository,
+    private val saveGeneratedGamesUseCase: SaveGeneratedGamesUseCase,
     private val generateGamesUseCase: GenerateGamesUseCase,
     private val filterSuccessCalculator: FilterSuccessCalculator,
     private val getLastDrawUseCase: GetLastDrawUseCase
 ) : ViewModel() {
 
-    private val _filterStates = MutableStateFlow(FilterType.entries.map { FilterState(type = it) })
+    private val _filterStates = MutableStateFlow(
+        FilterType.entries.map { FilterState(type = it) }
+    )
     private val _generationState = MutableStateFlow<GenerationUiState>(GenerationUiState.Idle)
     private val _lastDraw = MutableStateFlow<Set<Int>?>(null)
     private val _showResetDialog = MutableStateFlow(false)
     private val _filterInfoToShow = MutableStateFlow<FilterType?>(null)
-
     private val _eventFlow = MutableSharedFlow<NavigationEvent>(replay = 0)
-    val events = _eventFlow.asSharedFlow()
 
+    val events = _eventFlow.asSharedFlow()
     private var generationJob: Job? = null
 
-    val uiState = combine(
-        _filterStates, _generationState, _lastDraw, _showResetDialog, _filterInfoToShow
+    val uiState: StateFlow<FiltersScreenState> = combine(
+        _filterStates,
+        _generationState,
+        _lastDraw,
+        _showResetDialog,
+        _filterInfoToShow
     ) { filters, generation, lastDraw, showReset, infoToShow ->
         val activeFilters = filters.filter { it.isEnabled }
         FiltersScreenState(
@@ -80,13 +91,24 @@ class FiltersViewModel @Inject constructor(
             showResetDialog = showReset,
             filterInfoToShow = infoToShow
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STATE_IN_TIMEOUT_MS), FiltersScreenState())
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(STATE_IN_TIMEOUT_MS),
+        FiltersScreenState()
+    )
 
     init {
+        loadLastDraw()
+    }
+
+    private fun loadLastDraw() {
         viewModelScope.launch {
-            getLastDrawUseCase().onSuccess {
-                _lastDraw.value = it?.numbers
-            }
+            getLastDrawUseCase()
+                .onSuccess { _lastDraw.value = it?.numbers }
+                .onFailure {
+                    // Log error but don't crash, the UI can handle a null lastDraw
+                    android.util.Log.e("FiltersViewModel", "Error loading last draw", it)
+                }
         }
     }
 
@@ -103,18 +125,18 @@ class FiltersViewModel @Inject constructor(
 
     fun onFilterToggle(type: FilterType, isEnabled: Boolean) {
         _filterStates.update { states ->
-            states.map { f -> if (f.type == type) f.copy(isEnabled = isEnabled) else f }
+            states.map { if (it.type == type) it.copy(isEnabled = isEnabled) else it }
         }
     }
 
     fun onRangeAdjust(type: FilterType, newRange: ClosedFloatingPointRange<Float>) {
         val snappedRange = newRange.snapToStep(type.fullRange)
         _filterStates.update { currentStates ->
-            currentStates.map { filterState ->
-                if (filterState.type == type && filterState.selectedRange != snappedRange) {
-                    filterState.copy(selectedRange = snappedRange)
+            currentStates.map {
+                if (it.type == type && it.selectedRange != snappedRange) {
+                    it.copy(selectedRange = snappedRange)
                 } else {
-                    filterState
+                    it
                 }
             }
         }
@@ -122,8 +144,8 @@ class FiltersViewModel @Inject constructor(
 
     fun generateGames(quantity: Int) {
         if (_generationState.value is GenerationUiState.Loading) return
-        generationJob?.cancel()
 
+        generationJob?.cancel()
         generationJob = viewModelScope.launch {
             generateGamesUseCase(quantity, _filterStates.value)
                 .onCompletion {
@@ -131,25 +153,30 @@ class FiltersViewModel @Inject constructor(
                         _generationState.value = GenerationUiState.Idle
                     }
                 }
-                .collect { progress ->
-                    when (val type = progress.progressType) {
-                        is GameGenerator.ProgressType.Started ->
-                            _generationState.value = GenerationUiState.Loading("Iniciando...", 0, quantity)
-                        is GameGenerator.ProgressType.HeuristicStep ->
-                            _generationState.value = GenerationUiState.Loading(type.message, progress.current, progress.total)
-                        is GameGenerator.ProgressType.Attempt ->
-                            _generationState.value = GenerationUiState.Loading("Gerando...", progress.current, progress.total)
-                        is GameGenerator.ProgressType.Finished -> {
-                            gameRepository.addGeneratedGames(type.games)
-                            _eventFlow.emit(NavigationEvent.NavigateToGeneratedGames)
-                            _generationState.value = GenerationUiState.Idle
-                        }
-                        is GameGenerator.ProgressType.Failed -> {
-                            _eventFlow.emit(NavigationEvent.ShowSnackbar(type.reason))
-                            _generationState.value = GenerationUiState.Idle
-                        }
-                    }
-                }
+                .collect { progress -> handleGenerationProgress(progress) }
+        }
+    }
+
+    private suspend fun handleGenerationProgress(progress: GameGenerator.GenerationProgress) {
+        when (val type = progress.progressType) {
+            is GameGenerator.ProgressType.Started -> {
+                _generationState.value = GenerationUiState.Loading("Iniciando...", 0, progress.total)
+            }
+            is GameGenerator.ProgressType.HeuristicStep -> {
+                _generationState.value = GenerationUiState.Loading(type.message, progress.current, progress.total)
+            }
+            is GameGenerator.ProgressType.Attempt -> {
+                _generationState.value = GenerationUiState.Loading("Gerando...", progress.current, progress.total)
+            }
+            is GameGenerator.ProgressType.Finished -> {
+                saveGeneratedGamesUseCase(type.games)
+                _eventFlow.emit(NavigationEvent.NavigateToGeneratedGames)
+                _generationState.value = GenerationUiState.Idle
+            }
+            is GameGenerator.ProgressType.Failed -> {
+                _eventFlow.emit(NavigationEvent.ShowSnackbar(type.reason))
+                _generationState.value = GenerationUiState.Idle
+            }
         }
     }
 
@@ -178,14 +205,12 @@ class FiltersViewModel @Inject constructor(
     fun dismissFilterInfo() {
         _filterInfoToShow.value = null
     }
+}
 
-    private fun ClosedFloatingPointRange<Float>.snapToStep(
-        fullRange: ClosedFloatingPointRange<Float>
-    ): ClosedFloatingPointRange<Float> {
-        val correctedStart = min(start, endInclusive)
-        val correctedEnd = max(start, endInclusive)
-        val snappedStart = correctedStart.toInt().toFloat().coerceIn(fullRange.start, fullRange.endInclusive)
-        val snappedEnd = correctedEnd.toInt().toFloat().coerceIn(fullRange.start, fullRange.endInclusive)
-        return snappedStart..snappedEnd
-    }
+private fun ClosedFloatingPointRange<Float>.snapToStep(
+    fullRange: ClosedFloatingPointRange<Float>
+): ClosedFloatingPointRange<Float> {
+    val start = this.start.roundToInt().toFloat().coerceIn(fullRange.start, fullRange.endInclusive)
+    val end = this.endInclusive.roundToInt().toFloat().coerceIn(fullRange.start, fullRange.endInclusive)
+    return start..end
 }

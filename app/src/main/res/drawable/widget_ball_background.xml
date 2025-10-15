@@ -2,14 +2,8 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="oval">
 
-    <!--
-        Usa uma cor de superfície ligeiramente mais clara/escura que o fundo
-        para criar contraste, adaptando-se ao tema do sistema.
-    -->
-    <solid android:color="?android:attr/colorBackground" />
+    <solid android:color="?attr/colorSurface" />
 
     <stroke
         android:width="1dp"
-        android:color="#33000000" /> <!-- Borda sutil preta com 20% de opacidade -->
-
-</shape>
+        android:color="#1A000000" /> </shape>

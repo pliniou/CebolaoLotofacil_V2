@@ -13,8 +13,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Save
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -32,8 +32,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cebolao.lotofacil.R
@@ -42,12 +40,12 @@ import com.cebolao.lotofacil.data.LotofacilConstants
 import com.cebolao.lotofacil.ui.components.AnimateOnEntry
 import com.cebolao.lotofacil.ui.components.BarChart
 import com.cebolao.lotofacil.ui.components.CheckResultCard
+import com.cebolao.lotofacil.ui.components.MessageState
 import com.cebolao.lotofacil.ui.components.NumberGrid
 import com.cebolao.lotofacil.ui.components.PrimaryActionButton
 import com.cebolao.lotofacil.ui.components.SectionCard
 import com.cebolao.lotofacil.ui.components.SimpleStatsCard
-import com.cebolao.lotofacil.ui.theme.Padding
-import com.cebolao.lotofacil.ui.theme.Sizes
+import com.cebolao.lotofacil.ui.theme.Dimen
 import com.cebolao.lotofacil.viewmodels.CheckerUiEvent
 import com.cebolao.lotofacil.viewmodels.CheckerUiState
 import com.cebolao.lotofacil.viewmodels.CheckerViewModel
@@ -81,15 +79,21 @@ fun CheckerScreen(checkerViewModel: CheckerViewModel = hiltViewModel()) {
     AppScreen(
         title = stringResource(R.string.checker_title),
         subtitle = stringResource(R.string.checker_subtitle),
-        navigationIcon = { Icon(Icons.Default.Analytics, contentDescription = stringResource(R.string.checker_title), tint = MaterialTheme.colorScheme.primary) },
+        navigationIcon = {
+            Icon(
+                Icons.Default.Analytics,
+                contentDescription = stringResource(R.string.checker_title),
+                tint = MaterialTheme.colorScheme.primary
+            )
+        },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             BottomActionsBar(
                 selectedCount = selectedNumbers.size,
                 isLoading = checkerState is CheckerUiState.Loading,
                 isButtonEnabled = isButtonEnabled,
-                onClearClick = { checkerViewModel.clearSelection() },
-                onCheckClick = { checkerViewModel.onCheckGameClicked() },
+                onClearClick = { checkerViewModel.clearNumbers() },
+                onCheckClick = { checkerViewModel.checkGame() },
                 onSaveClick = { checkerViewModel.saveGame() }
             )
         }
@@ -98,22 +102,22 @@ fun CheckerScreen(checkerViewModel: CheckerViewModel = hiltViewModel()) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            contentPadding = PaddingValues(top = Padding.Card, bottom = Padding.BottomBarOffset),
-            verticalArrangement = Arrangement.spacedBy(Padding.Large)
+            contentPadding = PaddingValues(top = Dimen.CardPadding, bottom = Dimen.BottomBarOffset),
+            verticalArrangement = Arrangement.spacedBy(Dimen.LargePadding)
         ) {
             item {
                 Column(
-                    modifier = Modifier.padding(horizontal = Padding.Screen),
-                    verticalArrangement = Arrangement.spacedBy(Padding.Large)
+                    modifier = Modifier.padding(horizontal = Dimen.ScreenPadding),
+                    verticalArrangement = Arrangement.spacedBy(Dimen.LargePadding)
                 ) {
                     SelectionProgress(selectedNumbers.size)
                     AnimateOnEntry {
                         SectionCard {
                             NumberGrid(
                                 selectedNumbers = selectedNumbers,
-                                onNumberClick = { checkerViewModel.onNumberClicked(it) },
+                                onNumberClick = { checkerViewModel.toggleNumber(it) },
                                 maxSelection = LotofacilConstants.GAME_SIZE,
-                                numberSize = Sizes.NumberBallSmall
+                                numberSize = Dimen.NumberBallSmall
                             )
                         }
                     }
@@ -124,11 +128,17 @@ fun CheckerScreen(checkerViewModel: CheckerViewModel = hiltViewModel()) {
                 AnimatedContent(
                     targetState = checkerState,
                     label = "result-content",
-                    modifier = Modifier.padding(horizontal = Padding.Screen)
+                    modifier = Modifier.padding(horizontal = Dimen.ScreenPadding)
                 ) { state ->
                     when (state) {
                         is CheckerUiState.Success -> ResultSection(state.result, state.simpleStats)
-                        is CheckerUiState.Error -> ErrorCard(state.messageResId)
+                        is CheckerUiState.Error -> MessageState(
+                            icon = Icons.Default.ErrorOutline,
+                            title = stringResource(R.string.general_error_title),
+                            message = stringResource(state.messageResId),
+                            iconTint = MaterialTheme.colorScheme.error
+                        )
+
                         else -> Unit
                     }
                 }
@@ -139,7 +149,7 @@ fun CheckerScreen(checkerViewModel: CheckerViewModel = hiltViewModel()) {
 
 @Composable
 private fun ResultSection(result: CheckResult, stats: ImmutableList<Pair<String, String>>) {
-    Column(verticalArrangement = Arrangement.spacedBy(Padding.Large)) {
+    Column(verticalArrangement = Arrangement.spacedBy(Dimen.LargePadding)) {
         AnimateOnEntry { CheckResultCard(result) }
         AnimateOnEntry(delayMillis = 100) { SimpleStatsCard(stats) }
         AnimateOnEntry(delayMillis = 200) { BarChartCard(result) }
@@ -149,7 +159,10 @@ private fun ResultSection(result: CheckResult, stats: ImmutableList<Pair<String,
 @Composable
 private fun BarChartCard(result: CheckResult) {
     SectionCard {
-        Text(stringResource(R.string.checker_recent_hits_chart_title), style = MaterialTheme.typography.titleMedium)
+        Text(
+            stringResource(R.string.checker_recent_hits_chart_title),
+            style = MaterialTheme.typography.titleMedium
+        )
         val chartData = result.recentHits.map { it.first.toString().takeLast(4) to it.second }
         val maxValue = (chartData.maxOfOrNull { it.second }?.coerceAtLeast(10) ?: 10)
         BarChart(
@@ -157,7 +170,7 @@ private fun BarChartCard(result: CheckResult) {
             maxValue = maxValue,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(Sizes.BarChartHeight)
+                .height(Dimen.BarChartHeight)
         )
     }
 }
@@ -168,13 +181,13 @@ private fun SelectionProgress(count: Int) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(Padding.Small)
+        verticalArrangement = Arrangement.spacedBy(Dimen.SmallPadding)
     ) {
         LinearProgressIndicator(
             progress = { progress },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(Sizes.ProgressBar)
+                .height(Dimen.ProgressBarHeight)
                 .clip(MaterialTheme.shapes.small),
         )
         Text(
@@ -194,25 +207,34 @@ private fun BottomActionsBar(
     onCheckClick: () -> Unit,
     onSaveClick: () -> Unit
 ) {
-    Surface(shadowElevation = 8.dp, tonalElevation = 3.dp) {
+    Surface(
+        shadowElevation = Dimen.Elevation.Level4,
+        tonalElevation = Dimen.Elevation.Level2
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = Padding.Card, vertical = Padding.Medium),
-            horizontalArrangement = Arrangement.spacedBy(Padding.Medium),
+                .padding(horizontal = Dimen.CardPadding, vertical = Dimen.MediumPadding),
+            horizontalArrangement = Arrangement.spacedBy(Dimen.MediumPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
             OutlinedIconButton(
                 onClick = onClearClick,
                 enabled = selectedCount > 0 && !isLoading
             ) {
-                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.checker_clear_button_description))
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = stringResource(R.string.checker_clear_button_description)
+                )
             }
             OutlinedIconButton(
                 onClick = onSaveClick,
                 enabled = isButtonEnabled
             ) {
-                Icon(Icons.Default.Save, contentDescription = stringResource(R.string.checker_save_button_description))
+                Icon(
+                    Icons.Default.Save,
+                    contentDescription = stringResource(R.string.checker_save_button_description)
+                )
             }
             PrimaryActionButton(
                 modifier = Modifier.weight(1f),
@@ -223,20 +245,5 @@ private fun BottomActionsBar(
                 Text(stringResource(R.string.checker_check_button))
             }
         }
-    }
-}
-
-@Composable
-private fun ErrorCard(messageResId: Int) {
-    SectionCard(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
-    ) {
-        Text(
-            text = stringResource(messageResId),
-            color = MaterialTheme.colorScheme.onErrorContainer,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(),
-            style = MaterialTheme.typography.bodyMedium
-        )
     }
 }

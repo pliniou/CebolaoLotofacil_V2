@@ -13,8 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.cebolao.lotofacil.R
-import com.cebolao.lotofacil.ui.theme.Padding
-import com.cebolao.lotofacil.ui.theme.Sizes
+import com.cebolao.lotofacil.ui.theme.Dimen
 
 @Composable
 fun StudioHero(modifier: Modifier = Modifier) {
@@ -22,12 +21,12 @@ fun StudioHero(modifier: Modifier = Modifier) {
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(Padding.Medium)
+            verticalArrangement = Arrangement.spacedBy(Dimen.MediumPadding)
         ) {
             Image(
                 painter = painterResource(id = R.drawable.logo_cebola),
                 contentDescription = stringResource(R.string.studio_name),
-                modifier = Modifier.size(Sizes.Logo)
+                modifier = Modifier.size(Dimen.Logo)
             )
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(

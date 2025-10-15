@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
     <!-- Arquivo de exemplo: não realizar backup de arquivos grandes ou sensíveis -->
-    <exclude domain="file" path="lotofacil_resultados.txt" />
+    <exclude
+        domain="file"
+        path="lotofacil_resultados.txt" />
 </full-backup-content>

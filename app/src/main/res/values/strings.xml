@@ -132,8 +132,10 @@
 
     <string name="about_bolao_desc_body">Participar de bolões permite cobrir mais combinações dividindo custos e prêmios. É uma forma social de jogar com responsabilidade.</string>
     <string name="about_bolao_desc_footer"><![CDATA[<i>Dica:</i> defina regras claras de participação e divisão antes de apostar.]]></string>
-    
+
     <string name="widget_description">Exibe o resultado do último concurso da Lotofácil.</string>
     <string name="_00">00</string>
     <string name="games_clear_confirm">Excluir?</string>
+    <string name="general_error_title">Erro</string>
+    <string name="checker_incomplete_game_message">Ainda esta incompleto, jovem.</string>
 </resources>

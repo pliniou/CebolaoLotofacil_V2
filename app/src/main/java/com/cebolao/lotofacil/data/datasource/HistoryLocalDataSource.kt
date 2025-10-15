@@ -39,7 +39,10 @@ class HistoryLocalDataSourceImpl @Inject constructor(
             .distinctBy { it.contestNumber }
             .sortedByDescending { it.contestNumber }
 
-        Log.d(TAG, "Loaded ${allDraws.size} contests from local sources (Assets: ${assetHistory.size}, DataStore: ${savedHistory.size})")
+        Log.d(
+            TAG,
+            "Loaded ${allDraws.size} contests from local sources (Assets: ${assetHistory.size}, DataStore: ${savedHistory.size})"
+        )
         allDraws
     }
 
@@ -48,7 +51,9 @@ class HistoryLocalDataSourceImpl @Inject constructor(
 
         // Formata: "NUMERO - 01,02,..."
         val newHistoryEntries = newDraws.map { draw ->
-            "${draw.contestNumber} - ${draw.numbers.sorted().joinToString(",") { "%02d".format(it) }}"
+            "${draw.contestNumber} - ${
+                draw.numbers.sorted().joinToString(",") { "%02d".format(it) }
+            }"
         }.toSet()
 
         userPreferencesRepository.addDynamicHistoryEntries(newHistoryEntries)

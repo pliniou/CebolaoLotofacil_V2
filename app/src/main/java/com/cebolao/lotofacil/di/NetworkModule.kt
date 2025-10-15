@@ -76,7 +76,8 @@ object NetworkModule {
                         Thread.sleep(delay)
 
                     } catch (e: IOException) {
-                        exception = e // Guarda a exceção para relançar se todas as tentativas falharem
+                        exception =
+                            e // Guarda a exceção para relançar se todas as tentativas falharem
                     } finally {
                         // Fecha o corpo da resposta apenas se for uma resposta 429, para permitir a re-tentativa
                         if (response?.code == 429) {
@@ -87,7 +88,8 @@ object NetworkModule {
                 }
 
                 // Se todas as tentativas falharem, retorna a última resposta ou lança a última exceção
-                return response ?: throw exception ?: IOException("Request failed after ${Constants.MAX_RETRIES} attempts")
+                return response ?: throw exception
+                    ?: IOException("Request failed after ${Constants.MAX_RETRIES} attempts")
             }
         }
     }

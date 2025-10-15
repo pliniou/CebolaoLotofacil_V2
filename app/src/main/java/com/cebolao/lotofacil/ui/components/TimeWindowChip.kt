@@ -15,13 +15,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.unit.dp
-import com.cebolao.lotofacil.ui.theme.Padding
-
-private object TimeWindowChipConstants {
-    const val BORDER_ANIMATION_MS = 250
-    const val BORDER_ALPHA = 0.3f
-}
+import com.cebolao.lotofacil.ui.theme.AppConfig
+import com.cebolao.lotofacil.ui.theme.Dimen
 
 @Composable
 fun TimeWindowChip(
@@ -32,12 +27,12 @@ fun TimeWindowChip(
 ) {
     val container by animateColorAsState(
         targetValue = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-        animationSpec = tween(TimeWindowChipConstants.BORDER_ANIMATION_MS),
+        animationSpec = tween(AppConfig.Animation.ShortDuration),
         label = "timeWindowChipContainer"
     )
     val content by animateColorAsState(
         targetValue = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
-        animationSpec = tween(TimeWindowChipConstants.BORDER_ANIMATION_MS),
+        animationSpec = tween(AppConfig.Animation.ShortDuration),
         label = "timeWindowChipContent"
     )
 
@@ -49,13 +44,13 @@ fun TimeWindowChip(
         ),
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = container),
-        border = if (!isSelected) BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = TimeWindowChipConstants.BORDER_ALPHA)) else null
+        border = if (!isSelected) BorderStroke(Dimen.Border.Default, MaterialTheme.colorScheme.outline.copy(alpha = AppConfig.UI.TimeWindowChipBorderAlpha)) else null
     ) {
         Text(
             text = label,
             color = content,
             style = MaterialTheme.typography.labelLarge,
-            modifier = Modifier.padding(horizontal = Padding.Card, vertical = Padding.Small)
+            modifier = Modifier.padding(horizontal = Dimen.CardPadding, vertical = Dimen.SmallPadding)
         )
     }
 }

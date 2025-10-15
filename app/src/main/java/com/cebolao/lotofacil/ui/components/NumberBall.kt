@@ -23,17 +23,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.cebolao.lotofacil.ui.theme.Sizes
-
-private object NumberBallConstants {
-    val ELEVATION_SELECTED = 4.dp
-    val ELEVATION_DEFAULT = 1.dp
-    val BORDER_WIDTH = 1.dp
-    const val FONT_SIZE_FACTOR = 3.2f
-    const val ANIMATION_DURATION_MS = 250
-}
+import com.cebolao.lotofacil.ui.theme.AppConfig
+import com.cebolao.lotofacil.ui.theme.Dimen
 
 enum class NumberBallVariant { Primary, Secondary, Lotofacil }
 
@@ -41,15 +33,18 @@ enum class NumberBallVariant { Primary, Secondary, Lotofacil }
 fun NumberBall(
     number: Int,
     modifier: Modifier = Modifier,
-    size: Dp = Sizes.NumberBall,
+    size: Dp = Dimen.NumberBall,
     isSelected: Boolean = false,
     isHighlighted: Boolean = false,
     isDisabled: Boolean = false,
     variant: NumberBallVariant = NumberBallVariant.Primary
 ) {
     val elevation by animateDpAsState(
-        targetValue = if (isSelected) NumberBallConstants.ELEVATION_SELECTED else NumberBallConstants.ELEVATION_DEFAULT,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+        targetValue = if (isSelected) Dimen.Elevation.Level2 else Dimen.Elevation.Level1,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
         label = "ballElevation"
     )
 
@@ -60,9 +55,21 @@ fun NumberBall(
         variant = variant
     )
 
-    val animatedContainer by animateColorAsState(containerColor, tween(NumberBallConstants.ANIMATION_DURATION_MS), label = "ballContainer")
-    val animatedContent by animateColorAsState(contentColor, tween(NumberBallConstants.ANIMATION_DURATION_MS), label = "ballContent")
-    val animatedBorder by animateColorAsState(borderColor, tween(NumberBallConstants.ANIMATION_DURATION_MS), label = "ballBorder")
+    val animatedContainer by animateColorAsState(
+        containerColor,
+        tween(AppConfig.Animation.ShortDuration),
+        label = "ballContainer"
+    )
+    val animatedContent by animateColorAsState(
+        contentColor,
+        tween(AppConfig.Animation.ShortDuration),
+        label = "ballContent"
+    )
+    val animatedBorder by animateColorAsState(
+        borderColor,
+        tween(AppConfig.Animation.ShortDuration),
+        label = "ballBorder"
+    )
 
     Box(
         modifier = modifier
@@ -82,7 +89,7 @@ fun NumberBall(
                 shape = CircleShape
             )
             .border(
-                width = NumberBallConstants.BORDER_WIDTH,
+                width = Dimen.Border.Default,
                 color = animatedBorder,
                 shape = CircleShape
             )
@@ -102,7 +109,7 @@ fun NumberBall(
             text = "%02d".format(number),
             color = animatedContent,
             style = MaterialTheme.typography.bodyMedium.copy(
-                fontSize = (size.value / NumberBallConstants.FONT_SIZE_FACTOR).sp,
+                fontSize = (size.value / AppConfig.UI.NumberBallFontSizeFactor).sp,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold
             )
         )
@@ -128,16 +135,19 @@ private fun rememberBallColors(
             MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
             MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
         )
+
         isSelected -> Triple(
             primaryTone,
             MaterialTheme.colorScheme.onPrimary,
             primaryTone.copy(alpha = 0.3f)
         )
+
         isHighlighted -> Triple(
             MaterialTheme.colorScheme.primaryContainer,
             MaterialTheme.colorScheme.onPrimaryContainer,
             MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
         )
+
         else -> Triple(
             MaterialTheme.colorScheme.surfaceVariant,
             MaterialTheme.colorScheme.onSurfaceVariant,

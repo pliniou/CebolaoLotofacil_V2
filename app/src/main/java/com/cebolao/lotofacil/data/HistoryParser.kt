@@ -20,13 +20,16 @@ object HistoryParser {
 
             val numbers = numbersStr.split(',')
                 .mapNotNull { it.trim().toIntOrNull() }
-                .filter { it in LotofacilConstants.VALID_NUMBER_RANGE }
+                .filter { it in LotofacilConstants.NUMBER_RANGE }
                 .toSet()
 
             return if (numbers.size == LotofacilConstants.GAME_SIZE) {
                 HistoricalDraw(contestNumber, numbers)
             } else {
-                Log.w(TAG, "Linha de histórico inválida para o concurso $contestNumber: dezenas inválidas ou contagem incorreta. Linha: '$line'")
+                Log.w(
+                    TAG,
+                    "Linha de histórico inválida para o concurso $contestNumber: dezenas inválidas ou contagem incorreta. Linha: '$line'"
+                )
                 null
             }
         } catch (e: Exception) {
