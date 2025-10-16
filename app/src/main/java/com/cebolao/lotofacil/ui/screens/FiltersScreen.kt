@@ -199,7 +199,6 @@ private fun FilterPresetItem(preset: FilterPreset, onClick: () -> Unit) {
     }
 }
 
-
 @Composable
 private fun ResetFiltersDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
     AlertDialog(

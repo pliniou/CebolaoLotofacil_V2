@@ -32,8 +32,8 @@ val LightOutline = Color(0xFF80747B)
 val LightOutlineVariant = Color(0xFFD2C2CB)
 
 // Tema Escuro
-val DarkPrimary = Color(0xFFFFA9F9) // CORREÇÃO: Cor mais vibrante para melhor contraste.
-val DarkOnPrimary = Color(0xFF5C0056) // CORREÇÃO: Ajuste para garantir legibilidade sobre a nova primária.
+val DarkPrimary = Color(0xFFFFA9F9)
+val DarkOnPrimary = Color(0xFF5C0056)
 val DarkPrimaryContainer = Color(0xFF7A0071)
 val DarkOnPrimaryContainer = Color(0xFFFFD7F3)
 val DarkSecondary = Color(0xFFDBBEDB)

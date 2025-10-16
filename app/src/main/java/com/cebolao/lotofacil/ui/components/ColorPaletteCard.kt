@@ -68,8 +68,6 @@ private fun PaletteRowItem(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    // CORREÇÃO: Aplicar um MaterialTheme local para que os componentes da linha
-    // usem o colorScheme específico da paleta, fornecendo uma prévia correta.
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
@@ -94,7 +92,7 @@ private fun PaletteRowItem(
             Text(
                 text = palette.paletteName,
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary // Usa a cor primária da paleta
+                color = MaterialTheme.colorScheme.primary
             )
         }
     }

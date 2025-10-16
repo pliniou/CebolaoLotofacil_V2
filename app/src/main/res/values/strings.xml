@@ -9,7 +9,6 @@
     <string name="error_load_data_failed">Não foi possível carregar os dados. Sua conexão com a sorte (e a internet) está ativa?</string>
     <string name="general_loading_analysis">Analisando o potencial do seu jogo…</string>
     <string name="general_analysis_failed_snackbar">Falha na análise. A sorte é tímida às vezes.</string>
-    <string name="general_copied_to_clipboard">Copiado para a área de transferência!</string>
     <string name="general_cancel">Cancelar</string>
     <string name="general_close">Fechar</string>
     <string name="general_loading">Carregando…</string>
@@ -63,8 +62,6 @@
 
     <string name="games_title">Meus Jogos</string>
     <string name="games_subtitle">Visualize, analise e gerencie suas apostas</string>
-    <string name="games_export_button_description">Exportar jogos</string>
-    <string name="games_import_button_description">Importar jogos</string>
     <string name="games_clear_unpinned_button_description">Limpar jogos não fixados</string>
     <string name="games_clear_dialog_title">Limpar Jogos?</string>
     <string name="games_clear_dialog_message">Isso removerá todos os jogos que não estão fixados. Ação sem volta!</string>
@@ -76,20 +73,10 @@
     <string name="games_delete_game_description">Excluir jogo</string>
     <string name="games_share_game_description">Compartilhar jogo</string>
     <string name="games_analyze_button">Analisar</string>
-    <string name="games_check_button">Conferir</string>
     <string name="games_analysis_dialog_title">Análise do Jogo</string>
     <string name="games_empty_state_title">Nenhum jogo por aqui ainda</string>
     <string name="games_empty_state_description">Vá para o Gerador Inteligente e crie suas primeiras combinações. A sorte favorece quem se prepara!</string>
-    <string name="games_export_dialog_title">Exportar Jogos</string>
-    <string name="games_export_dialog_share_button">Compartilhar</string>
-    <string name="games_export_dialog_copy_button">Copiar</string>
     <string name="games_share_chooser_title">Compartilhar jogos</string>
-    <string name="games_import_dialog_title">Importar Jogos</string>
-    <string name="games_import_dialog_message">Cole aqui os jogos exportados (um por linha) e deixe a mágica acontecer.</string>
-    <string name="games_import_dialog_textfield_label">Texto de importação</string>
-    <string name="games_import_dialog_confirm_button">Importar</string>
-    <string name="games_import_success_message">Importados %1$d jogos. Boa sorte!</string>
-    <string name="games_import_fail_message">Não encontrei nenhum jogo válido no texto. Verifique o formato.</string>
     <string name="games_clear_confirm">Limpar</string>
 
     <string name="checker_title">Conferidor</string>
@@ -113,7 +100,7 @@
     <string name="checker_incomplete_game_message">Faltam números! Selecione 15 dezenas para conferir.</string>
 
     <string name="share_game_subject">Um jogo da Lotofácil para você!</string>
-    <string name="share_game_message_template"><![CDATA[Gerei este jogo da Lotofácil com o app Cebolão Generator! Se ganhar, não esquece dos amigos... 😉\n\n<b>%1$s</b>]]></string>
+    <string name="share_game_message_template"><![CDATA[Gerei este jogo da Lotofácil com o app Cebolão Generator! Se ganhar, não esquece dos amigos… 😉\n\n<b>%1$s</b>]]></string>
 
     <string name="about_title">Sobre e Ajuda</string>
     <string name="about_subtitle">Informações, regras e configurações</string>

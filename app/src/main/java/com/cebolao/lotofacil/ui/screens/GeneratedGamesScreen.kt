@@ -200,7 +200,7 @@ private fun GamesList(
             start = Dimen.ScreenPadding,
             end = Dimen.ScreenPadding,
             top = Dimen.CardPadding,
-            bottom = Dimen.BottomBarOffset // CORREÇÃO: Uso do offset para consistência.
+            bottom = Dimen.BottomBarOffset
         ),
         verticalArrangement = Arrangement.spacedBy(Dimen.LargePadding)
     ) {

@@ -261,7 +261,6 @@ private fun AccumulatedPrizeCard(nextDrawInfo: NextDrawInfo) {
     }
 }
 
-
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun LastDrawSection(lastDraw: HistoricalDraw, winnerData: ImmutableList<WinnerData>) {

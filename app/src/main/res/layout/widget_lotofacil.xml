@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -18,7 +19,7 @@
             android:layout_height="@dimen/medium_icon_size"
             android:contentDescription="@string/app_name"
             android:src="@drawable/ic_lotofacil_logo"
-            android:tint="?android:attr/textColorPrimary" />
+            app:tint="?android:attr/textColorPrimary" />
 
         <TextView
             android:id="@+id/widget_title"
@@ -36,7 +37,7 @@
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/home_sync_button_description"
             android:src="@drawable/ic_refresh"
-            android:tint="?android:attr/textColorSecondary" />
+            app:tint="?android:attr/textColorSecondary" />
     </LinearLayout>
 
     <FrameLayout

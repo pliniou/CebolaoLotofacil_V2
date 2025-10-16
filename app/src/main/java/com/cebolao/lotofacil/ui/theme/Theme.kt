@@ -41,7 +41,6 @@ fun CebolaoLotofacilTheme(
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
-            // O cast para Activity é necessário para acessar a 'window'
             val window = (view.context as Activity).window
             window.statusBarColor = Color.Transparent.toArgb()
             window.navigationBarColor = Color.Transparent.toArgb()
