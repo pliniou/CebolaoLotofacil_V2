@@ -9,7 +9,7 @@ import androidx.compose.ui.unit.dp
 object Dimen {
 
     //region Espaçamentos (Padding)
-    val ScreenPadding = 20.dp
+    val ScreenPadding = 16.dp
     val LargePadding = 24.dp
     val CardPadding = 16.dp
     val MediumPadding = 12.dp

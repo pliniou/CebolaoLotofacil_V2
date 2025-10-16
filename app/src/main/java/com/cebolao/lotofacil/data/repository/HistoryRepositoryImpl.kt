@@ -98,11 +98,11 @@ class HistoryRepositoryImpl @Inject constructor(
             _syncStatus.value = SyncStatus.Success
         }.onFailure { e ->
             Log.e(TAG, "Failed to sync history", e)
-            _syncStatus.value = SyncStatus.Failed("Failed to sync history: ${e.message}")
+            _syncStatus.value = SyncStatus.Failed(e)
         }
     }
 
-    override suspend fun getLatestContestDetails(): LotofacilApiResult? {
+    override suspend fun getLatestApiResult(): LotofacilApiResult? {
         return latestApiResultCache ?: remoteDataSource.getLatestDraw()?.also {
             latestApiResultCache = it
         }

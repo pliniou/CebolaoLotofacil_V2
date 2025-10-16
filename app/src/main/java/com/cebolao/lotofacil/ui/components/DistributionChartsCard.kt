@@ -4,11 +4,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MultiChoiceSegmentedButtonRow
-import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -41,14 +42,16 @@ fun DistributionChartsCard(
         Column(verticalArrangement = Arrangement.spacedBy(Dimen.CardPadding)) {
             Text(text = "Distribuição de Padrões", style = MaterialTheme.typography.titleLarge)
 
-            MultiChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                StatisticPattern.entries.forEach { pattern ->
-                    SegmentedButton(
-                        checked = selectedPattern == pattern,
-                        onCheckedChange = { onPatternSelected(pattern) },
-                        shape = MaterialTheme.shapes.medium,
-                        icon = { Icon(imageVector = pattern.icon, contentDescription = null) },
-                        label = { Text(pattern.title) }
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Dimen.SmallPadding)
+            ) {
+                items(StatisticPattern.entries.toTypedArray()) { pattern ->
+                    FilterChip(
+                        selected = selectedPattern == pattern,
+                        onClick = { onPatternSelected(pattern) },
+                        label = { Text(pattern.title) },
+                        leadingIcon = { Icon(imageVector = pattern.icon, contentDescription = null) }
                     )
                 }
             }

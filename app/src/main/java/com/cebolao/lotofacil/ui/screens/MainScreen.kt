@@ -78,8 +78,10 @@ fun MainScreen(
                                 }
                             },
                             icon = {
-                                val icon =
-                                    if (selected) screen.selectedIcon else screen.unselectedIcon
+                                val icon = when {
+                                    selected -> screen.selectedIcon
+                                    else -> screen.unselectedIcon
+                                }
                                 if (icon != null) {
                                     Icon(
                                         imageVector = icon,

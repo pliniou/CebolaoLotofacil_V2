@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -45,6 +46,7 @@ import com.cebolao.lotofacil.domain.model.WinnerData
 import com.cebolao.lotofacil.ui.components.AnimateOnEntry
 import com.cebolao.lotofacil.ui.components.AppDivider
 import com.cebolao.lotofacil.ui.components.DistributionChartsCard
+import com.cebolao.lotofacil.ui.components.InfoRow
 import com.cebolao.lotofacil.ui.components.MessageState
 import com.cebolao.lotofacil.ui.components.NumberBall
 import com.cebolao.lotofacil.ui.components.NumberBallVariant
@@ -61,10 +63,11 @@ import java.util.Locale
 
 private object HomeScreenConstants {
     const val NEXT_DRAW_ANIM_DELAY = 50L
-    const val LAST_DRAW_ANIM_DELAY = 150L
-    const val STATS_PANEL_ANIM_DELAY = 250L
-    const val CHARTS_ANIM_DELAY = 350L
-    const val EXPLANATION_CARD_ANIM_DELAY = 450L
+    const val ACCUMULATED_PRIZE_ANIM_DELAY = 100L
+    const val LAST_DRAW_ANIM_DELAY = 200L
+    const val STATS_PANEL_ANIM_DELAY = 300L
+    const val CHARTS_ANIM_DELAY = 400L
+    const val EXPLANATION_CARD_ANIM_DELAY = 500L
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -127,7 +130,10 @@ fun HomeScreen(homeViewModel: HomeViewModel = hiltViewModel()) {
                     }
                 } else {
                     LazyColumn(
-                        contentPadding = PaddingValues(bottom = Dimen.LargePadding),
+                        contentPadding = PaddingValues(
+                            horizontal = Dimen.ScreenPadding,
+                            vertical = Dimen.CardPadding
+                        ),
                         verticalArrangement = Arrangement.spacedBy(Dimen.LargePadding)
                     ) {
                         when (val screenState = uiState.screenState) {
@@ -145,16 +151,21 @@ fun HomeScreen(homeViewModel: HomeViewModel = hiltViewModel()) {
                             is HomeScreenState.Success -> {
                                 item(key = "next_draw") {
                                     AnimateOnEntry(
-                                        modifier = Modifier.padding(horizontal = Dimen.ScreenPadding),
                                         delayMillis = HomeScreenConstants.NEXT_DRAW_ANIM_DELAY
                                     ) {
                                         screenState.nextDrawInfo?.let { NextDrawInfoCard(it) }
                                     }
                                 }
+                                item(key = "accumulated_prize") {
+                                    AnimateOnEntry(
+                                        delayMillis = HomeScreenConstants.ACCUMULATED_PRIZE_ANIM_DELAY
+                                    ) {
+                                        screenState.nextDrawInfo?.let { AccumulatedPrizeCard(it) }
+                                    }
+                                }
                                 item(key = "last_draw") {
                                     screenState.lastDraw?.let {
                                         AnimateOnEntry(
-                                            modifier = Modifier.padding(horizontal = Dimen.ScreenPadding),
                                             delayMillis = HomeScreenConstants.LAST_DRAW_ANIM_DELAY
                                         ) {
                                             LastDrawSection(it, screenState.winnerData.toImmutableList())
@@ -164,7 +175,6 @@ fun HomeScreen(homeViewModel: HomeViewModel = hiltViewModel()) {
                                 item(key = "statistics") {
                                     uiState.statistics?.let {
                                         AnimateOnEntry(
-                                            modifier = Modifier.padding(horizontal = Dimen.ScreenPadding),
                                             delayMillis = HomeScreenConstants.STATS_PANEL_ANIM_DELAY
                                         ) {
                                             StatisticsPanel(
@@ -179,7 +189,6 @@ fun HomeScreen(homeViewModel: HomeViewModel = hiltViewModel()) {
                                 item(key = "charts") {
                                     uiState.statistics?.let {
                                         AnimateOnEntry(
-                                            modifier = Modifier.padding(horizontal = Dimen.ScreenPadding),
                                             delayMillis = HomeScreenConstants.CHARTS_ANIM_DELAY
                                         ) {
                                             DistributionChartsCard(
@@ -192,7 +201,6 @@ fun HomeScreen(homeViewModel: HomeViewModel = hiltViewModel()) {
                                 }
                                 item(key = "explanation") {
                                     AnimateOnEntry(
-                                        modifier = Modifier.padding(horizontal = Dimen.ScreenPadding),
                                         delayMillis = HomeScreenConstants.EXPLANATION_CARD_ANIM_DELAY
                                     ) {
                                         StatisticsExplanationCard()
@@ -215,21 +223,41 @@ fun HomeScreen(homeViewModel: HomeViewModel = hiltViewModel()) {
 @Composable
 private fun NextDrawInfoCard(nextDrawInfo: NextDrawInfo) {
     SectionCard {
-        InfoRow("Próximo Concurso", nextDrawInfo.formattedDate)
-        InfoRow("Prêmio Estimado", nextDrawInfo.formattedPrize)
-        InfoRow("Acumulado Final 0 ou 5", nextDrawInfo.formattedPrizeFinalFive)
+        InfoRow(stringResource(R.string.home_next_contest, nextDrawInfo.contestNumber), nextDrawInfo.formattedDate)
+        InfoRow(stringResource(R.string.home_prize_estimate), nextDrawInfo.formattedPrize)
     }
 }
 
 @Composable
-private fun InfoRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+private fun AccumulatedPrizeCard(nextDrawInfo: NextDrawInfo) {
+    SectionCard {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Dimen.MediumPadding)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Star,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.tertiary
+            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.home_accumulated_prize_final_five),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = stringResource(R.string.home_special_prize_info),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Text(
+                text = nextDrawInfo.formattedPrizeFinalFive,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.tertiary
+            )
+        }
     }
 }
 
@@ -280,7 +308,7 @@ private fun WinnerInfoSection(winnerData: ImmutableList<WinnerData>) {
 
     Column(verticalArrangement = Arrangement.spacedBy(Dimen.MediumPadding)) {
         Text(
-            text = "Ganhadores do Último Concurso",
+            text = stringResource(R.string.home_winners_last_contest),
             style = MaterialTheme.typography.titleMedium
         )
         winnerData.forEach { winnerInfo ->
@@ -291,14 +319,17 @@ private fun WinnerInfoSection(winnerData: ImmutableList<WinnerData>) {
             ) {
                 Column(Modifier.weight(1.5f)) {
                     Text(
-                        text = winnerInfo.description.replace(" Acertos", " acertos"),
+                        text = stringResource(R.string.home_hits_format, winnerInfo.hits),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold
                     )
                 }
                 Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "${winnerInfo.winnerCount} ${if (winnerInfo.winnerCount == 1) "ganhador" else "ganhadores"}",
+                        text = stringResource(
+                            if (winnerInfo.winnerCount == 1) R.string.home_winner_count_one else R.string.home_winner_count_other,
+                            winnerInfo.winnerCount
+                        ),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }

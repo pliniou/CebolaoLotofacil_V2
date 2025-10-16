@@ -2,6 +2,7 @@ package com.cebolao.lotofacil.viewmodels
 
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Stable
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cebolao.lotofacil.R
@@ -11,6 +12,7 @@ import com.cebolao.lotofacil.data.LotofacilGame
 import com.cebolao.lotofacil.domain.usecase.CheckGameUseCase
 import com.cebolao.lotofacil.domain.usecase.GetGameSimpleStatsUseCase
 import com.cebolao.lotofacil.domain.usecase.SaveGameUseCase
+import com.cebolao.lotofacil.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -18,7 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.single
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -32,12 +34,12 @@ sealed interface CheckerUiEvent {
 sealed interface CheckerUiState {
     data object Idle : CheckerUiState
     data object Loading : CheckerUiState
-    
+
     data class Success(
         val result: CheckResult,
         val simpleStats: ImmutableList<Pair<String, String>>
     ) : CheckerUiState
-    
+
     data class Error(
         @StringRes val messageResId: Int,
         val canRetry: Boolean = true
@@ -48,20 +50,28 @@ sealed interface CheckerUiState {
 class CheckerViewModel @Inject constructor(
     private val checkGameUseCase: CheckGameUseCase,
     private val getGameSimpleStatsUseCase: GetGameSimpleStatsUseCase,
-    private val saveGameUseCase: SaveGameUseCase
+    private val saveGameUseCase: SaveGameUseCase,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    // Estado UI - encapsulado
     private val _uiState = MutableStateFlow<CheckerUiState>(CheckerUiState.Idle)
     val uiState: StateFlow<CheckerUiState> = _uiState.asStateFlow()
 
-    // Números selecionados - encapsulado
     private val _selectedNumbers = MutableStateFlow<Set<Int>>(emptySet())
     val selectedNumbers: StateFlow<Set<Int>> = _selectedNumbers.asStateFlow()
 
-    // Eventos one-shot
     private val _eventFlow = MutableSharedFlow<CheckerUiEvent>(replay = 0)
     val events = _eventFlow.asSharedFlow()
+
+    init {
+        savedStateHandle.get<String>(Screen.Checker.CHECKER_NUMBERS_ARG)?.let { numbersArg ->
+            val numbers = numbersArg.split(',').mapNotNull { it.toIntOrNull() }.toSet()
+            if (numbers.size == LotofacilConstants.GAME_SIZE) {
+                _selectedNumbers.value = numbers
+                checkGame()
+            }
+        }
+    }
 
     fun toggleNumber(number: Int) {
         _selectedNumbers.update { current ->
@@ -75,80 +85,52 @@ class CheckerViewModel @Inject constructor(
 
     fun clearNumbers() {
         _selectedNumbers.value = emptySet()
+        _uiState.value = CheckerUiState.Idle
     }
 
     fun checkGame() {
-        val numbersToCheck = _selectedNumbers.value
-        
-        if (numbersToCheck.size != LotofacilConstants.GAME_SIZE) {
-            viewModelScope.launch {
-                _eventFlow.emit(
-                    CheckerUiEvent.ShowSnackbar(R.string.checker_incomplete_game_message)
-                )
-            }
-            return
-        }
+        if (!validateCurrentSelection(R.string.checker_incomplete_game_message)) return
 
         viewModelScope.launch {
             _uiState.value = CheckerUiState.Loading
-            
-            try {
-                val checkResult = checkGameUseCase(numbersToCheck).single()
-                val simpleStatsResult = getGameSimpleStatsUseCase(
-                    LotofacilGame(numbers = numbersToCheck)
-                ).single()
+            val game = LotofacilGame(numbers = _selectedNumbers.value)
 
-                if (checkResult.isSuccess && simpleStatsResult.isSuccess) {
-                    _uiState.value = CheckerUiState.Success(
-                        result = checkResult.getOrThrow(),
-                        simpleStats = simpleStatsResult.getOrThrow()
-                    )
-                } else {
-                    _uiState.value = CheckerUiState.Error(
-                        messageResId = R.string.error_analysis_failed,
-                        canRetry = true
-                    )
-                }
-            } catch (_: Exception) {
-                _uiState.value = CheckerUiState.Error(
-                    messageResId = R.string.error_analysis_failed,
-                    canRetry = true
+            val checkResult = checkGameUseCase(game.numbers).first()
+            val simpleStatsResult = getGameSimpleStatsUseCase(game).first()
+
+            if (checkResult.isSuccess && simpleStatsResult.isSuccess) {
+                _uiState.value = CheckerUiState.Success(
+                    result = checkResult.getOrThrow(),
+                    simpleStats = simpleStatsResult.getOrThrow()
                 )
+            } else {
+                _uiState.value = CheckerUiState.Error(R.string.error_analysis_failed)
             }
         }
     }
 
     fun saveGame() {
-        val numbersToSave = _selectedNumbers.value
-        
-        if (numbersToSave.size != LotofacilConstants.GAME_SIZE) {
-            viewModelScope.launch {
-                _eventFlow.emit(
-                    CheckerUiEvent.ShowSnackbar(R.string.checker_save_fail_message)
-                )
-            }
-            return
-        }
+        if (!validateCurrentSelection(R.string.checker_save_fail_message)) return
 
         viewModelScope.launch {
-            try {
-                val newGame = LotofacilGame(numbers = numbersToSave)
-                saveGameUseCase(newGame)
-                    .onSuccess {
-                        _eventFlow.emit(
-                            CheckerUiEvent.ShowSnackbar(R.string.checker_save_success_message)
-                        )
-                    }
-                    .onFailure {
-                        _eventFlow.emit(
-                            CheckerUiEvent.ShowSnackbar(R.string.checker_save_fail_message)
-                        )
-                    }
-            } catch (e: Exception) {
-                _eventFlow.emit(
-                    CheckerUiEvent.ShowSnackbar(R.string.checker_save_fail_message)
-                )
-            }
+            val gameToSave = LotofacilGame(numbers = _selectedNumbers.value)
+            saveGameUseCase(gameToSave)
+                .onSuccess {
+                    _eventFlow.emit(CheckerUiEvent.ShowSnackbar(R.string.checker_save_success_message))
+                }
+                .onFailure {
+                    _eventFlow.emit(CheckerUiEvent.ShowSnackbar(R.string.checker_save_fail_message))
+                }
         }
+    }
+
+    private fun validateCurrentSelection(@StringRes errorMessageResId: Int): Boolean {
+        if (_selectedNumbers.value.size != LotofacilConstants.GAME_SIZE) {
+            viewModelScope.launch {
+                _eventFlow.emit(CheckerUiEvent.ShowSnackbar(errorMessageResId))
+            }
+            return false
+        }
+        return true
     }
 }

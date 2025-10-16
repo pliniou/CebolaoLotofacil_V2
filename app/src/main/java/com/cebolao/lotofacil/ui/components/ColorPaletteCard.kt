@@ -28,6 +28,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import com.cebolao.lotofacil.ui.theme.AccentPalette
 import com.cebolao.lotofacil.ui.theme.Dimen
+import com.cebolao.lotofacil.ui.theme.Shapes
+import com.cebolao.lotofacil.ui.theme.Typography
 import com.cebolao.lotofacil.ui.theme.darkColorSchemeFor
 import com.cebolao.lotofacil.ui.theme.lightColorSchemeFor
 
@@ -66,23 +68,35 @@ private fun PaletteRowItem(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(MaterialTheme.shapes.medium)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onClick,
-                role = Role.RadioButton
-            )
-            .padding(vertical = Dimen.ExtraSmallPadding),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Dimen.MediumPadding)
+    // CORREÇÃO: Aplicar um MaterialTheme local para que os componentes da linha
+    // usem o colorScheme específico da paleta, fornecendo uma prévia correta.
+    MaterialTheme(
+        colorScheme = colorScheme,
+        typography = Typography,
+        shapes = Shapes
     ) {
-        RadioButton(selected = isSelected, onClick = onClick)
-        ColorSwatch(colorScheme.primary)
-        Text(text = palette.paletteName, style = MaterialTheme.typography.bodyLarge)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(MaterialTheme.shapes.medium)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onClick,
+                    role = Role.RadioButton
+                )
+                .padding(vertical = Dimen.ExtraSmallPadding),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Dimen.MediumPadding)
+        ) {
+            RadioButton(selected = isSelected, onClick = onClick)
+            ColorSwatch(colorScheme.primary)
+            Text(
+                text = palette.paletteName,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.primary // Usa a cor primária da paleta
+            )
+        }
     }
 }
 

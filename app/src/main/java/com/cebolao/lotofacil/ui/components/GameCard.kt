@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Analytics
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Share
@@ -35,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import com.cebolao.lotofacil.R
 import com.cebolao.lotofacil.data.LotofacilGame
 import com.cebolao.lotofacil.ui.theme.AppConfig
@@ -88,7 +88,7 @@ fun GameCard(
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(elevation),
         border = BorderStroke(
-            width = if (isPinned) Dimen.Border.Thick else Dimen.Elevation.Level0,
+            width = if (isPinned) Dimen.Border.Thick else 0.dp,
             color = borderColor
         ),
         colors = CardDefaults.cardColors(containerColor = containerColor)
@@ -173,15 +173,6 @@ private fun GameCardActions(
                 )
                 Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
                 Text(text = stringResource(R.string.games_analyze_button))
-            }
-            TextButton(onClick = { onAction(GameCardAction.Check) }) {
-                Icon(
-                    imageVector = Icons.Filled.Check,
-                    contentDescription = null,
-                    modifier = Modifier.size(ButtonDefaults.IconSize)
-                )
-                Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
-                Text(text = stringResource(R.string.games_check_button))
             }
         }
     }

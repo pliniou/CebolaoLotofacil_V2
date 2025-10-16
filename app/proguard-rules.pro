@@ -71,10 +71,4 @@
 # Estas regras são CRUCIAIS para resolver o aviso "failed lock verification" que pode
 # degradar a performance do Compose em tempo de execução.
 -keep class androidx.compose.runtime.snapshots.** { *; }
-
-# Regra específica para resolver o aviso "failed lock verification" do SnapshotStateList,
-# conforme observado nos logs.
--keep class androidx.compose.runtime.snapshots.SnapshotStateList { *; }
--keepclassmembers class androidx.compose.runtime.snapshots.SnapshotStateList {
-    *;
-}
+-keepclassmembers class androidx.compose.runtime.snapshots.SnapshotStateList { *; }

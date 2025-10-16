@@ -34,7 +34,7 @@ class GetHomeScreenDataUseCase @Inject constructor(
             }
 
             val result = coroutineScope {
-                val latestApiResultDeferred = async { historyRepository.getLatestContestDetails() }
+                val latestApiResultDeferred = async { historyRepository.getLatestApiResult() }
                 val initialStatsDeferred = async { statisticsAnalyzer.analyze(history) }
 
                 val lastDraw = history.firstOrNull()
@@ -60,13 +60,20 @@ class GetHomeScreenDataUseCase @Inject constructor(
         val nextDrawInfo = apiResult?.takeIf { it.dataProximoConcurso != null }
             ?.let {
                 NextDrawInfo(
+                    contestNumber = it.numero + 1,
                     formattedDate = it.dataProximoConcurso!!,
                     formattedPrize = currencyFormat.format(it.valorEstimadoProximoConcurso),
                     formattedPrizeFinalFive = currencyFormat.format(it.valorAcumuladoConcurso_0_5)
                 )
             }
         val winnerData = apiResult?.listaRateioPremio?.map {
-            WinnerData(it.descricaoFaixa, it.numeroDeGanhadores, it.valorPremio)
+            val hits = it.descricaoFaixa.filter { char -> char.isDigit() }.toIntOrNull() ?: 0
+            WinnerData(
+                hits = hits,
+                description = it.descricaoFaixa,
+                winnerCount = it.numeroDeGanhadores,
+                prize = it.valorPremio
+            )
         } ?: emptyList()
         return nextDrawInfo to winnerData
     }

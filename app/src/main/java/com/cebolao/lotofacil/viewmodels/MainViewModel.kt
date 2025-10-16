@@ -71,31 +71,19 @@ class MainViewModel @Inject constructor(
 
     fun onOnboardingComplete() {
         viewModelScope.launch {
-            try {
-                userPreferencesRepository.setHasCompletedOnboarding(true)
-            } catch (e: Exception) {
-                android.util.Log.e("MainViewModel", "Error completing onboarding", e)
-            }
+            userPreferencesRepository.setHasCompletedOnboarding(true)
         }
     }
 
     fun setThemeMode(mode: String) {
         viewModelScope.launch {
-            try {
-                userPreferencesRepository.setThemeMode(mode)
-            } catch (e: Exception) {
-                android.util.Log.e("MainViewModel", "Error setting theme mode", e)
-            }
+            userPreferencesRepository.setThemeMode(mode)
         }
     }
 
     fun setAccentPalette(palette: AccentPalette) {
         viewModelScope.launch {
-            try {
-                userPreferencesRepository.setAccentPalette(palette.name)
-            } catch (e: Exception) {
-                android.util.Log.e("MainViewModel", "Error setting accent palette", e)
-            }
+            userPreferencesRepository.setAccentPalette(palette.name)
         }
     }
 }

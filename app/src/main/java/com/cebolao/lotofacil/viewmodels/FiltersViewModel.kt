@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.cebolao.lotofacil.data.FilterPreset
 import com.cebolao.lotofacil.data.FilterState
 import com.cebolao.lotofacil.data.FilterType
+import com.cebolao.lotofacil.di.STATE_IN_TIMEOUT_MS
 import com.cebolao.lotofacil.domain.service.FilterSuccessCalculator
 import com.cebolao.lotofacil.domain.service.GameGenerator
 import com.cebolao.lotofacil.domain.usecase.GenerateGamesUseCase
@@ -25,8 +26,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.math.roundToInt
-
-private const val STATE_IN_TIMEOUT_MS = 5000L
 
 @Stable
 sealed interface NavigationEvent {
@@ -106,7 +105,6 @@ class FiltersViewModel @Inject constructor(
             getLastDrawUseCase()
                 .onSuccess { _lastDraw.value = it?.numbers }
                 .onFailure {
-                    // Log error but don't crash, the UI can handle a null lastDraw
                     android.util.Log.e("FiltersViewModel", "Error loading last draw", it)
                 }
         }

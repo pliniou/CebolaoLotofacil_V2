@@ -9,16 +9,17 @@ sealed interface SyncStatus {
     data object Idle : SyncStatus
     data object Syncing : SyncStatus
     data object Success : SyncStatus
-    data class Failed(val message: String) : SyncStatus
+    data class Failed(val error: Throwable) : SyncStatus
 }
 
+/**
+ * Interface que define o contrato para acessar o histórico de sorteios.
+ */
 interface HistoryRepository {
     val syncStatus: StateFlow<SyncStatus>
 
+    fun syncHistory(): Job
     suspend fun getHistory(): List<HistoricalDraw>
     suspend fun getLastDraw(): HistoricalDraw?
-    fun syncHistory(): Job
-
-    /** Retorna os detalhes completos do último concurso, incluindo prêmios e próximo sorteio. */
-    suspend fun getLatestContestDetails(): LotofacilApiResult?
+    suspend fun getLatestApiResult(): LotofacilApiResult?
 }

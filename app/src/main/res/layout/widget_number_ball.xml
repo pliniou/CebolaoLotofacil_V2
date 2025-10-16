@@ -7,12 +7,12 @@
     <TextView
         android:id="@+id/widget_ball_text"
         style="@style/Widget.Text.NumberBall"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
+        android:layout_width="@dimen/number_ball_widget_size"
+        android:layout_height="@dimen/number_ball_widget_size"
         android:layout_gravity="center"
-        android:layout_margin="2dp"
+        android:layout_margin="@dimen/extra_small_padding"
         android:background="@drawable/widget_ball_background"
         android:gravity="center"
-        android:text="@string/_00"/>
+        android:text="@string/widget_ball_placeholder_text"/>
 
 </FrameLayout>

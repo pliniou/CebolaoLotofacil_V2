@@ -200,7 +200,7 @@ private fun GamesList(
             start = Dimen.ScreenPadding,
             end = Dimen.ScreenPadding,
             top = Dimen.CardPadding,
-            bottom = Dimen.LargePadding
+            bottom = Dimen.BottomBarOffset // CORREÇÃO: Uso do offset para consistência.
         ),
         verticalArrangement = Arrangement.spacedBy(Dimen.LargePadding)
     ) {
@@ -235,9 +235,9 @@ private fun GameSummaryCard(summary: GameSummary, modifier: Modifier = Modifier)
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            SummaryItem("Total", summary.totalGames.toString())
-            SummaryItem("Fixados", summary.pinnedGames.toString(), icon = Icons.Default.PushPin)
-            SummaryItem("Custo", currencyFormat.format(summary.totalCost))
+            SummaryItem(label = "Total", value = summary.totalGames.toString())
+            SummaryItem(label = "Fixados", value = summary.pinnedGames.toString(), icon = Icons.Default.PushPin)
+            SummaryItem(label = "Custo", value = currencyFormat.format(summary.totalCost))
         }
     }
 }
@@ -245,17 +245,15 @@ private fun GameSummaryCard(summary: GameSummary, modifier: Modifier = Modifier)
 @Composable
 private fun SummaryItem(label: String, value: String, icon: ImageVector? = null) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Dimen.ExtraSmallPadding)) {
-            if (icon != null) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.padding(end = Dimen.ExtraSmallPadding)
-                )
-            }
-            Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (icon != null) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
         }
+        Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 

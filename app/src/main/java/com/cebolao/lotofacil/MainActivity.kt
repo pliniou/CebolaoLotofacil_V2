@@ -72,11 +72,8 @@ class MainActivity : ComponentActivity() {
 
             splash.setKeepOnScreenCondition { !uiState.isReady }
 
-            val useDarkTheme = when (themeMode) {
-                "light" -> false
-                "dark" -> true
-                else -> isSystemInDarkTheme()
-            }
+            // CORREÇÃO: Lógica de seleção de tema simplificada para maior clareza.
+            val useDarkTheme = themeMode == "dark" || (themeMode == "auto" && isSystemInDarkTheme())
 
             CebolaoLotofacilTheme(
                 darkTheme = useDarkTheme,

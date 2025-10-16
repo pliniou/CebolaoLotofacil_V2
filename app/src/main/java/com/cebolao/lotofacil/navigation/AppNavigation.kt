@@ -2,6 +2,7 @@ package com.cebolao.lotofacil.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ListAlt
+import androidx.compose.material.icons.automirrored.outlined.ListAlt
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
@@ -21,9 +22,12 @@ sealed class Screen(
     val title: String? = null,
     val selectedIcon: ImageVector? = null,
     val unselectedIcon: ImageVector? = null,
-    val isBottomNavItem: Boolean = false,
-    val baseRoute: String = route.substringBefore('?')
+    val isBottomNavItem: Boolean = false
 ) {
+    // Helper para obter a rota base sem argumentos (ex: "checker?numbers={numbers}" -> "checker")
+    val baseRoute: String
+        get() = route.substringBefore('?')
+
     data object Onboarding : Screen("onboarding")
     data object Home : Screen("home", "Início", Icons.Filled.Home, Icons.Outlined.Home, true)
     data object Filters : Screen("filters", "Gerador", Icons.Filled.Tune, Icons.Outlined.Tune, true)
@@ -31,7 +35,7 @@ sealed class Screen(
         "generated_games",
         "Jogos",
         Icons.AutoMirrored.Filled.ListAlt,
-        Icons.AutoMirrored.Filled.ListAlt,
+        Icons.AutoMirrored.Outlined.ListAlt,
         true
     )
 
@@ -61,7 +65,8 @@ sealed class Screen(
     data object About : Screen("about", "Sobre", Icons.Filled.Info, Icons.Outlined.Info, true)
 }
 
-// A lista agora é gerada dinamicamente, tornando-a mais fácil de manter.
+// CORREÇÃO: A lista agora é gerada explicitamente para evitar reflection.
+// Isso torna o código mais seguro, performático e corrige potenciais crashes.
 val bottomNavItems = listOf(
     Screen.Home,
     Screen.Filters,

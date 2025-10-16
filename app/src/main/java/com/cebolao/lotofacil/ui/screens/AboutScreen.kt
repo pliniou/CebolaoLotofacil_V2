@@ -118,17 +118,18 @@ fun AboutScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            contentPadding = PaddingValues(bottom = Dimen.BottomBarOffset, top = Dimen.CardPadding),
+            contentPadding = PaddingValues(
+                horizontal = Dimen.ScreenPadding,
+                vertical = Dimen.CardPadding
+            ),
             verticalArrangement = Arrangement.spacedBy(Dimen.CardPadding)
         ) {
             item {
-                StudioHero(modifier = Modifier.padding(horizontal = Dimen.ScreenPadding))
+                StudioHero()
             }
 
             item {
-                AnimateOnEntry(
-                    modifier = Modifier.padding(horizontal = Dimen.ScreenPadding)
-                ) {
+                AnimateOnEntry {
                     ThemeSettingsCard(
                         currentTheme = currentTheme,
                         onThemeChange = onThemeChange
@@ -137,9 +138,7 @@ fun AboutScreen(
             }
 
             item {
-                AnimateOnEntry(
-                    modifier = Modifier.padding(horizontal = Dimen.ScreenPadding)
-                ) {
+                AnimateOnEntry {
                     ColorPaletteCard(
                         currentPalette = currentPalette,
                         onPaletteChange = onPaletteChange
@@ -148,28 +147,21 @@ fun AboutScreen(
             }
 
             items(infoItems, key = { it.title }) { info ->
-                InfoListItem(info = info, onClick = { dialogContent = info })
+                AnimateOnEntry {
+                    InfoListCard(
+                        title = info.title,
+                        subtitle = info.subtitle,
+                        icon = info.icon,
+                        modifier = Modifier
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onClick = { dialogContent = info }
+                            )
+                    )
+                }
             }
         }
-    }
-}
-
-@Composable
-private fun InfoListItem(info: InfoItem, onClick: () -> Unit) {
-    AnimateOnEntry(
-        modifier = Modifier.padding(horizontal = Dimen.ScreenPadding)
-    ) {
-        InfoListCard(
-            title = info.title,
-            subtitle = info.subtitle,
-            icon = info.icon,
-            modifier = Modifier
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = onClick
-                )
-        )
     }
 }
 

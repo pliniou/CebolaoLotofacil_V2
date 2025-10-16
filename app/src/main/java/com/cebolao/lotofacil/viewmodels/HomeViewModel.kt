@@ -72,7 +72,6 @@ class HomeViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState = _uiState.asStateFlow()
 
-    private var fullHistory: List<HistoricalDraw> = emptyList()
     private var analysisJob: Job? = null
 
     init {
@@ -111,8 +110,6 @@ class HomeViewModel @Inject constructor(
                 getHomeScreenDataUseCase().collect { result ->
                     result
                         .onSuccess { data ->
-                            fullHistory = historyRepository.getHistory()
-
                             _uiState.update {
                                 it.copy(
                                     screenState = HomeScreenState.Success(
@@ -124,7 +121,6 @@ class HomeViewModel @Inject constructor(
                                     selectedTimeWindow = ALL_CONTESTS_WINDOW
                                 )
                             }
-
                             enqueueWidgetUpdateWork()
                         }
                         .onFailure {
@@ -183,7 +179,7 @@ class HomeViewModel @Inject constructor(
     }
 
     fun onTimeWindowSelected(window: Int) {
-        if (_uiState.value.selectedTimeWindow == window || fullHistory.isEmpty()) {
+        if (_uiState.value.selectedTimeWindow == window) {
             return
         }
 
@@ -193,25 +189,16 @@ class HomeViewModel @Inject constructor(
                 it.copy(isStatsLoading = true, selectedTimeWindow = window)
             }
 
-            try {
-                val drawsToAnalyze = if (window == ALL_CONTESTS_WINDOW) {
-                    fullHistory
-                } else {
-                    fullHistory.take(window)
+            analyzeHistoryUseCase(window)
+                .onSuccess { newStats ->
+                    _uiState.update {
+                        it.copy(statistics = newStats, isStatsLoading = false)
+                    }
                 }
-
-                analyzeHistoryUseCase(drawsToAnalyze)
-                    .onSuccess { newStats ->
-                        _uiState.update {
-                            it.copy(statistics = newStats, isStatsLoading = false)
-                        }
-                    }
-                    .onFailure {
-                        _uiState.update { it.copy(isStatsLoading = false) }
-                    }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(isStatsLoading = false) }
-            }
+                .onFailure {
+                    // Log do erro seria ideal aqui.
+                    _uiState.update { it.copy(isStatsLoading = false) }
+                }
         }
     }
 

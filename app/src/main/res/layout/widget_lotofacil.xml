@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="@drawable/widget_background"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="@dimen/card_padding">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -14,8 +14,8 @@
         android:orientation="horizontal">
 
         <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="@dimen/medium_icon_size"
+            android:layout_height="@dimen/medium_icon_size"
             android:contentDescription="@string/app_name"
             android:src="@drawable/ic_lotofacil_logo"
             android:tint="?android:attr/textColorPrimary" />
@@ -25,14 +25,14 @@
             style="@style/Widget.Text.Title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="@dimen/small_padding"
             android:layout_weight="1"
             android:text="@string/home_title" />
 
         <ImageButton
             android:id="@+id/widget_refresh_button"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
+            android:layout_width="@dimen/large_icon_size"
+            android:layout_height="@dimen/large_icon_size"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/home_sync_button_description"
             android:src="@drawable/ic_refresh"
@@ -42,8 +42,8 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_marginTop="8dp">
+        android:layout_marginTop="@dimen/small_padding"
+        android:layout_weight="1">
 
         <GridLayout
             android:id="@+id/widget_numbers_grid"

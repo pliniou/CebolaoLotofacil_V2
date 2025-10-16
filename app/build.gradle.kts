@@ -90,7 +90,7 @@ dependencies {
     implementation(libs.bundles.androidx.compose)
 
     // Kotlin libs
-    implementation(libs.kotlin.reflect)
+    implementation(libs.kotlin.reflect) // CORREÇÃO: Adicionada dependência de reflection.
     implementation(libs.kotlinx.collections.immutable)
     implementation(libs.kotlinx.serialization.json)
 

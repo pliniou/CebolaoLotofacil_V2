@@ -23,7 +23,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.single
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -102,21 +102,13 @@ class GameViewModel @Inject constructor(
 
     fun clearUnpinned() {
         viewModelScope.launch {
-            try {
-                clearUnpinnedGamesUseCase()
-            } catch (e: Exception) {
-                android.util.Log.e("GameViewModel", "Error clearing unpinned games", e)
-            }
+            clearUnpinnedGamesUseCase()
         }
     }
 
     fun togglePinState(gameToToggle: LotofacilGame) {
         viewModelScope.launch {
-            try {
-                togglePinStateUseCase(gameToToggle)
-            } catch (e: Exception) {
-                android.util.Log.e("GameViewModel", "Error toggling pin state", e)
-            }
+            togglePinStateUseCase(gameToToggle)
         }
     }
 
@@ -125,15 +117,10 @@ class GameViewModel @Inject constructor(
     }
 
     fun confirmDeleteGame() {
-        viewModelScope.launch {
-            _uiState.value.gameToDelete?.let { game ->
-                try {
-                    deleteGameUseCase(game)
-                } catch (e: Exception) {
-                    android.util.Log.e("GameViewModel", "Error deleting game", e)
-                } finally {
-                    _uiState.update { it.copy(gameToDelete = null) }
-                }
+        _uiState.value.gameToDelete?.let { gameToDelete ->
+            viewModelScope.launch {
+                deleteGameUseCase(gameToDelete)
+                _uiState.update { it.copy(gameToDelete = null) }
             }
         }
     }
@@ -146,22 +133,18 @@ class GameViewModel @Inject constructor(
         analyzeJob?.cancel()
         analyzeJob = viewModelScope.launch {
             _analysisState.value = GameAnalysisUiState.Loading
-            
-            try {
-                val checkResult = checkGameUseCase(game.numbers).single()
-                val simpleStats = getGameSimpleStatsUseCase(game).single()
 
-                if (checkResult.isSuccess && simpleStats.isSuccess) {
-                    val result = GameAnalysisResult(
-                        game = game,
-                        simpleStats = simpleStats.getOrThrow(),
-                        checkResult = checkResult.getOrThrow()
-                    )
-                    _analysisState.value = GameAnalysisUiState.Success(result)
-                } else {
-                    _analysisState.value = GameAnalysisUiState.Error(R.string.error_analysis_failed)
-                }
-            } catch (e: Exception) {
+            val checkResult = checkGameUseCase(game.numbers).first()
+            val simpleStats = getGameSimpleStatsUseCase(game).first()
+
+            if (checkResult.isSuccess && simpleStats.isSuccess) {
+                val result = GameAnalysisResult(
+                    game = game,
+                    simpleStats = simpleStats.getOrThrow(),
+                    checkResult = checkResult.getOrThrow()
+                )
+                _analysisState.value = GameAnalysisUiState.Success(result)
+            } else {
                 _analysisState.value = GameAnalysisUiState.Error(R.string.error_analysis_failed)
             }
         }
