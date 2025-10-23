@@ -15,36 +15,33 @@ import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.cebolao.lotofacil.util.CHECKER_ARG_SEPARATOR
 
 @Stable
 sealed class Screen(
     val route: String,
     val title: String? = null,
     val selectedIcon: ImageVector? = null,
-    val unselectedIcon: ImageVector? = null,
-    val isBottomNavItem: Boolean = false
+    val unselectedIcon: ImageVector? = null
 ) {
-    // Helper para obter a rota base sem argumentos (ex: "checker?numbers={numbers}" -> "checker")
     val baseRoute: String
         get() = route.substringBefore('?')
 
     data object Onboarding : Screen("onboarding")
-    data object Home : Screen("home", "Início", Icons.Filled.Home, Icons.Outlined.Home, true)
-    data object Filters : Screen("filters", "Gerador", Icons.Filled.Tune, Icons.Outlined.Tune, true)
+    data object Home : Screen("home", "Início", Icons.Filled.Home, Icons.Outlined.Home)
+    data object Filters : Screen("filters", "Gerador", Icons.Filled.Tune, Icons.Outlined.Tune)
     data object GeneratedGames : Screen(
         "generated_games",
         "Jogos",
         Icons.AutoMirrored.Filled.ListAlt,
-        Icons.AutoMirrored.Outlined.ListAlt,
-        true
+        Icons.AutoMirrored.Outlined.ListAlt
     )
 
     data object Checker : Screen(
-        "checker?numbers={numbers}",
-        "Conferidor",
-        Icons.Filled.Analytics,
-        Icons.Outlined.Analytics,
-        true
+        route = "checker?numbers={numbers}",
+        title = "Conferidor",
+        selectedIcon = Icons.Filled.Analytics,
+        unselectedIcon = Icons.Outlined.Analytics
     ) {
         const val CHECKER_NUMBERS_ARG = "numbers"
 
@@ -57,16 +54,14 @@ sealed class Screen(
         )
 
         fun createRoute(numbers: Set<Int>): String {
-            val numbersArg = numbers.joinToString(",")
+            val numbersArg = numbers.joinToString(CHECKER_ARG_SEPARATOR.toString())
             return "checker?$CHECKER_NUMBERS_ARG=$numbersArg"
         }
     }
 
-    data object About : Screen("about", "Sobre", Icons.Filled.Info, Icons.Outlined.Info, true)
+    data object About : Screen("about", "Sobre", Icons.Filled.Info, Icons.Outlined.Info)
 }
 
-// CORREÇÃO: A lista agora é gerada explicitamente para evitar reflection.
-// Isso torna o código mais seguro, performático e corrige potenciais crashes.
 val bottomNavItems = listOf(
     Screen.Home,
     Screen.Filters,

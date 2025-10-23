@@ -30,7 +30,11 @@ fun PrimaryActionButton(
         enabled = enabled && !loading,
         onClick = onClick,
         shape = MaterialTheme.shapes.large,
-        colors = colors
+        colors = colors,
+        elevation = ButtonDefaults.buttonElevation(
+            defaultElevation = Dimen.Elevation.Level1,
+            pressedElevation = Dimen.Elevation.Level0
+        )
     ) {
         Row(modifier = Modifier.padding(horizontal = Dimen.ExtraSmallPadding)) {
             if (loading) {

@@ -17,17 +17,19 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 
-private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "user_prefs")
+private const val DATASTORE_NAME = "user_prefs"
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = DATASTORE_NAME)
 
 private const val TAG = "UserPreferencesRepo"
-private const val DEFAULT_THEME_MODE = "auto"
+const val THEME_MODE_AUTO = "auto"
+const val THEME_MODE_DARK = "dark"
 
 private object PreferenceKeys {
     val PINNED_GAMES = stringSetPreferencesKey("pinned_games")
@@ -43,7 +45,9 @@ class UserPreferencesRepositoryImpl @Inject constructor(
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : UserPreferencesRepository {
 
-    override val pinnedGames: Flow<Set<String>> = context.dataStore.data
+    private val dataStore = context.dataStore
+
+    override val pinnedGames: Flow<Set<String>> = dataStore.data
         .catch { exception ->
             handleError(exception, "reading pinned games")
             emit(emptyPreferences())
@@ -54,22 +58,22 @@ class UserPreferencesRepositoryImpl @Inject constructor(
 
     override suspend fun savePinnedGames(games: Set<String>) {
         withContext(ioDispatcher) {
-            try {
-                context.dataStore.edit { preferences ->
+            runCatching {
+                dataStore.edit { preferences ->
                     preferences[PreferenceKeys.PINNED_GAMES] = games
                 }
                 Log.d(TAG, "Saved ${games.size} pinned games")
-            } catch (e: IOException) {
+            }.onFailure { e ->
                 handleError(e, "saving pinned games")
             }
         }
     }
 
     override suspend fun getHistory(): Set<String> = withContext(ioDispatcher) {
-        try {
-            val preferences = context.dataStore.data.firstOrNull() ?: emptyPreferences()
+        runCatching {
+            val preferences = dataStore.data.first()
             preferences[PreferenceKeys.DYNAMIC_HISTORY] ?: emptySet()
-        } catch (e: Exception) {
+        }.getOrElse { e ->
             handleError(e, "getting history")
             emptySet()
         }
@@ -80,40 +84,40 @@ class UserPreferencesRepositoryImpl @Inject constructor(
             val validEntries = newHistoryEntries.filter { it.isNotBlank() }.toSet()
             if (validEntries.isEmpty()) return@withContext
 
-            try {
-                context.dataStore.edit { preferences ->
+            runCatching {
+                dataStore.edit { preferences ->
                     val currentHistory = preferences[PreferenceKeys.DYNAMIC_HISTORY] ?: emptySet()
                     preferences[PreferenceKeys.DYNAMIC_HISTORY] = currentHistory + validEntries
-                    Log.d(TAG, "Added ${validEntries.size} valid history entries")
+                    Log.d(TAG, "Added ${validEntries.size} valid history entries. Total: ${currentHistory.size + validEntries.size}")
                 }
-            } catch (e: IOException) {
+            }.onFailure { e ->
                 handleError(e, "adding dynamic history entries")
             }
         }
     }
 
-    override val themeMode: Flow<String> = context.dataStore.data
+    override val themeMode: Flow<String> = dataStore.data
         .catch { exception ->
             handleError(exception, "reading theme mode")
             emit(emptyPreferences())
         }
         .map { preferences ->
-            preferences[PreferenceKeys.THEME_MODE] ?: DEFAULT_THEME_MODE
+            preferences[PreferenceKeys.THEME_MODE] ?: THEME_MODE_AUTO
         }
 
     override suspend fun setThemeMode(mode: String) {
         withContext(ioDispatcher) {
-            try {
-                context.dataStore.edit { preferences ->
+            runCatching {
+                dataStore.edit { preferences ->
                     preferences[PreferenceKeys.THEME_MODE] = mode
                 }
-            } catch (e: IOException) {
+            }.onFailure { e ->
                 handleError(e, "setting theme mode")
             }
         }
     }
 
-    override val hasCompletedOnboarding: Flow<Boolean> = context.dataStore.data
+    override val hasCompletedOnboarding: Flow<Boolean> = dataStore.data
         .catch { exception ->
             handleError(exception, "reading onboarding status")
             emit(emptyPreferences())
@@ -122,20 +126,19 @@ class UserPreferencesRepositoryImpl @Inject constructor(
             preferences[PreferenceKeys.ONBOARDING_COMPLETED] ?: false
         }
 
-
     override suspend fun setHasCompletedOnboarding(completed: Boolean) {
         withContext(ioDispatcher) {
-            try {
-                context.dataStore.edit { preferences ->
+            runCatching {
+                dataStore.edit { preferences ->
                     preferences[PreferenceKeys.ONBOARDING_COMPLETED] = completed
                 }
-            } catch (e: IOException) {
+            }.onFailure { e ->
                 handleError(e, "setting onboarding status")
             }
         }
     }
 
-    override val accentPalette: Flow<String> = context.dataStore.data
+    override val accentPalette: Flow<String> = dataStore.data
         .catch { exception ->
             handleError(exception, "reading accent palette")
             emit(emptyPreferences())
@@ -146,17 +149,21 @@ class UserPreferencesRepositoryImpl @Inject constructor(
 
     override suspend fun setAccentPalette(paletteName: String) {
         withContext(ioDispatcher) {
-            try {
-                context.dataStore.edit { preferences ->
+            runCatching {
+                dataStore.edit { preferences ->
                     preferences[PreferenceKeys.ACCENT_PALETTE] = paletteName
                 }
-            } catch (e: IOException) {
+            }.onFailure { e ->
                 handleError(e, "setting accent palette")
             }
         }
     }
 
     private fun handleError(exception: Throwable, contextMessage: String) {
-        Log.e(TAG, "Error $contextMessage", exception)
+        if (exception is IOException) {
+            Log.e(TAG, "DataStore IO error $contextMessage: ${exception.message}", exception)
+        } else {
+            Log.e(TAG, "DataStore error $contextMessage: ${exception.message}", exception)
+        }
     }
 }

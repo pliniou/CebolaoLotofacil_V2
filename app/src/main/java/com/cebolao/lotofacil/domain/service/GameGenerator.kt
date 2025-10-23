@@ -1,5 +1,6 @@
 package com.cebolao.lotofacil.domain.service
 
+import android.util.Log
 import com.cebolao.lotofacil.data.FilterState
 import com.cebolao.lotofacil.data.FilterType
 import com.cebolao.lotofacil.data.LotofacilConstants
@@ -8,16 +9,28 @@ import com.cebolao.lotofacil.di.DefaultDispatcher
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import java.security.SecureRandom
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.coroutineContext
+import kotlin.random.Random
 
 private const val MAX_RANDOM_ATTEMPTS = 250_000
 private const val HEURISTIC_ATTEMPTS_MULTIPLIER = 50
 private const val PROGRESS_UPDATE_FREQUENCY = 5
+private const val TAG = "GameGenerator"
+
+private const val MSG_HEURISTIC_START = "Iniciando geração otimizada..."
+private const val MSG_RANDOM_START = "Buscando jogos aleatórios..."
+private const val MSG_RANDOM_START_GENERIC = "Iniciando geração aleatória..."
+private const val MSG_FAILURE_PREFIX = "Não foi possível gerar"
+private const val MSG_FAILURE_SUFFIX = "jogos com os filtros atuais após"
+private const val MSG_FAILURE_SUFFIX_2 = "tentativas. Tente filtros menos restritos."
+private const val MSG_FAILURE_NO_HISTORY =
+    "Filtro 'Repetidas do Anterior' ativo, mas o último sorteio não está disponível."
 
 @Singleton
 class GameGenerator @Inject constructor(
@@ -28,7 +41,7 @@ class GameGenerator @Inject constructor(
 
     sealed class ProgressType {
         data object Started : ProgressType()
-        data class HeuristicStep(val message: String) : ProgressType()
+        data class Step(val message: String) : ProgressType()
         data class Attempt(val attemptNumber: Int, val found: Int) : ProgressType()
         data class Finished(val games: List<LotofacilGame>) : ProgressType()
         data class Failed(val reason: String) : ProgressType()
@@ -48,119 +61,109 @@ class GameGenerator @Inject constructor(
         emit(GenerationProgress(ProgressType.Started, 0, count))
 
         val validGames = mutableSetOf<LotofacilGame>()
-        val prioritized = activeFilters.filter { it.isEnabled }
+        val enabledFilters = activeFilters.filter { it.isEnabled }
 
-        val repeatsFilter = prioritized.find { it.type == FilterType.REPETIDAS_CONCURSO_ANTERIOR }
-        if (repeatsFilter != null && repeatsFilter.isEnabled && lastDraw == null) {
-            val reason =
-                "Filtro 'Repetidas do Anterior' está ativo, mas o histórico do último sorteio não está disponível."
-            emit(GenerationProgress(ProgressType.Failed(reason), 0, count))
+        val repeatsFilter = enabledFilters.find { it.type == FilterType.REPETIDAS_CONCURSO_ANTERIOR }
+        if (repeatsFilter != null && lastDraw == null) {
+            emit(GenerationProgress(ProgressType.Failed(MSG_FAILURE_NO_HISTORY), 0, count))
             return@flow
         }
 
-        if (repeatsFilter?.isEnabled == true) {
-            emit(
-                GenerationProgress(
-                    ProgressType.HeuristicStep("Iniciando fase heurística..."),
-                    0,
-                    count
-                )
-            )
-
-            val heuristicLimit = HEURISTIC_ATTEMPTS_MULTIPLIER * count
-            repeat(heuristicLimit) { attempt ->
-                coroutineContext.ensureActive()
-                val candidate = constructHeuristicGame(repeatsFilter, lastDraw)
-
-                if (candidate != null && isGameValid(candidate, prioritized, lastDraw)) {
-                    if (validGames.add(candidate)) {
-                        emit(
-                            GenerationProgress(
-                                ProgressType.Attempt(attempt + 1, validGames.size),
-                                validGames.size,
-                                count
-                            )
-                        )
-                        if (validGames.size >= count) {
-                            emit(
-                                GenerationProgress(
-                                    ProgressType.Finished(validGames.toList()),
-                                    validGames.size,
-                                    count
-                                )
-                            )
-                            return@flow
-                        }
-                    }
-                }
+        if (repeatsFilter != null) {
+            emit(GenerationProgress(ProgressType.Step(MSG_HEURISTIC_START), 0, count))
+            generateHeuristically(repeatsFilter, lastDraw, enabledFilters, validGames, count)
+            if (validGames.size >= count) {
+                emit(GenerationProgress(ProgressType.Finished(validGames.toList()), validGames.size, count))
+                return@flow
             }
         }
 
-        val initialMessage =
-            if (repeatsFilter?.isEnabled == true) "Fase heurística finalizada. Buscando aleatoriamente..." else "Buscando jogos aleatórios..."
-        emit(GenerationProgress(ProgressType.HeuristicStep(initialMessage), validGames.size, count))
+        val randomStartMessage = if (repeatsFilter != null) MSG_RANDOM_START else MSG_RANDOM_START_GENERIC
+        emit(GenerationProgress(ProgressType.Step(randomStartMessage), validGames.size, count))
+        val success = generateRandomly(enabledFilters, lastDraw, validGames, count)
 
+        if (success) {
+            emit(GenerationProgress(ProgressType.Finished(validGames.toList()), validGames.size, count))
+        } else {
+            val heuristicAttempts = if (repeatsFilter != null) HEURISTIC_ATTEMPTS_MULTIPLIER * count else 0
+            val totalAttempts = heuristicAttempts + MAX_RANDOM_ATTEMPTS
+            val reason = "$MSG_FAILURE_PREFIX $count $MSG_FAILURE_SUFFIX $totalAttempts $MSG_FAILURE_SUFFIX_2"
+            emit(GenerationProgress(ProgressType.Failed(reason), validGames.size, count))
+        }
+
+    }.flowOn(defaultDispatcher)
+
+    private suspend fun FlowCollector<GenerationProgress>.generateHeuristically(
+        repeatsFilter: FilterState,
+        lastDraw: Set<Int>?,
+        enabledFilters: List<FilterState>,
+        validGames: MutableSet<LotofacilGame>,
+        count: Int
+    ) {
+        val heuristicLimit = HEURISTIC_ATTEMPTS_MULTIPLIER * count
+        for (attempt in 1..heuristicLimit) {
+            coroutineContext.ensureActive()
+            val candidate = constructHeuristicGame(repeatsFilter, lastDraw) ?: continue
+
+            if (isGameValid(candidate, enabledFilters, lastDraw)) {
+                if (validGames.add(candidate)) {
+                    emit(GenerationProgress(ProgressType.Attempt(attempt, validGames.size), validGames.size, count))
+                    if (validGames.size >= count) return
+                }
+            }
+        }
+    }
+
+    private suspend fun FlowCollector<GenerationProgress>.generateRandomly(
+        enabledFilters: List<FilterState>,
+        lastDraw: Set<Int>?,
+        validGames: MutableSet<LotofacilGame>,
+        count: Int
+    ): Boolean {
         var attempts = 0
         while (validGames.size < count && attempts < MAX_RANDOM_ATTEMPTS) {
             coroutineContext.ensureActive()
             val game = generateRandomGame()
-            if (isGameValid(game, prioritized, lastDraw)) {
+            if (isGameValid(game, enabledFilters, lastDraw)) {
                 if (validGames.add(game)) {
                     if (validGames.size % PROGRESS_UPDATE_FREQUENCY == 0 || validGames.size == count) {
-                        emit(
-                            GenerationProgress(
-                                ProgressType.Attempt(attempts, validGames.size),
-                                validGames.size,
-                                count
-                            )
-                        )
+                        emit(GenerationProgress(ProgressType.Attempt(attempts, validGames.size), validGames.size, count))
                     }
                 }
             }
             attempts++
         }
-
-        if (validGames.size < count) {
-            val reason =
-                "Não foi possível gerar $count jogos com os filtros atuais após $attempts tentativas. Tente filtros menos restritos."
-            emit(GenerationProgress(ProgressType.Failed(reason), validGames.size, count))
-        } else {
-            emit(
-                GenerationProgress(
-                    ProgressType.Finished(validGames.toList()),
-                    validGames.size,
-                    count
-                )
-            )
-        }
-    }.flowOn(defaultDispatcher)
+        return validGames.size >= count
+    }
 
     private fun constructHeuristicGame(
         repeatsFilter: FilterState?,
         lastDraw: Set<Int>?
     ): LotofacilGame? {
+        if (repeatsFilter == null || !repeatsFilter.isEnabled || lastDraw == null) {
+            return generateRandomGame()
+        }
+
         val chosen = mutableSetOf<Int>()
-        val remaining: MutableList<Int> = allNumbers.toMutableList()
+        val remainingSource: MutableList<Int> = allNumbers.toMutableList()
 
-        if (repeatsFilter?.isEnabled == true && lastDraw != null) {
-            val desiredRepeats = (repeatsFilter.selectedRange.start.toInt()..
-                    repeatsFilter.selectedRange.endInclusive.toInt())
-                .random()
-                .coerceIn(0, LotofacilConstants.GAME_SIZE)
+        val repeatsRange = repeatsFilter.selectedRange.start.toInt()..repeatsFilter.selectedRange.endInclusive.toInt()
+        val desiredRepeats = repeatsRange.toList()
+            .random(Random)
+            .coerceIn(0, LotofacilConstants.GAME_SIZE.coerceAtMost(lastDraw.size))
 
-            val repeats = lastDraw.shuffled(secureRandom).take(desiredRepeats).toSet()
-            chosen.addAll(repeats)
-            remaining.removeAll(repeats)
-        }
+        val repeats = lastDraw.shuffled(secureRandom).take(desiredRepeats).toSet()
+        chosen.addAll(repeats)
+        remainingSource.removeAll(repeats)
 
-        remaining.shuffle(secureRandom)
-        while (chosen.size < LotofacilConstants.GAME_SIZE && remaining.isNotEmpty()) {
-            chosen.add(remaining.removeAt(0))
-        }
+        remainingSource.shuffle(secureRandom)
+        val needed = LotofacilConstants.GAME_SIZE - chosen.size
+        chosen.addAll(remainingSource.take(needed))
 
         return if (chosen.size == LotofacilConstants.GAME_SIZE) {
             LotofacilGame(chosen)
         } else {
+            Log.e(TAG, "Heuristic construction failed: ended with ${chosen.size} numbers.")
             null
         }
     }
@@ -176,7 +179,7 @@ class GameGenerator @Inject constructor(
         activeFilters: List<FilterState>,
         lastDraw: Set<Int>?
     ): Boolean {
-        for (filter in activeFilters) {
+        return activeFilters.all { filter ->
             val value: Int = when (filter.type) {
                 FilterType.SOMA_DEZENAS -> game.sum
                 FilterType.PARES -> game.evens
@@ -187,10 +190,7 @@ class GameGenerator @Inject constructor(
                 FilterType.MULTIPLOS_DE_3 -> game.multiplesOf3
                 FilterType.REPETIDAS_CONCURSO_ANTERIOR -> game.repeatedFrom(lastDraw)
             }
-            if (!filter.containsValue(value)) {
-                return false
-            }
+            filter.containsValue(value)
         }
-        return true
     }
 }

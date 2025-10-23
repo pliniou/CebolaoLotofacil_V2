@@ -15,7 +15,9 @@ import javax.inject.Singleton
 
 private const val TOP_NUMBERS_COUNT = 5
 private const val CACHE_MAX_SIZE = 50
-private const val CACHE_EVICTION_FACTOR = 0.25 // Evict 25% of the cache when full
+private const val CACHE_EVICTION_FACTOR = 0.25
+private const val SUM_DISTRIBUTION_GROUPING = 10
+private const val DEFAULT_GROUPING = 1
 
 @Singleton
 class StatisticsAnalyzer @Inject constructor(
@@ -60,7 +62,7 @@ class StatisticsAnalyzer @Inject constructor(
         }
 
     private fun calculateMostFrequent(draws: List<HistoricalDraw>): List<NumberFrequency> {
-        val frequencies = IntArray(26)  // 0-25, índice 25 é o maior número válido
+        val frequencies = IntArray(LotofacilConstants.MAX_NUMBER + 1)
 
         draws.forEach { draw ->
             draw.numbers.forEach { number ->
@@ -70,13 +72,12 @@ class StatisticsAnalyzer @Inject constructor(
             }
         }
 
-        return (1..25).map { number ->
+        return (LotofacilConstants.MIN_NUMBER..LotofacilConstants.MAX_NUMBER).map { number ->
             NumberFrequency(number, frequencies[number])
         }
             .sortedByDescending { it.frequency }
             .take(TOP_NUMBERS_COUNT)
     }
-
 
     private fun calculateMostOverdue(draws: List<HistoricalDraw>): List<NumberFrequency> {
         if (draws.isEmpty()) return emptyList()
@@ -86,13 +87,13 @@ class StatisticsAnalyzer @Inject constructor(
 
         draws.forEach { draw ->
             draw.numbers.forEach { number ->
-                if (number in 1..25 && number !in lastSeenMap) {  // SIMPLIFICADO
+                if (number in LotofacilConstants.VALID_NUMBER_RANGE && number !in lastSeenMap) {
                     lastSeenMap[number] = draw.contestNumber
                 }
             }
         }
 
-        return (1..25).map { number ->  // SIMPLIFICADO
+        return (LotofacilConstants.MIN_NUMBER..LotofacilConstants.MAX_NUMBER).map { number ->
             val lastSeen = lastSeenMap[number] ?: draws.last().contestNumber
             val overdue = lastContestNumber - lastSeen
             NumberFrequency(number, overdue)
@@ -100,7 +101,6 @@ class StatisticsAnalyzer @Inject constructor(
             .sortedByDescending { it.frequency }
             .take(TOP_NUMBERS_COUNT)
     }
-
 
     private suspend fun calculateAllDistributions(draws: List<HistoricalDraw>): DistributionResults {
         return coroutineScope {
@@ -115,8 +115,9 @@ class StatisticsAnalyzer @Inject constructor(
             val fibonacciDeferred =
                 async { calculateDistribution(draws) { it.count { num -> num in LotofacilConstants.FIBONACCI } } }
             val multiplesOf3Deferred =
-                async { calculateDistribution(draws) { it.count { num -> num % 3 == 0 } } }
-            val sumDeferred = async { calculateDistribution(draws, 10) { it.sum() } }
+                async { calculateDistribution(draws) { it.count { num -> num in LotofacilConstants.MULTIPLOS_DE_3 } } }
+            val sumDeferred =
+                async { calculateDistribution(draws, SUM_DISTRIBUTION_GROUPING) { it.sum() } }
 
             DistributionResults(
                 evenDistribution = evenDeferred.await(),
@@ -132,7 +133,7 @@ class StatisticsAnalyzer @Inject constructor(
 
     private fun calculateDistribution(
         draws: List<HistoricalDraw>,
-        grouping: Int = 1,
+        grouping: Int = DEFAULT_GROUPING,
         valueExtractor: (Set<Int>) -> Int
     ): Map<Int, Int> {
         return draws.groupingBy { draw ->

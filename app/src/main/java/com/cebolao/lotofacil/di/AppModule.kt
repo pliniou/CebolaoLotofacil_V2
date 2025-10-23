@@ -34,39 +34,39 @@ annotation class ApplicationScope
 object AppModule {
 
     @Provides
-    @Singleton
+    @Singleton // WorkManager é um singleton do sistema
     fun provideWorkManager(@ApplicationContext context: Context): WorkManager =
         WorkManager.getInstance(context)
 
     @Provides
-    @Singleton
+    @Singleton // Serviços podem ser singletons se não tiverem estado mutável problemático
     fun provideGameGenerator(@DefaultDispatcher dispatcher: CoroutineDispatcher): GameGenerator =
         GameGenerator(dispatcher)
 
     @Provides
-    @Singleton
+    @Singleton // Serviços podem ser singletons
     fun provideStatisticsAnalyzer(@DefaultDispatcher dispatcher: CoroutineDispatcher): StatisticsAnalyzer =
         StatisticsAnalyzer(dispatcher)
 
     @Provides
-    @Singleton
+    @Singleton // Serviços podem ser singletons
     fun provideFilterSuccessCalculator(): FilterSuccessCalculator =
         FilterSuccessCalculator()
 
     @IoDispatcher
     @Provides
-    @Singleton
+    // Removido @Singleton - Dispatchers são objetos globais
     fun providesIoDispatcher(): CoroutineDispatcher = Dispatchers.IO
 
     @DefaultDispatcher
     @Provides
-    @Singleton
+    // Removido @Singleton - Dispatchers são objetos globais
     fun providesDefaultDispatcher(): CoroutineDispatcher = Dispatchers.Default
 
     @ApplicationScope
     @Provides
-    @Singleton
+    @Singleton // O CoroutineScope da aplicação deve ser Singleton
     fun providesApplicationScope(
         @DefaultDispatcher defaultDispatcher: CoroutineDispatcher
-    ): CoroutineScope = CoroutineScope(SupervisorJob() + defaultDispatcher)
+    ): CoroutineScope = CoroutineScope(SupervisorJob() + defaultDispatcher) // Mantido SupervisorJob
 }

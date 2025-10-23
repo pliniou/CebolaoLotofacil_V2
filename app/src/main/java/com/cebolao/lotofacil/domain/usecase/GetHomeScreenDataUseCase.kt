@@ -1,5 +1,6 @@
 package com.cebolao.lotofacil.domain.usecase
 
+import android.util.Log
 import com.cebolao.lotofacil.data.network.LotofacilApiResult
 import com.cebolao.lotofacil.di.DefaultDispatcher
 import com.cebolao.lotofacil.domain.model.HomeScreenData
@@ -7,6 +8,9 @@ import com.cebolao.lotofacil.domain.model.NextDrawInfo
 import com.cebolao.lotofacil.domain.model.WinnerData
 import com.cebolao.lotofacil.domain.repository.HistoryRepository
 import com.cebolao.lotofacil.domain.service.StatisticsAnalyzer
+import com.cebolao.lotofacil.util.DEFAULT_PLACEHOLDER
+import com.cebolao.lotofacil.util.LOCALE_COUNTRY
+import com.cebolao.lotofacil.util.LOCALE_LANGUAGE
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -17,8 +21,7 @@ import java.text.NumberFormat
 import java.util.Locale
 import javax.inject.Inject
 
-private const val LOCALE_LANGUAGE = "pt"
-private const val LOCALE_COUNTRY = "BR"
+private const val TAG = "GetHomeScreenDataUseCase"
 
 class GetHomeScreenDataUseCase @Inject constructor(
     private val historyRepository: HistoryRepository,
@@ -27,29 +30,34 @@ class GetHomeScreenDataUseCase @Inject constructor(
 ) {
     operator fun invoke(): Flow<Result<HomeScreenData>> = flow {
         try {
-            val history = historyRepository.getHistory()
-            if (history.isEmpty()) {
-                emit(Result.failure(Exception("Nenhum histórico de sorteio encontrado.")))
-                return@flow
-            }
-
-            val result = coroutineScope {
+            val resultData = coroutineScope {
                 val latestApiResultDeferred = async { historyRepository.getLatestApiResult() }
+                val historyDeferred = async { historyRepository.getHistory() }
+
+                val history = historyDeferred.await()
+                if (history.isEmpty()) {
+                    Log.w(TAG, "History is empty, cannot generate home screen data.")
+                    throw IllegalStateException("Nenhum histórico de sorteio encontrado.")
+                }
+
                 val initialStatsDeferred = async { statisticsAnalyzer.analyze(history) }
 
                 val lastDraw = history.firstOrNull()
                 val latestApiResult = latestApiResultDeferred.await()
+                val initialStats = initialStatsDeferred.await()
+
                 val (nextDraw, winners) = processApiResult(latestApiResult)
 
                 HomeScreenData(
                     lastDraw = lastDraw,
-                    initialStats = initialStatsDeferred.await(),
+                    initialStats = initialStats,
                     nextDrawInfo = nextDraw,
                     winnerData = winners
                 )
             }
-            emit(Result.success(result))
+            emit(Result.success(resultData))
         } catch (e: Exception) {
+            Log.e(TAG, "Error loading home screen data", e)
             emit(Result.failure(e))
         }
     }.flowOn(defaultDispatcher)
@@ -57,24 +65,31 @@ class GetHomeScreenDataUseCase @Inject constructor(
     private fun processApiResult(apiResult: LotofacilApiResult?): Pair<NextDrawInfo?, List<WinnerData>> {
         val currencyFormat =
             NumberFormat.getCurrencyInstance(Locale(LOCALE_LANGUAGE, LOCALE_COUNTRY))
-        val nextDrawInfo = apiResult?.takeIf { it.dataProximoConcurso != null }
+
+        val nextDrawInfo = apiResult?.takeIf { it.dataProximoConcurso != null && it.numero > 0 }
             ?.let {
                 NextDrawInfo(
                     contestNumber = it.numero + 1,
-                    formattedDate = it.dataProximoConcurso!!,
+                    formattedDate = it.dataProximoConcurso ?: DEFAULT_PLACEHOLDER,
                     formattedPrize = currencyFormat.format(it.valorEstimadoProximoConcurso),
-                    formattedPrizeFinalFive = currencyFormat.format(it.valorAcumuladoConcurso_0_5)
+                    formattedPrizeFinalFive = currencyFormat.format(it.valorAcumuladoConcurso05)
                 )
             }
-        val winnerData = apiResult?.listaRateioPremio?.map {
-            val hits = it.descricaoFaixa.filter { char -> char.isDigit() }.toIntOrNull() ?: 0
-            WinnerData(
-                hits = hits,
-                description = it.descricaoFaixa,
-                winnerCount = it.numeroDeGanhadores,
-                prize = it.valorPremio
-            )
+
+        val winnerData = apiResult?.listaRateioPremio?.mapNotNull { rateio ->
+            val hits = rateio.descricaoFaixa.filter { char -> char.isDigit() }.toIntOrNull()
+            if (hits != null) {
+                WinnerData(
+                    hits = hits,
+                    description = rateio.descricaoFaixa,
+                    winnerCount = rateio.numeroDeGanhadores,
+                    prize = rateio.valorPremio
+                )
+            } else {
+                null
+            }
         } ?: emptyList()
+
         return nextDrawInfo to winnerData
     }
 }

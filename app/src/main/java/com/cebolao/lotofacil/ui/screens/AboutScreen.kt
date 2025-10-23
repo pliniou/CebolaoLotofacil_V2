@@ -15,7 +15,9 @@ import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Policy
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -33,8 +35,10 @@ import com.cebolao.lotofacil.ui.components.FormattedText
 import com.cebolao.lotofacil.ui.components.InfoDialog
 import com.cebolao.lotofacil.ui.components.InfoListCard
 import com.cebolao.lotofacil.ui.components.InfoPoint
+import com.cebolao.lotofacil.ui.components.SectionCard
 import com.cebolao.lotofacil.ui.components.StudioHero
 import com.cebolao.lotofacil.ui.components.ThemeSettingsCard
+import com.cebolao.lotofacil.ui.components.TitleWithIcon
 import com.cebolao.lotofacil.ui.theme.AccentPalette
 import com.cebolao.lotofacil.ui.theme.Dimen
 
@@ -50,8 +54,8 @@ private fun rememberInfoItems(): List<InfoItem> {
     return remember {
         listOf(
             InfoItem(
-                title = "Finalidade do App",
-                subtitle = "Para que serve o Cebolão",
+                title = "Sobre o App",
+                subtitle = "Para que serve o Cebolão Generator?",
                 icon = Icons.Default.Lightbulb,
                 content = { AboutPurposeContent() }
             ),
@@ -62,14 +66,14 @@ private fun rememberInfoItems(): List<InfoItem> {
                 content = { AboutRulesContent() }
             ),
             InfoItem(
-                title = "O que é um Bolão?",
+                title = "Bolão !?",
                 subtitle = "Aumente suas chances em grupo",
                 icon = Icons.Default.Group,
                 content = { AboutBolaoContent() }
             ),
             InfoItem(
                 title = "Privacidade",
-                subtitle = "Seus dados estão seguros",
+                subtitle = "Seus dados (e jogos) estão seguros",
                 icon = Icons.Default.Lock,
                 content = { AboutPrivacyContent() }
             ),
@@ -130,19 +134,23 @@ fun AboutScreen(
 
             item {
                 AnimateOnEntry {
-                    ThemeSettingsCard(
-                        currentTheme = currentTheme,
-                        onThemeChange = onThemeChange
-                    )
-                }
-            }
-
-            item {
-                AnimateOnEntry {
-                    ColorPaletteCard(
-                        currentPalette = currentPalette,
-                        onPaletteChange = onPaletteChange
-                    )
+                    SectionCard {
+                        Column(verticalArrangement = Arrangement.spacedBy(Dimen.CardPadding)) {
+                            TitleWithIcon(
+                                text = "Personalização Visual",
+                                icon = Icons.Default.Palette
+                            )
+                            ThemeSettingsCard(
+                                currentTheme = currentTheme,
+                                onThemeChange = onThemeChange
+                            )
+                            ColorPaletteCard(
+                                currentPalette = currentPalette,
+                                onPaletteChange = onPaletteChange,
+                                modifier = Modifier
+                            )
+                        }
+                    }
                 }
             }
 
@@ -155,7 +163,7 @@ fun AboutScreen(
                         modifier = Modifier
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
+                                indication = rememberRipple(),
                                 onClick = { dialogContent = info }
                             )
                     )

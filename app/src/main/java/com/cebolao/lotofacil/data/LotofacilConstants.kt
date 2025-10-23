@@ -27,7 +27,7 @@ object LotofacilConstants {
     val ALL_NUMBERS: List<Int> = NUMBER_RANGE.toList()
 
     /** Custo de uma aposta simples (15 números) */
-    val GAME_COST: BigDecimal = BigDecimal("3.00")
+    val GAME_COST: BigDecimal = BigDecimal("3.50")
 
     /** Números primos de 1 a 25 */
     val PRIMOS: Set<Int> = setOf(2, 3, 5, 7, 11, 13, 17, 19, 23)
@@ -51,12 +51,7 @@ object LotofacilConstants {
         17, 18, 19
     )
 
-    /** Alias para `MIOLO` para manter consistência com `FilterType` */
-    val RETRATO: Set<Int> = MIOLO
-
     /** Múltiplos de 3 até 25 */
     val MULTIPLOS_DE_3: Set<Int> = setOf(3, 6, 9, 12, 15, 18, 21, 24)
 
-    /** Números pares de 1 a 25 - total de 12 números */
-    val PARES: Set<Int> = (MIN_NUMBER..MAX_NUMBER).filter { it % 2 == 0 }.toSet()
 }

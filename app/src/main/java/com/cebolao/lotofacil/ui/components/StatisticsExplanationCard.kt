@@ -21,14 +21,18 @@ fun StatisticsExplanationCard(
                 icon = Icons.AutoMirrored.Outlined.HelpOutline
             )
             AppDivider()
-            InfoPoint(
-                title = stringResource(R.string.about_purpose_item1_title),
-                description = stringResource(R.string.home_overdue_hot_numbers_desc)
-            )
-            InfoPoint(
-                title = stringResource(R.string.about_purpose_item2_title),
-                description = stringResource(R.string.home_distribution_charts_desc)
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(Dimen.SmallPadding)) {
+                InfoPoint(
+                    title = stringResource(R.string.about_purpose_item1_title),
+                    description = stringResource(R.string.home_overdue_hot_numbers_desc)
+                )
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(Dimen.SmallPadding)) {
+                InfoPoint(
+                    title = stringResource(R.string.about_purpose_item2_title),
+                    description = stringResource(R.string.home_distribution_charts_desc)
+                )
+            }
         }
     }
 }

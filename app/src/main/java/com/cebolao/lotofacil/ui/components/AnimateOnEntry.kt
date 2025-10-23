@@ -18,12 +18,6 @@ import androidx.compose.ui.Modifier
 import com.cebolao.lotofacil.ui.theme.AppConfig
 import kotlinx.coroutines.delay
 
-private const val INITIAL_OFFSET_DIVISOR = 8
-
-/**
- * Um wrapper que anima a entrada de seu conteúdo na tela.
- * A animação é consistente, utilizando as durações definidas no AppConfig.
- */
 @Composable
 fun AnimateOnEntry(
     modifier: Modifier = Modifier,
@@ -34,7 +28,9 @@ fun AnimateOnEntry(
     var isVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        if (delayMillis > 0) delay(delayMillis)
+        if (delayMillis > 0) {
+            delay(delayMillis)
+        }
         isVisible = true
     }
 
@@ -42,10 +38,10 @@ fun AnimateOnEntry(
         modifier = modifier,
         visible = isVisible,
         enter = slideInVertically(
-            initialOffsetY = { it / INITIAL_OFFSET_DIVISOR },
+            initialOffsetY = { fullHeight -> fullHeight / AppConfig.UI.AnimateOnEntryOffsetYDivisor },
             animationSpec = spring(
                 dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessLow
+                stiffness = Spring.StiffnessMediumLow
             )
         ) + fadeIn(animationSpec = tween(durationMillis)),
         exit = slideOutVertically() + fadeOut()

@@ -7,7 +7,11 @@
 
     <style name="Widget.Text.Title">
         <item name="android:fontFamily">@font/gabarito_bold</item>
-        <item name="android:textSize">16sp</item>
+        <item name="android:textSize">18sp</item>
+    </style>
+
+    <style name="Widget.Text.Prize" parent="Widget.Text.Title">
+        <item name="android:textSize">@dimen/widget_large_text_size</item>
     </style>
 
     <style name="Widget.Text.NumberBall">
@@ -17,7 +21,7 @@
     </style>
 
     <style name="Widget.Text.Loading">
-        <item name="android:textSize">12sp</item>
+        <item name="android:textSize">14sp</item>
         <item name="android:textColor">?android:attr/textColorSecondary</item>
     </style>
 </resources>

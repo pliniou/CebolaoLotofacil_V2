@@ -13,6 +13,7 @@ import com.cebolao.lotofacil.domain.usecase.CheckGameUseCase
 import com.cebolao.lotofacil.domain.usecase.GetGameSimpleStatsUseCase
 import com.cebolao.lotofacil.domain.usecase.SaveGameUseCase
 import com.cebolao.lotofacil.navigation.Screen
+import com.cebolao.lotofacil.util.CHECKER_ARG_SEPARATOR
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -24,6 +25,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+private const val EVENT_FLOW_REPLAY = 0
 
 @Stable
 sealed interface CheckerUiEvent {
@@ -60,12 +63,12 @@ class CheckerViewModel @Inject constructor(
     private val _selectedNumbers = MutableStateFlow<Set<Int>>(emptySet())
     val selectedNumbers: StateFlow<Set<Int>> = _selectedNumbers.asStateFlow()
 
-    private val _eventFlow = MutableSharedFlow<CheckerUiEvent>(replay = 0)
+    private val _eventFlow = MutableSharedFlow<CheckerUiEvent>(replay = EVENT_FLOW_REPLAY)
     val events = _eventFlow.asSharedFlow()
 
     init {
         savedStateHandle.get<String>(Screen.Checker.CHECKER_NUMBERS_ARG)?.let { numbersArg ->
-            val numbers = numbersArg.split(',').mapNotNull { it.toIntOrNull() }.toSet()
+            val numbers = numbersArg.split(CHECKER_ARG_SEPARATOR).mapNotNull { it.toIntOrNull() }.toSet()
             if (numbers.size == LotofacilConstants.GAME_SIZE) {
                 _selectedNumbers.value = numbers
                 checkGame()

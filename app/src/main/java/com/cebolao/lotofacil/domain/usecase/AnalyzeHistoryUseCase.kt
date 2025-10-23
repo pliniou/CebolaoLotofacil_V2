@@ -1,6 +1,8 @@
 package com.cebolao.lotofacil.domain.usecase
 
+import android.util.Log
 import com.cebolao.lotofacil.data.HistoricalDraw
+import com.cebolao.lotofacil.data.LotofacilConstants
 import com.cebolao.lotofacil.data.StatisticsReport
 import com.cebolao.lotofacil.data.model.NumberFrequency
 import com.cebolao.lotofacil.di.IoDispatcher
@@ -9,38 +11,33 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
+private const val TAG = "AnalyzeHistoryUseCase"
 private const val MOST_FREQUENT_COUNT = 5
 private const val ALL_CONTESTS_WINDOW = 0
 
-/**
- * Use case para analisar um histórico de sorteios e gerar um relatório estatístico.
- * Agora, ele aceita uma janela de tempo para otimizar a busca de dados.
- */
 class AnalyzeHistoryUseCase @Inject constructor(
     private val historyRepository: HistoryRepository,
     @IoDispatcher private val dispatcher: CoroutineDispatcher
 ) {
 
-    /**
-     * @param timeWindow O número de concursos mais recentes a serem analisados.
-     * Se for 0, todos os concursos serão analisados.
-     */
-    suspend operator fun invoke(timeWindow: Int): Result<StatisticsReport> = withContext(dispatcher) {
-        try {
-            val history = if (timeWindow == ALL_CONTESTS_WINDOW) {
-                historyRepository.getHistory()
+    suspend operator fun invoke(timeWindow: Int = ALL_CONTESTS_WINDOW): Result<StatisticsReport> = withContext(dispatcher) {
+        runCatching {
+            val fullHistory = historyRepository.getHistory()
+
+            val historyToAnalyze = if (timeWindow == ALL_CONTESTS_WINDOW || timeWindow <= 0) {
+                fullHistory
             } else {
-                historyRepository.getHistory().take(timeWindow)
+                fullHistory.take(timeWindow)
             }
 
-            if (history.isEmpty()) {
-                return@withContext Result.success(StatisticsReport())
+            if (historyToAnalyze.isEmpty()) {
+                Log.w(TAG, "History is empty for time window: $timeWindow. Returning empty report.")
+                StatisticsReport()
+            } else {
+                calculateStatistics(historyToAnalyze)
             }
-
-            val report = calculateStatistics(history)
-            Result.success(report)
-        } catch (e: Exception) {
-            Result.failure(e)
+        }.onFailure { e ->
+            Log.e(TAG, "Failed to analyze history for time window: $timeWindow", e)
         }
     }
 
@@ -54,9 +51,12 @@ class AnalyzeHistoryUseCase @Inject constructor(
             .take(MOST_FREQUENT_COUNT)
             .map { NumberFrequency(it.key, it.value) }
 
-        val mostOverdue = (1..25).map { number ->
-            val lastSeen = history.firstOrNull { it.numbers.contains(number) }?.contestNumber ?: 0
-            val overdue = if (lastSeen > 0) latestContestNumber - lastSeen else latestContestNumber
+        val mostOverdue = (LotofacilConstants.MIN_NUMBER..LotofacilConstants.MAX_NUMBER).map { number ->
+            val lastSeenContest = history.firstOrNull { it.numbers.contains(number) }?.contestNumber
+            val overdue = when (lastSeenContest) {
+                null -> latestContestNumber - (history.lastOrNull()?.contestNumber ?: latestContestNumber) + 1
+                else -> latestContestNumber - lastSeenContest
+            }
             NumberFrequency(number, overdue)
         }.sortedByDescending { it.frequency }.take(MOST_FREQUENT_COUNT)
 
@@ -69,7 +69,14 @@ class AnalyzeHistoryUseCase @Inject constructor(
             frameDistribution = history.groupingBy { it.frame }.eachCount(),
             portraitDistribution = history.groupingBy { it.portrait }.eachCount(),
             fibonacciDistribution = history.groupingBy { it.fibonacci }.eachCount(),
-            multiplesOf3Distribution = history.groupingBy { it.multiplesOf3 }.eachCount()
+            multiplesOf3Distribution = history.groupingBy { it.multiplesOf3 }.eachCount(),
+            averageSum = calculateAverageSum(history),
+            totalDrawsAnalyzed = history.size
         )
+    }
+
+    private fun calculateAverageSum(history: List<HistoricalDraw>): Float {
+        if (history.isEmpty()) return 0f
+        return history.map { it.sum }.average().toFloat()
     }
 }

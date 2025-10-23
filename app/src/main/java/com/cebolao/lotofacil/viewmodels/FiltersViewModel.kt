@@ -1,17 +1,18 @@
 package com.cebolao.lotofacil.viewmodels
 
+import android.util.Log
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cebolao.lotofacil.data.FilterPreset
 import com.cebolao.lotofacil.data.FilterState
 import com.cebolao.lotofacil.data.FilterType
-import com.cebolao.lotofacil.di.STATE_IN_TIMEOUT_MS
 import com.cebolao.lotofacil.domain.service.FilterSuccessCalculator
 import com.cebolao.lotofacil.domain.service.GameGenerator
 import com.cebolao.lotofacil.domain.usecase.GenerateGamesUseCase
 import com.cebolao.lotofacil.domain.usecase.GetLastDrawUseCase
 import com.cebolao.lotofacil.domain.usecase.SaveGeneratedGamesUseCase
+import com.cebolao.lotofacil.util.STATE_IN_TIMEOUT_MS
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -24,8 +25,14 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.concurrent.CancellationException
 import javax.inject.Inject
 import kotlin.math.roundToInt
+
+private const val EVENT_FLOW_REPLAY = 0
+private const val TAG = "FiltersViewModel"
+private const val MSG_LOADING_START = "Iniciando..."
+private const val MSG_LOADING_GENERATING = "Gerando..."
 
 @Stable
 sealed interface NavigationEvent {
@@ -69,9 +76,10 @@ class FiltersViewModel @Inject constructor(
     private val _lastDraw = MutableStateFlow<Set<Int>?>(null)
     private val _showResetDialog = MutableStateFlow(false)
     private val _filterInfoToShow = MutableStateFlow<FilterType?>(null)
-    private val _eventFlow = MutableSharedFlow<NavigationEvent>(replay = 0)
 
+    private val _eventFlow = MutableSharedFlow<NavigationEvent>(replay = EVENT_FLOW_REPLAY)
     val events = _eventFlow.asSharedFlow()
+
     private var generationJob: Job? = null
 
     val uiState: StateFlow<FiltersScreenState> = combine(
@@ -105,7 +113,7 @@ class FiltersViewModel @Inject constructor(
             getLastDrawUseCase()
                 .onSuccess { _lastDraw.value = it?.numbers }
                 .onFailure {
-                    android.util.Log.e("FiltersViewModel", "Error loading last draw", it)
+                    Log.e(TAG, "Error loading last draw numbers", it)
                 }
         }
     }
@@ -146,8 +154,8 @@ class FiltersViewModel @Inject constructor(
         generationJob?.cancel()
         generationJob = viewModelScope.launch {
             generateGamesUseCase(quantity, _filterStates.value)
-                .onCompletion {
-                    if (it is java.util.concurrent.CancellationException) {
+                .onCompletion { throwable ->
+                    if (throwable is CancellationException) {
                         _generationState.value = GenerationUiState.Idle
                     }
                 }
@@ -158,13 +166,13 @@ class FiltersViewModel @Inject constructor(
     private suspend fun handleGenerationProgress(progress: GameGenerator.GenerationProgress) {
         when (val type = progress.progressType) {
             is GameGenerator.ProgressType.Started -> {
-                _generationState.value = GenerationUiState.Loading("Iniciando...", 0, progress.total)
+                _generationState.value = GenerationUiState.Loading(MSG_LOADING_START, 0, progress.total)
             }
-            is GameGenerator.ProgressType.HeuristicStep -> {
+            is GameGenerator.ProgressType.Step -> {
                 _generationState.value = GenerationUiState.Loading(type.message, progress.current, progress.total)
             }
             is GameGenerator.ProgressType.Attempt -> {
-                _generationState.value = GenerationUiState.Loading("Gerando...", progress.current, progress.total)
+                _generationState.value = GenerationUiState.Loading(MSG_LOADING_GENERATING, progress.current, progress.total)
             }
             is GameGenerator.ProgressType.Finished -> {
                 saveGeneratedGamesUseCase(type.games)
@@ -208,7 +216,9 @@ class FiltersViewModel @Inject constructor(
 private fun ClosedFloatingPointRange<Float>.snapToStep(
     fullRange: ClosedFloatingPointRange<Float>
 ): ClosedFloatingPointRange<Float> {
-    val start = this.start.roundToInt().toFloat().coerceIn(fullRange.start, fullRange.endInclusive)
-    val end = this.endInclusive.roundToInt().toFloat().coerceIn(fullRange.start, fullRange.endInclusive)
-    return start..end
+    val start = this.start.roundToInt().toFloat()
+    val end = this.endInclusive.roundToInt().toFloat()
+    val coercedStart = start.coerceIn(fullRange.start, fullRange.endInclusive)
+    val coercedEnd = end.coerceIn(fullRange.start, fullRange.endInclusive)
+    return coercedStart..coercedEnd
 }

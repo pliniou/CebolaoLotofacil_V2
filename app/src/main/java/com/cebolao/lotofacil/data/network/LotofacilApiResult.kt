@@ -21,7 +21,7 @@ data class LotofacilApiResult(
     val valorEstimadoProximoConcurso: Double = 0.0,
 
     @SerialName("valorAcumuladoConcurso_0_5")
-    val valorAcumuladoConcurso_0_5: Double = 0.0,
+    val valorAcumuladoConcurso05: Double = 0.0,
 
     @SerialName("listaRateioPremio")
     val listaRateioPremio: List<RateioPremio> = emptyList()

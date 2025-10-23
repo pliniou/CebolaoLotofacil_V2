@@ -34,11 +34,13 @@ import androidx.compose.ui.text.font.FontWeight
 import com.cebolao.lotofacil.R
 import com.cebolao.lotofacil.data.LotofacilConstants
 import com.cebolao.lotofacil.ui.theme.Dimen
+import com.cebolao.lotofacil.util.LOCALE_COUNTRY
+import com.cebolao.lotofacil.util.LOCALE_LANGUAGE
 import com.cebolao.lotofacil.viewmodels.GenerationUiState
 import java.text.NumberFormat
 import java.util.Locale
 
-private val GAME_QUANTITY_OPTIONS = listOf(1, 2, 3, 5, 7, 9, 10, 12, 15, 20)
+private val GAME_QUANTITY_OPTIONS = listOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 
 @Composable
 fun GenerationActionsPanel(
@@ -50,7 +52,14 @@ fun GenerationActionsPanel(
     val haptic = LocalHapticFeedback.current
     var selectedIndex by remember { mutableIntStateOf(0) }
     val quantity = GAME_QUANTITY_OPTIONS[selectedIndex]
-    val currencyFormat = remember { NumberFormat.getCurrencyInstance(Locale("pt", "BR")) }
+    val currencyFormat = remember {
+        NumberFormat.getCurrencyInstance(
+            Locale(
+                LOCALE_LANGUAGE,
+                LOCALE_COUNTRY
+            )
+        )
+    }
     val isLoading = generationState is GenerationUiState.Loading
 
     Surface(

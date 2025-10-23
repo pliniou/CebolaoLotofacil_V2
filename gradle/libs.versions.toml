@@ -82,7 +82,6 @@ retrofit-converter-kotlinx-serialization = { group = "com.jakewharton.retrofit",
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 okhttp-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
 # Kotlin Libraries
-kotlin-reflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect", version.ref = "kotlin" }
 kotlinx-collections-immutable = { group = "org.jetbrains.kotlinx", name = "kotlinx-collections-immutable", version.ref = "kotlinxCollectionsImmutable" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 # Desugaring
@@ -102,6 +101,7 @@ testing-android-work = { group = "androidx.work", name = "work-testing", version
 # Debug Tools
 androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
+# Material Components (usado apenas para Widgets XML)
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 
 [plugins]

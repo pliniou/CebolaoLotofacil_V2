@@ -8,13 +8,13 @@ import com.cebolao.lotofacil.R
 import com.cebolao.lotofacil.data.CheckResult
 import com.cebolao.lotofacil.data.LotofacilConstants
 import com.cebolao.lotofacil.data.LotofacilGame
-import com.cebolao.lotofacil.di.STATE_IN_TIMEOUT_MS
-import com.cebolao.lotofacil.domain.repository.GameRepository
 import com.cebolao.lotofacil.domain.usecase.CheckGameUseCase
 import com.cebolao.lotofacil.domain.usecase.ClearUnpinnedGamesUseCase
 import com.cebolao.lotofacil.domain.usecase.DeleteGameUseCase
 import com.cebolao.lotofacil.domain.usecase.GetGameSimpleStatsUseCase
+import com.cebolao.lotofacil.domain.usecase.ObserveGamesUseCase
 import com.cebolao.lotofacil.domain.usecase.TogglePinStateUseCase
+import com.cebolao.lotofacil.util.STATE_IN_TIMEOUT_MS
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -60,7 +60,7 @@ sealed interface GameAnalysisUiState {
 
 @HiltViewModel
 class GameViewModel @Inject constructor(
-    private val gameRepository: GameRepository,
+    observeGamesUseCase: ObserveGamesUseCase,
     private val checkGameUseCase: CheckGameUseCase,
     private val getGameSimpleStatsUseCase: GetGameSimpleStatsUseCase,
     private val clearUnpinnedGamesUseCase: ClearUnpinnedGamesUseCase,
@@ -74,7 +74,14 @@ class GameViewModel @Inject constructor(
     private val _analysisState = MutableStateFlow<GameAnalysisUiState>(GameAnalysisUiState.Idle)
     val analysisState: StateFlow<GameAnalysisUiState> = _analysisState.asStateFlow()
 
-    val generatedGames: StateFlow<ImmutableList<LotofacilGame>> = gameRepository.games
+    val generatedGames: StateFlow<ImmutableList<LotofacilGame>> = observeGamesUseCase.observeAllGames()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(STATE_IN_TIMEOUT_MS),
+            initialValue = persistentListOf()
+        )
+
+    val pinnedGames: StateFlow<ImmutableList<LotofacilGame>> = observeGamesUseCase.observePinnedGames()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(STATE_IN_TIMEOUT_MS),
@@ -134,17 +141,17 @@ class GameViewModel @Inject constructor(
         analyzeJob = viewModelScope.launch {
             _analysisState.value = GameAnalysisUiState.Loading
 
-            val checkResult = checkGameUseCase(game.numbers).first()
-            val simpleStats = getGameSimpleStatsUseCase(game).first()
-
-            if (checkResult.isSuccess && simpleStats.isSuccess) {
-                val result = GameAnalysisResult(
+            runCatching {
+                val checkResult = checkGameUseCase(game.numbers).first().getOrThrow()
+                val simpleStats = getGameSimpleStatsUseCase(game).first().getOrThrow()
+                GameAnalysisResult(
                     game = game,
-                    simpleStats = simpleStats.getOrThrow(),
-                    checkResult = checkResult.getOrThrow()
+                    simpleStats = simpleStats,
+                    checkResult = checkResult
                 )
+            }.onSuccess { result ->
                 _analysisState.value = GameAnalysisUiState.Success(result)
-            } else {
+            }.onFailure {
                 _analysisState.value = GameAnalysisUiState.Error(R.string.error_analysis_failed)
             }
         }

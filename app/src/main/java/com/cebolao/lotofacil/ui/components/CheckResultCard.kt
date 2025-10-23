@@ -27,7 +27,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import com.cebolao.lotofacil.R
 import com.cebolao.lotofacil.data.CheckResult
+import com.cebolao.lotofacil.domain.usecase.MIN_SCORE_FOR_PRIZE
+import com.cebolao.lotofacil.ui.theme.AppConfig
 import com.cebolao.lotofacil.ui.theme.Dimen
+import com.cebolao.lotofacil.util.DEFAULT_PLACEHOLDER
 import kotlinx.collections.immutable.ImmutableMap
 
 @Composable
@@ -96,10 +99,10 @@ private fun ResultHeader(totalWins: Int, contestsChecked: Int) {
 private fun ScoreBreakdown(scoreCounts: ImmutableMap<Int, Int>) {
     Column(verticalArrangement = Arrangement.spacedBy(Dimen.SmallPadding)) {
         scoreCounts.entries.sortedByDescending { it.key }.forEach { (score, count) ->
-            if (score >= 11) {
+            if (score >= MIN_SCORE_FOR_PRIZE) {
                 val animated by animateIntAsState(
                     targetValue = count,
-                    animationSpec = tween(600),
+                    animationSpec = tween(AppConfig.Animation.LongDuration),
                     label = "scoreCount-$score"
                 )
                 Row(
@@ -143,8 +146,8 @@ private fun LastHitInfo(result: CheckResult) {
         Text(
             text = stringResource(
                 R.string.checker_last_hit_info,
-                result.lastHitContest ?: "--",
-                result.lastHitScore ?: "--"
+                result.lastHitContest?.toString() ?: DEFAULT_PLACEHOLDER,
+                result.lastHitScore?.toString() ?: DEFAULT_PLACEHOLDER
             ),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant

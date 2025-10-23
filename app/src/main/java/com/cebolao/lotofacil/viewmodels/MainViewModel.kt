@@ -3,10 +3,11 @@ package com.cebolao.lotofacil.viewmodels
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.cebolao.lotofacil.di.STATE_IN_TIMEOUT_MS
+import com.cebolao.lotofacil.data.repository.THEME_MODE_AUTO
 import com.cebolao.lotofacil.domain.repository.UserPreferencesRepository
 import com.cebolao.lotofacil.navigation.Screen
 import com.cebolao.lotofacil.ui.theme.AccentPalette
+import com.cebolao.lotofacil.util.STATE_IN_TIMEOUT_MS
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -14,8 +15,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
-private const val DEFAULT_THEME_MODE = "auto"
 
 @Stable
 data class MainUiState(
@@ -59,7 +58,7 @@ class MainViewModel @Inject constructor(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(STATE_IN_TIMEOUT_MS),
-            initialValue = DEFAULT_THEME_MODE
+            initialValue = THEME_MODE_AUTO
         )
 
     val accentPalette: StateFlow<String> = userPreferencesRepository.accentPalette

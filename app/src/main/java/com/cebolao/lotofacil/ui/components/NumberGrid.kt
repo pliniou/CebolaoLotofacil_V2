@@ -17,13 +17,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
+import com.cebolao.lotofacil.R
+import com.cebolao.lotofacil.data.LotofacilConstants
+import com.cebolao.lotofacil.ui.theme.AppConfig
 import com.cebolao.lotofacil.ui.theme.Dimen
+import com.cebolao.lotofacil.util.DEFAULT_NUMBER_FORMAT
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
-private val ALL_LOTOFACIL_NUMBERS = (1..25).toImmutableList()
-private const val ITEMS_PER_ROW = 5
+private val ALL_LOTOFACIL_NUMBERS = (LotofacilConstants.MIN_NUMBER..LotofacilConstants.MAX_NUMBER).toImmutableList()
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -33,7 +38,8 @@ fun NumberGrid(
     selectedNumbers: Set<Int>,
     onNumberClick: (Int) -> Unit,
     maxSelection: Int? = null,
-    numberSize: Dp = Dimen.NumberBall
+    numberSize: Dp = Dimen.NumberBall,
+    ballVariant: NumberBallVariant = NumberBallVariant.Primary
 ) {
     val haptic = LocalHapticFeedback.current
     val selectionFull = maxSelection != null && selectedNumbers.size >= maxSelection
@@ -47,7 +53,7 @@ fun NumberGrid(
             Alignment.CenterHorizontally
         ),
         verticalArrangement = Arrangement.spacedBy(Dimen.SmallPadding),
-        maxItemsInEachRow = ITEMS_PER_ROW
+        maxItemsInEachRow = AppConfig.UI.NumberGridItemsPerRow
     ) {
         allNumbers.forEach { number ->
             val isSelected = number in selectedNumbers
@@ -59,6 +65,7 @@ fun NumberGrid(
                 isClickable = isClickable,
                 haptic = haptic,
                 numberSize = numberSize,
+                ballVariant = ballVariant,
                 onNumberClick = onNumberClick
             )
         }
@@ -72,8 +79,12 @@ private fun NumberGridItem(
     isClickable: Boolean,
     haptic: HapticFeedback,
     numberSize: Dp,
+    ballVariant: NumberBallVariant,
     onNumberClick: (Int) -> Unit
 ) {
+    val numberFormatted = DEFAULT_NUMBER_FORMAT.format(number)
+    val clickLabel = stringResource(R.string.number_grid_toggle_number, numberFormatted)
+
     Box(
         modifier = Modifier
             .clip(CircleShape)
@@ -84,15 +95,18 @@ private fun NumberGridItem(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     onNumberClick(number)
-                }
+                },
+                onClickLabel = clickLabel
             )
+            .semantics(mergeDescendants = true) {}
             .padding(Dimen.ExtraSmallPadding)
     ) {
         NumberBall(
             number = number,
             isSelected = isSelected,
             isDisabled = !isClickable,
-            size = numberSize
+            size = numberSize,
+            variant = ballVariant
         )
     }
 }

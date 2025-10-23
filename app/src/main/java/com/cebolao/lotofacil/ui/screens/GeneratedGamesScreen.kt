@@ -1,8 +1,8 @@
 package com.cebolao.lotofacil.ui.screens
 
 import android.content.Intent
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.filled.DeleteSweep
@@ -18,11 +20,14 @@ import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Style
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -30,6 +35,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,6 +47,7 @@ import androidx.core.text.HtmlCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.cebolao.lotofacil.R
 import com.cebolao.lotofacil.data.LotofacilGame
 import com.cebolao.lotofacil.navigation.Screen
@@ -54,23 +61,33 @@ import com.cebolao.lotofacil.ui.components.MessageState
 import com.cebolao.lotofacil.ui.components.SectionCard
 import com.cebolao.lotofacil.ui.components.TitleWithIcon
 import com.cebolao.lotofacil.ui.theme.Dimen
+import com.cebolao.lotofacil.util.LOCALE_COUNTRY
+import com.cebolao.lotofacil.util.LOCALE_LANGUAGE
+import com.cebolao.lotofacil.util.MIME_TYPE_TEXT_PLAIN
 import com.cebolao.lotofacil.viewmodels.GameAnalysisUiState
 import com.cebolao.lotofacil.viewmodels.GameSummary
 import com.cebolao.lotofacil.viewmodels.GameViewModel
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.Locale
 
+private val gameTabs = listOf("Todos", "Fixados")
+
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun GeneratedGamesScreen(
     navController: NavController,
     gameViewModel: GameViewModel = hiltViewModel()
 ) {
-    val games by gameViewModel.generatedGames.collectAsStateWithLifecycle()
+    val allGames by gameViewModel.generatedGames.collectAsStateWithLifecycle()
+    val pinnedGames by gameViewModel.pinnedGames.collectAsStateWithLifecycle()
     val uiState by gameViewModel.uiState.collectAsStateWithLifecycle()
     val analysisState by gameViewModel.analysisState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+    val pagerState = rememberPagerState(pageCount = { gameTabs.size })
+    val scope = rememberCoroutineScope()
 
     var showClearDialog by remember { mutableStateOf(false) }
 
@@ -83,45 +100,49 @@ fun GeneratedGamesScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         actions = {
             ScreenActions(
-                games = games,
+                games = allGames,
                 onShowClearDialog = { showClearDialog = true }
             )
         }
     ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding)) {
-            if (games.isEmpty()) {
+        Column(modifier = Modifier.padding(innerPadding)) {
+            if (allGames.isEmpty()) {
                 MessageState(
                     icon = Icons.AutoMirrored.Filled.ListAlt,
                     title = stringResource(R.string.games_empty_state_title),
                     message = stringResource(R.string.games_empty_state_description),
                     actionLabel = stringResource(R.string.filters_button_generate),
-                    onActionClick = { navController.navigate(Screen.Filters.route) },
+                    onActionClick = {
+                        navController.navigate(Screen.Filters.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
                     modifier = Modifier.padding(horizontal = Dimen.ScreenPadding)
                 )
             } else {
-                GamesList(
-                    games = games,
-                    summary = uiState.summary,
-                    onGameAction = { game, action ->
-                        when (action) {
-                            GameCardAction.Analyze -> gameViewModel.analyzeGame(game)
-                            GameCardAction.Pin -> gameViewModel.togglePinState(game)
-                            GameCardAction.Delete -> gameViewModel.requestDeleteGame(game)
-                            GameCardAction.Check -> navController.navigateToChecker(game.numbers)
-                            GameCardAction.Share -> {
-                                val numbersFormatted = game.numbers.sorted().joinToString(", ")
-                                val shareTemplate = context.getString(R.string.share_game_message_template, numbersFormatted)
-                                val shareText = HtmlCompat.fromHtml(shareTemplate, HtmlCompat.FROM_HTML_MODE_COMPACT).toString()
-                                val intent = Intent(Intent.ACTION_SEND).apply {
-                                    type = "text/plain"
-                                    putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.share_game_subject))
-                                    putExtra(Intent.EXTRA_TEXT, shareText)
-                                }
-                                context.startActivity(Intent.createChooser(intent, context.getString(R.string.games_share_chooser_title)))
-                            }
-                        }
+                GameSummaryCard(summary = uiState.summary, modifier = Modifier.padding(Dimen.ScreenPadding))
+                PrimaryTabRow(selectedTabIndex = pagerState.currentPage) {
+                    gameTabs.forEachIndexed { index, title ->
+                        Tab(
+                            selected = pagerState.currentPage == index,
+                            onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
+                            text = { Text(text = title) }
+                        )
                     }
-                )
+                }
+                HorizontalPager(state = pagerState) { page ->
+                    val gamesToShow = if (page == 0) allGames else pinnedGames
+                    GamesList(
+                        games = gamesToShow,
+                        onGameAction = { game, action ->
+                            handleGameAction(action, game, gameViewModel, navController, context)
+                        }
+                    )
+                }
             }
         }
     }
@@ -141,6 +162,32 @@ fun GeneratedGamesScreen(
             onDismiss = { gameViewModel.dismissDeleteDialog() },
             onConfirm = { gameViewModel.confirmDeleteGame() }
         )
+    }
+}
+
+private fun handleGameAction(
+    action: GameCardAction,
+    game: LotofacilGame,
+    gameViewModel: GameViewModel,
+    navController: NavController,
+    context: android.content.Context
+) {
+    when (action) {
+        GameCardAction.Analyze -> gameViewModel.analyzeGame(game)
+        GameCardAction.Pin -> gameViewModel.togglePinState(game)
+        GameCardAction.Delete -> gameViewModel.requestDeleteGame(game)
+        GameCardAction.Check -> navController.navigateToChecker(game.numbers)
+        GameCardAction.Share -> {
+            val numbersFormatted = game.numbers.sorted().joinToString(", ")
+            val shareTemplate = context.getString(R.string.share_game_message_template, numbersFormatted)
+            val shareText = HtmlCompat.fromHtml(shareTemplate, HtmlCompat.FROM_HTML_MODE_COMPACT).toString()
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = MIME_TYPE_TEXT_PLAIN
+                putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.share_game_subject))
+                putExtra(Intent.EXTRA_TEXT, shareText)
+            }
+            context.startActivity(Intent.createChooser(intent, context.getString(R.string.games_share_chooser_title)))
+        }
     }
 }
 
@@ -191,7 +238,6 @@ private fun ScreenActions(
 @Composable
 private fun GamesList(
     games: ImmutableList<LotofacilGame>,
-    summary: GameSummary,
     onGameAction: (LotofacilGame, GameCardAction) -> Unit
 ) {
     LazyColumn(
@@ -204,12 +250,6 @@ private fun GamesList(
         ),
         verticalArrangement = Arrangement.spacedBy(Dimen.LargePadding)
     ) {
-        item {
-            AnimateOnEntry {
-                GameSummaryCard(summary = summary)
-            }
-        }
-
         items(
             items = games,
             key = { game -> game.numbers.sorted().joinToString("-") }
@@ -226,7 +266,7 @@ private fun GamesList(
 
 @Composable
 private fun GameSummaryCard(summary: GameSummary, modifier: Modifier = Modifier) {
-    val currencyFormat = remember { NumberFormat.getCurrencyInstance(Locale("pt", "BR")) }
+    val currencyFormat = remember { NumberFormat.getCurrencyInstance(Locale(LOCALE_COUNTRY, LOCALE_LANGUAGE)) }
 
     SectionCard(modifier = modifier) {
         TitleWithIcon(text = "Resumo dos Jogos", icon = Icons.Default.Style)
@@ -244,15 +284,17 @@ private fun GameSummaryCard(summary: GameSummary, modifier: Modifier = Modifier)
 
 @Composable
 private fun SummaryItem(label: String, value: String, icon: ImageVector? = null) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        if (icon != null) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
-            )
+    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Dimen.ExtraSmallPadding)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Dimen.ExtraSmallPadding)) {
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+            Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         }
-        Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

@@ -25,36 +25,33 @@ data class FilterState(
 ) {
     /** Percentual do range total que está selecionado (0.0 a 1.0) */
     val rangePercentage: Float by lazy {
-        val totalRange = type.fullRange.endInclusive - type.fullRange.start
-        if (totalRange == 0f) {
-            0f
-        } else {
-            (selectedRange.endInclusive - selectedRange.start) / totalRange
-        }
+        val totalRange = (type.fullRange.endInclusive - type.fullRange.start).coerceAtLeast(Float.MIN_VALUE)
+        (selectedRange.endInclusive - selectedRange.start) / totalRange
     }
 
     /** Categoria de restritividade baseada no percentual do range */
     val restrictivenessCategory: RestrictivenessCategory by lazy {
-        when {
-            !isEnabled -> RestrictivenessCategory.DISABLED
-            rangePercentage >= VERY_LOOSE_THRESHOLD -> RestrictivenessCategory.VERY_LOOSE
-            rangePercentage >= LOOSE_THRESHOLD -> RestrictivenessCategory.LOOSE
-            rangePercentage >= MODERATE_THRESHOLD -> RestrictivenessCategory.MODERATE
-            rangePercentage >= TIGHT_THRESHOLD -> RestrictivenessCategory.TIGHT
-            else -> RestrictivenessCategory.VERY_TIGHT
+        if (!isEnabled) {
+            RestrictivenessCategory.DISABLED
+        } else {
+            when (rangePercentage) {
+                in VERY_LOOSE_THRESHOLD..Float.MAX_VALUE -> RestrictivenessCategory.VERY_LOOSE
+                in LOOSE_THRESHOLD..VERY_LOOSE_THRESHOLD -> RestrictivenessCategory.LOOSE
+                in MODERATE_THRESHOLD..LOOSE_THRESHOLD -> RestrictivenessCategory.MODERATE
+                in TIGHT_THRESHOLD..MODERATE_THRESHOLD -> RestrictivenessCategory.TIGHT
+                else -> RestrictivenessCategory.VERY_TIGHT
+            }
         }
     }
 
     /** Verifica se um valor está dentro do range selecionado (ou se o filtro está desabilitado) */
-    fun containsValue(value: Int): Boolean =
-        if (isEnabled) {
-            value.toFloat() in selectedRange
-        } else {
-            true
-        }
+    fun containsValue(value: Int): Boolean = if (isEnabled) {
+        value.toFloat() in selectedRange
+    } else {
+        true
+    }
 
     private companion object {
-        // Thresholds para categorização de restritividade
         const val VERY_LOOSE_THRESHOLD = 0.8f
         const val LOOSE_THRESHOLD = 0.6f
         const val MODERATE_THRESHOLD = 0.4f

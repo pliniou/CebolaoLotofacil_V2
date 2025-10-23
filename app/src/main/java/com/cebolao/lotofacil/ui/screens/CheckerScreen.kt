@@ -5,10 +5,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Analytics
@@ -45,6 +48,7 @@ import com.cebolao.lotofacil.ui.components.NumberGrid
 import com.cebolao.lotofacil.ui.components.PrimaryActionButton
 import com.cebolao.lotofacil.ui.components.SectionCard
 import com.cebolao.lotofacil.ui.components.SimpleStatsCard
+import com.cebolao.lotofacil.ui.theme.AppConfig
 import com.cebolao.lotofacil.ui.theme.Dimen
 import com.cebolao.lotofacil.viewmodels.CheckerUiEvent
 import com.cebolao.lotofacil.viewmodels.CheckerUiState
@@ -151,8 +155,8 @@ fun CheckerScreen(checkerViewModel: CheckerViewModel = hiltViewModel()) {
 private fun ResultSection(result: CheckResult, stats: ImmutableList<Pair<String, String>>) {
     Column(verticalArrangement = Arrangement.spacedBy(Dimen.LargePadding)) {
         AnimateOnEntry { CheckResultCard(result) }
-        AnimateOnEntry(delayMillis = 100) { SimpleStatsCard(stats) }
-        AnimateOnEntry(delayMillis = 200) { BarChartCard(result) }
+        AnimateOnEntry(delayMillis = AppConfig.Animation.CheckerResultEntryDelay.toLong()) { SimpleStatsCard(stats) }
+        AnimateOnEntry(delayMillis = AppConfig.Animation.CheckerResultEntryDelay * 2L) { BarChartCard(result) }
     }
 }
 
@@ -163,8 +167,11 @@ private fun BarChartCard(result: CheckResult) {
             stringResource(R.string.checker_recent_hits_chart_title),
             style = MaterialTheme.typography.titleMedium
         )
-        val chartData = result.recentHits.map { it.first.toString().takeLast(4) to it.second }
-        val maxValue = (chartData.maxOfOrNull { it.second }?.coerceAtLeast(10) ?: 10)
+        val chartData =
+            result.recentHits.map { it.first.toString().takeLast(AppConfig.UI.CheckerChartSuffixLength) to it.second }
+        val maxValue =
+            (chartData.maxOfOrNull { it.second }?.coerceAtLeast(AppConfig.UI.CheckerChartMinMaxValue)
+                ?: AppConfig.UI.CheckerChartMinMaxValue)
         BarChart(
             data = chartData.toImmutableList(),
             maxValue = maxValue,
@@ -214,6 +221,7 @@ private fun BottomActionsBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.navigationBars)
                 .padding(horizontal = Dimen.CardPadding, vertical = Dimen.MediumPadding),
             horizontalArrangement = Arrangement.spacedBy(Dimen.MediumPadding),
             verticalAlignment = Alignment.CenterVertically

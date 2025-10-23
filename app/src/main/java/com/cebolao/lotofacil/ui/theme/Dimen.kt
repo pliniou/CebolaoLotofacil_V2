@@ -32,10 +32,14 @@ object Dimen {
     val ProgressBarHeight = 6.dp
     val ProgressBarStroke = 2.5.dp
     val BarChartHeight = 180.dp
-    val BarChartYAxisLabelWidth = 36.dp
-    val BarChartXAxisLabelHeight = 36.dp
+    val BarChartYAxisLabelWidth = 40.dp
+    val BarChartXAxisLabelHeight = 40.dp
     val BarChartTooltipWidth = 60.dp
-    val BarChartTooltipHeight = 24.dp
+    val BarChartTooltipHeight = 30.dp
+
+    // Novas dimensões para ColorPaletteCard
+    val PaletteCardWidth = 130.dp
+    val PaletteCardHeight = 110.dp
     //endregion
 
     //region Elevações (Elevation)

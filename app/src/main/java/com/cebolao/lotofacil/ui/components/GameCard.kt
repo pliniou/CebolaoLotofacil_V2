@@ -7,25 +7,19 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.FactCheck
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.PushPin
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -34,16 +28,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.cebolao.lotofacil.R
 import com.cebolao.lotofacil.data.LotofacilGame
 import com.cebolao.lotofacil.ui.theme.AppConfig
 import com.cebolao.lotofacil.ui.theme.Dimen
+import kotlinx.collections.immutable.toImmutableList
 
-/**
- * Define as ações que um usuário pode realizar em um GameCard.
- * Usar uma sealed class simplifica o callback do componente.
- */
 sealed class GameCardAction {
     data object Analyze : GameCardAction()
     data object Pin : GameCardAction()
@@ -52,7 +42,6 @@ sealed class GameCardAction {
     data object Share : GameCardAction()
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun GameCard(
     game: LotofacilGame,
@@ -69,14 +58,14 @@ fun GameCard(
     )
     val borderColor by animateColorAsState(
         targetValue = if (isPinned) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface.copy(
-            alpha = 0f
+            alpha = AppConfig.UI.GameCardDisabledBorderAlpha
         ),
         animationSpec = tween(AppConfig.Animation.ShortDuration),
         label = "borderColor"
     )
     val containerColor by animateColorAsState(
         targetValue = if (isPinned) {
-            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = AppConfig.UI.GameCardPinnedContainerAlpha)
         } else {
             MaterialTheme.colorScheme.surfaceColorAtElevation(elevation)
         },
@@ -88,28 +77,19 @@ fun GameCard(
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(elevation),
         border = BorderStroke(
-            width = if (isPinned) Dimen.Border.Thick else 0.dp,
+            width = Dimen.Border.Thick,
             color = borderColor
         ),
         colors = CardDefaults.cardColors(containerColor = containerColor)
     ) {
-        FlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(
-                Dimen.ExtraSmallPadding,
-                Alignment.CenterHorizontally
-            ),
-            verticalArrangement = Arrangement.spacedBy(Dimen.ExtraSmallPadding),
-            maxItemsInEachRow = 5
-        ) {
-            game.numbers.sorted().forEach { number ->
-                NumberBall(
-                    number = number,
-                    size = Dimen.NumberBall,
-                    variant = NumberBallVariant.Secondary
-                )
-            }
-        }
+        NumberGrid(
+            allNumbers = game.numbers.sorted().toImmutableList(),
+            selectedNumbers = game.numbers,
+            onNumberClick = {},
+            maxSelection = game.numbers.size,
+            numberSize = Dimen.NumberBall,
+            ballVariant = NumberBallVariant.Secondary
+        )
 
         AppDivider()
 
@@ -156,6 +136,8 @@ private fun GameCardActions(
                     tint = MaterialTheme.colorScheme.error
                 )
             }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(Dimen.ExtraSmallPadding)) {
             IconButton(onClick = { onAction(GameCardAction.Share) }) {
                 Icon(
                     imageVector = Icons.Filled.Share,
@@ -163,16 +145,19 @@ private fun GameCardActions(
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(Dimen.ExtraSmallPadding)) {
-            TextButton(onClick = { onAction(GameCardAction.Analyze) }) {
+            IconButton(onClick = { onAction(GameCardAction.Analyze) }) {
                 Icon(
                     imageVector = Icons.Filled.Analytics,
-                    contentDescription = null,
-                    modifier = Modifier.size(ButtonDefaults.IconSize)
+                    contentDescription = stringResource(R.string.games_analyze_button),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
-                Text(text = stringResource(R.string.games_analyze_button))
+            }
+            IconButton(onClick = { onAction(GameCardAction.Check) }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.FactCheck,
+                    contentDescription = stringResource(R.string.games_check_button),
+                    tint = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }

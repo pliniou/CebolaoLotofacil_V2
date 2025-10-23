@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="0dp"
     android:layout_height="wrap_content"
     android:layout_gravity="fill_horizontal">
@@ -13,6 +14,6 @@
         android:layout_margin="@dimen/extra_small_padding"
         android:background="@drawable/widget_ball_background"
         android:gravity="center"
-        android:text="@string/widget_ball_placeholder_text"/>
+        tools:text="@string/widget_ball_placeholder_text"/>
 
 </FrameLayout>

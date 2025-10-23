@@ -17,7 +17,7 @@ android {
         targetSdk = 34
         versionCode = 2
         versionName = "2.0"
-        testInstrumentationRunner = "com.cebolao.lotofacil.HiltTestRunner"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -90,7 +90,6 @@ dependencies {
     implementation(libs.bundles.androidx.compose)
 
     // Kotlin libs
-    implementation(libs.kotlin.reflect) // CORREÇÃO: Adicionada dependência de reflection.
     implementation(libs.kotlinx.collections.immutable)
     implementation(libs.kotlinx.serialization.json)
 

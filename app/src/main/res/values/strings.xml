@@ -16,7 +16,7 @@
     <string name="general_failed_to_load_data">Falha ao Carregar Dados</string>
     <string name="general_info_icon_description">Ícone de informação</string>
     <string name="general_error_title">Ocorreu um Erro</string>
-
+    <string name="general_selected">Selecionado</string>
     <string name="onboarding_skip">Pular</string>
     <string name="onboarding_next">Próximo</string>
     <string name="onboarding_start">Começar</string>
@@ -28,7 +28,6 @@
     <string name="home_next_contest">Próximo Concurso #%1$d</string>
     <string name="home_prize_estimate">Prêmio Estimado</string>
     <string name="home_accumulated_prize_final_five">Acumulado Final 0 ou 5</string>
-    <string name="home_special_prize_info">Prêmio especial</string>
     <string name="home_statistics_center">Central de Estatísticas</string>
     <string name="home_analysis_period">Período de Análise</string>
     <string name="home_all_contests">Todos</string>
@@ -38,8 +37,8 @@
     <string name="home_suffix_times">x</string>
     <string name="home_suffix_ago"> atrás</string>
     <string name="home_understanding_stats">Entendendo as Estatísticas</string>
-    <string name="home_overdue_hot_numbers_desc"><![CDATA[<b>• Dezenas Atrasadas/Quentes:</b> Mostra os 5 números mais \'frios\' (sem sair há tempos) e os \'quentes\' (frequentes). O valor abaixo indica o atraso (em concursos) ou a frequência total.]]></string>
-    <string name="home_distribution_charts_desc"><![CDATA[<b>• Gráficos de Distribuição:</b> A barra mais alta indica o padrão mais comum (ex: 8 números pares). Use os filtros acima do gráfico para explorar diferentes estatísticas e encontrar sua estratégia.]]></string>
+    <string name="home_overdue_hot_numbers_desc">Mostra os 5 números mais \'frios\' (sem sair há tempos) e os \'quentes\' (frequentes). O valor abaixo indica o atraso (em concursos) ou a frequência total.</string>
+    <string name="home_distribution_charts_desc">A barra mais alta indica o padrão mais comum (ex: 8 números pares). Use os filtros acima do gráfico para explorar diferentes estatísticas e encontrar sua estratégia.</string>
     <string name="home_sync_success_message">Dados atualizados com sucesso!</string>
     <string name="home_sync_failed_message">Não foi possível atualizar. Mostrando os dados locais, sem pânico!</string>
     <string name="home_winners_last_contest">Ganhadores do Último Concurso</string>
@@ -73,6 +72,7 @@
     <string name="games_delete_game_description">Excluir jogo</string>
     <string name="games_share_game_description">Compartilhar jogo</string>
     <string name="games_analyze_button">Analisar</string>
+    <string name="games_check_button">Conferir</string>
     <string name="games_analysis_dialog_title">Análise do Jogo</string>
     <string name="games_empty_state_title">Nenhum jogo por aqui ainda</string>
     <string name="games_empty_state_description">Vá para o Gerador Inteligente e crie suas primeiras combinações. A sorte favorece quem se prepara!</string>
@@ -104,34 +104,54 @@
 
     <string name="about_title">Sobre e Ajuda</string>
     <string name="about_subtitle">Informações, regras e configurações</string>
+    <string name="about_info_purpose_title">Sobre o App</string>
+    <string name="about_info_purpose_subtitle">Para que serve o Cebolão Generator?</string>
+    <string name="about_info_rules_title">Regras Básicas</string>
+    <string name="about_info_rules_subtitle">Como funciona a Lotofácil</string>
+    <string name="about_info_bolao_title">Bolão!?</string>
+    <string name="about_info_bolao_subtitle">Aumente suas chances em grupo</string>
+    <string name="about_info_privacy_title">Privacidade</string>
+    <string name="about_info_privacy_subtitle">Seus dados (e jogos) estão seguros</string>
+    <string name="about_info_legal_title">Avisos Legais</string>
+    <string name="about_info_legal_subtitle">Isenção de responsabilidade</string>
     <string name="about_purpose_desc_body">Este app é uma ferramenta de estudo para a Lotofácil. Ele ajuda a entender padrões, explorar filtros e visualizar combinações. Ele não promete acertos — afinal, é um jogo de azar!</string>
     <string name="about_purpose_desc_footer">Importante: loterias são jogos de sorte. Jogue com responsabilidade.</string>
-
-    <string name="about_purpose_item1_title"><![CDATA[<b>Explorar padrões</b>]]></string>
+    <string name="about_purpose_item1_title">Explorar padrões</string>
     <string name="about_purpose_item1_desc">Veja frequências e atrasos sem precisar de planilhas complicadas.</string>
-    <string name="about_purpose_item2_title"><![CDATA[<b>Filtrar combinações</b>]]></string>
+    <string name="about_purpose_item2_title">Filtrar combinações</string>
     <string name="about_purpose_item2_desc">Use a matemática a seu favor para refinar jogos com sua estratégia.</string>
-    <string name="about_purpose_item3_title"><![CDATA[<b>Organizar seus jogos</b>]]></string>
+    <string name="about_purpose_item3_title">Organizar seus jogos</string>
     <string name="about_purpose_item3_desc">Salve, fixe e exporte jogos com facilidade para seus amigos e bolões.</string>
-
     <string name="about_legal_item1">Este app não possui vínculo com a Caixa Econômica Federal.</string>
     <string name="about_legal_item2">Resultados e estatísticas são para fins de estudo. Sempre confira o bilhete oficial.</string>
     <string name="about_legal_item3">Não há nenhuma garantia de ganho ou previsão de resultados.</string>
-    <string name="about_legal_footer"><![CDATA[<b>Isenção de responsabilidade:</b> as informações são educativas e não são um conselho de investimento.]]></string>
-
-    <string name="about_privacy_desc_body"><![CDATA[Sua privacidade é prioridade. O app não coleta dados pessoais; tudo fica salvo apenas no seu dispositivo. Simples assim.]]></string>
+    <string name="about_legal_footer">Isenção de responsabilidade: as informações são educativas e não são um conselho de investimento.</string>
+    <string name="about_privacy_desc_body">Sua privacidade é prioridade. O app não coleta dados pessoais; tudo fica salvo apenas no seu dispositivo. Simples assim.</string>
     <string name="about_privacy_item1">Sem cadastros, sem rastreamento.</string>
     <string name="about_privacy_item2">Preferências salvas localmente no seu aparelho.</string>
     <string name="about_privacy_item3">A conexão de rede é segura (HTTPS) para buscar os resultados.</string>
-
     <string name="about_rules_item1">Você escolhe 15 números de um total de 25.</string>
     <string name="about_rules_item2">Prêmios para 11, 12, 13, 14 e 15 acertos.</string>
     <string name="about_rules_item3">Sorteios ocorrem regularmente. Fique de olho nos canais oficiais.</string>
-
     <string name="about_bolao_desc_body">Participar de bolões é uma forma inteligente de aumentar as chances, cobrindo mais combinações e dividindo os custos (e os prêmios!).</string>
-    <string name="about_bolao_desc_footer"><![CDATA[<i>Dica de amigo:</i> combine as regras de participação e divisão do prêmio antes de jogar.]]></string>
+    <string name="about_bolao_desc_footer">Dica de amigo: combine as regras de participação e divisão do prêmio antes de jogar.</string>
 
-    <string name="widget_description">Mostra o resultado do último concurso da Lotofácil na sua tela inicial.</string>
+    <string name="widget_last_draw_title">Último Sorteio</string>
+    <string name="widget_last_draw_description">Mostra o resultado do último concurso da Lotofácil.</string>
+    <string name="widget_next_contest_title">Próximo Concurso #%1$d</string>
+    <string name="widget_next_contest_title_generic">Próximo Concurso</string>
+    <string name="widget_next_contest_description">Acompanhe o prêmio estimado para o próximo sorteio.</string>
+    <string name="widget_pinned_game_title">Jogo Fixado</string>
+    <string name="widget_pinned_game_description">Exibe um dos seus jogos fixados aleatoriamente.</string>
     <string name="widget_ball_placeholder_text">00</string>
+    <string name="widget_error_load">Falha ao carregar</string>
+    <string name="widget_no_pinned_games">Nenhum jogo fixado</string>
+
+    <string name="number_ball_state_selected">selecionado</string>
+    <string name="number_ball_state_highlighted">destacado</string>
+    <string name="number_ball_state_disabled">desabilitado</string>
+    <string name="number_ball_state_available">disponível</string>
+    <string name="number_ball_content_description">Número %1$s, %2$s</string>
+    <string name="number_grid_toggle_number">Selecionar ou deselecionar número %1$s</string>
 
 </resources>

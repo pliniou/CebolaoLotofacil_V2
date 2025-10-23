@@ -22,6 +22,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -35,6 +36,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.cebolao.lotofacil.R
+import com.cebolao.lotofacil.ui.components.AnimateOnEntry
+import com.cebolao.lotofacil.ui.theme.AppConfig
 import com.cebolao.lotofacil.ui.theme.Dimen
 import kotlinx.coroutines.launch
 
@@ -51,40 +54,42 @@ private val ONBOARDING_PAGES = listOf(
     OnboardingPage(R.drawable.img_onboarding_step_4, "Confira e Gerencie", "Use o conferidor para testar seus jogos contra todo o histórico e salve suas melhores combinações.")
 )
 
-private const val IMAGE_ASPECT_FRACTION = 0.6f
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun OnboardingScreen(onOnboardingComplete: () -> Unit) {
     val pagerState = rememberPagerState(pageCount = { ONBOARDING_PAGES.size })
     val scope = rememberCoroutineScope()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.statusBars)
-            .padding(horizontal = Dimen.ScreenPadding, vertical = Dimen.CardPadding)
-    ) {
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.weight(1f)
-        ) { page ->
-            OnboardingPageContent(page = ONBOARDING_PAGES[page])
-        }
-        OnboardingControls(
-            pageCount = ONBOARDING_PAGES.size,
-            currentPage = pagerState.currentPage,
-            onNextClick = {
-                scope.launch {
-                    if (pagerState.currentPage < ONBOARDING_PAGES.size - 1) {
-                        pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                    } else {
-                        onOnboardingComplete()
-                    }
+    Surface(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .padding(horizontal = Dimen.ScreenPadding, vertical = Dimen.CardPadding)
+        ) {
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.weight(1f)
+            ) { page ->
+                AnimateOnEntry {
+                    OnboardingPageContent(page = ONBOARDING_PAGES[page])
                 }
-            },
-            onSkipClick = onOnboardingComplete
-        )
+            }
+            OnboardingControls(
+                pageCount = ONBOARDING_PAGES.size,
+                currentPage = pagerState.currentPage,
+                onNextClick = {
+                    scope.launch {
+                        if (pagerState.currentPage < ONBOARDING_PAGES.size - 1) {
+                            pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                        } else {
+                            onOnboardingComplete()
+                        }
+                    }
+                },
+                onSkipClick = onOnboardingComplete
+            )
+        }
     }
 }
 
@@ -100,7 +105,7 @@ private fun OnboardingPageContent(page: OnboardingPage) {
         Image(
             painter = painterResource(id = page.imageResId),
             contentDescription = null,
-            modifier = Modifier.fillMaxSize(IMAGE_ASPECT_FRACTION),
+            modifier = Modifier.fillMaxSize(AppConfig.UI.OnboardingImageFraction),
             contentScale = ContentScale.Fit
         )
         Text(page.title, style = MaterialTheme.typography.headlineMedium)
@@ -166,7 +171,7 @@ private fun PagerIndicator(
         repeat(pageCount) { iteration ->
             val isSelected = currentPage == iteration
             val width by animateDpAsState(
-                targetValue = if (isSelected) Dimen.ActiveIndicatorWidth else Dimen.SmallPadding,
+                targetValue = if (isSelected) Dimen.ActiveIndicatorWidth else Dimen.IndicatorHeight,
                 label = "indicatorWidth"
             )
             val color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant

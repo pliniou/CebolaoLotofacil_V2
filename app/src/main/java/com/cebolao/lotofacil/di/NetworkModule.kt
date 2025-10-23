@@ -28,6 +28,9 @@ import javax.inject.Singleton
 object NetworkModule {
 
     private const val RATE_LIMIT_INTERCEPTOR = "RateLimitInterceptor"
+    private const val HTTP_CACHE_DIR = "http_cache"
+    private const val HTTP_TOO_MANY_REQUESTS = 429
+    private const val CONTENT_TYPE_JSON = "application/json"
 
     private object Constants {
         const val BASE_URL = "https://servicebus2.caixa.gov.br/portaldeloterias/api/"
@@ -48,7 +51,7 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideHttpCache(@ApplicationContext context: Context): Cache {
-        val cacheDir = File(context.cacheDir, "http_cache")
+        val cacheDir = File(context.cacheDir, HTTP_CACHE_DIR)
         return Cache(cacheDir, Constants.CACHE_SIZE_BYTES)
     }
 
@@ -68,7 +71,7 @@ object NetworkModule {
                     try {
                         response = chain.proceed(request)
                         // Sai do loop se a resposta for bem-sucedida ou um erro diferente de 429
-                        if (response.code != 429) {
+                        if (response.code != HTTP_TOO_MANY_REQUESTS) {
                             return response
                         }
                         // Prepara para re-tentativa se o código for 429
@@ -80,7 +83,7 @@ object NetworkModule {
                             e // Guarda a exceção para relançar se todas as tentativas falharem
                     } finally {
                         // Fecha o corpo da resposta apenas se for uma resposta 429, para permitir a re-tentativa
-                        if (response?.code == 429) {
+                        if (response?.code == HTTP_TOO_MANY_REQUESTS) {
                             response.body?.close()
                         }
                     }
@@ -116,7 +119,7 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient, json: Json): Retrofit {
-        val contentType = "application/json".toMediaType()
+        val contentType = CONTENT_TYPE_JSON.toMediaType()
         return Retrofit.Builder()
             .baseUrl(Constants.BASE_URL)
             .client(okHttpClient)

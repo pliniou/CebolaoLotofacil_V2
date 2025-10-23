@@ -19,13 +19,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
+import com.cebolao.lotofacil.R
 import com.cebolao.lotofacil.ui.theme.AppConfig
 import com.cebolao.lotofacil.ui.theme.Dimen
+import com.cebolao.lotofacil.util.DEFAULT_NUMBER_FORMAT
 
 enum class NumberBallVariant { Primary, Secondary, Lotofacil }
 
@@ -71,19 +74,28 @@ fun NumberBall(
         label = "ballBorder"
     )
 
+    val stateDescription = when {
+        isSelected -> stringResource(R.string.number_ball_state_selected)
+        isHighlighted -> stringResource(R.string.number_ball_state_highlighted)
+        isDisabled -> stringResource(R.string.number_ball_state_disabled)
+        else -> stringResource(R.string.number_ball_state_available)
+    }
+    val numberFormatted = DEFAULT_NUMBER_FORMAT.format(number)
+    val fullContentDescription = stringResource(R.string.number_ball_content_description, numberFormatted, stateDescription)
+
     Box(
         modifier = modifier
             .size(size)
             .shadow(
                 elevation = elevation,
                 shape = CircleShape,
-                spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
+                spotColor = MaterialTheme.colorScheme.primary.copy(alpha = AppConfig.UI.NumberBallShadowSpotAlpha)
             )
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
                         animatedContainer,
-                        animatedContainer.copy(alpha = 0.85f)
+                        animatedContainer.copy(alpha = AppConfig.UI.NumberBallGradientAlpha)
                     )
                 ),
                 shape = CircleShape
@@ -94,19 +106,12 @@ fun NumberBall(
                 shape = CircleShape
             )
             .semantics {
-                contentDescription = "Número %02d, %s".format(
-                    number, when {
-                        isSelected -> "selecionado"
-                        isHighlighted -> "destacado"
-                        isDisabled -> "desabilitado"
-                        else -> "disponível"
-                    }
-                )
+                contentDescription = fullContentDescription
             },
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "%02d".format(number),
+            text = numberFormatted,
             color = animatedContent,
             style = MaterialTheme.typography.bodyMedium.copy(
                 fontSize = (size.value / AppConfig.UI.NumberBallFontSizeFactor).sp,
@@ -131,27 +136,24 @@ private fun rememberBallColors(
 
     return when {
         isDisabled -> Triple(
-            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-            MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConfig.UI.NumberBallDisabledAlpha),
+            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = AppConfig.UI.NumberBallDisabledAlpha),
+            MaterialTheme.colorScheme.outline.copy(alpha = AppConfig.UI.NumberBallBorderAlphaDisabled)
         )
-
         isSelected -> Triple(
             primaryTone,
             MaterialTheme.colorScheme.onPrimary,
-            primaryTone.copy(alpha = 0.3f)
+            primaryTone.copy(alpha = AppConfig.UI.NumberBallBorderAlphaSelected)
         )
-
         isHighlighted -> Triple(
             MaterialTheme.colorScheme.primaryContainer,
             MaterialTheme.colorScheme.onPrimaryContainer,
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+            MaterialTheme.colorScheme.primary.copy(alpha = AppConfig.UI.NumberBallBorderAlphaHighlighted)
         )
-
         else -> Triple(
             MaterialTheme.colorScheme.surfaceVariant,
             MaterialTheme.colorScheme.onSurfaceVariant,
-            MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+            MaterialTheme.colorScheme.outline.copy(alpha = AppConfig.UI.NumberBallBorderAlphaDefault)
         )
     }
 }

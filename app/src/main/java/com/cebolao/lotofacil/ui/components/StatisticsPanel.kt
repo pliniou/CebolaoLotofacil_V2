@@ -23,10 +23,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.cebolao.lotofacil.R
 import com.cebolao.lotofacil.data.StatisticsReport
+import com.cebolao.lotofacil.ui.theme.AppConfig
 import com.cebolao.lotofacil.ui.theme.Dimen
 import kotlinx.collections.immutable.toImmutableList
 
-private val TIME_WINDOWS = listOf(0, 25, 50, 75, 100, 200)
+private val TIME_WINDOWS = listOf(0, 20, 50, 100, 200, 500)
 
 @Composable
 fun StatisticsPanel(
@@ -77,7 +78,8 @@ fun StatisticsPanel(
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier.background(
-                        MaterialTheme.colorScheme.surfaceColorAtElevation(Dimen.Elevation.Level1).copy(alpha = 0.7f)
+                        MaterialTheme.colorScheme.surfaceColorAtElevation(Dimen.Elevation.Level1)
+                            .copy(alpha = AppConfig.UI.StatsPanelLoadingOverlayAlpha)
                     )
                 ) {
                     CircularProgressIndicator()

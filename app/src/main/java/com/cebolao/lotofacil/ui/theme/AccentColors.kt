@@ -3,21 +3,20 @@ package com.cebolao.lotofacil.ui.theme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
-import androidx.compose.ui.graphics.Color
 
 enum class AccentPalette(val paletteName: String) {
-    DEFAULT("Padrão"),
+    DEFAULT("Lotofácil"),
+    VIVID("Vívida"),
     FOREST("Floresta"),
-    OCEAN("Oceano"),
-    SUNSET("Poente")
+    OCEAN("Oceano")
 }
 
+/**
+ * Gera um ColorScheme claro com base na paleta selecionada.
+ * As cores base (Background, Surface, Error) são compartilhadas.
+ */
 fun lightColorSchemeFor(palette: AccentPalette): ColorScheme {
-    val base = lightColorScheme(
-        primary = LightPrimary,
-        onPrimary = LightOnPrimary,
-        primaryContainer = LightPrimaryContainer,
-        onPrimaryContainer = LightOnPrimaryContainer,
+    val baseScheme = lightColorScheme(
         error = LightError,
         onError = LightOnError,
         errorContainer = LightErrorContainer,
@@ -33,7 +32,11 @@ fun lightColorSchemeFor(palette: AccentPalette): ColorScheme {
     )
 
     return when (palette) {
-        AccentPalette.DEFAULT -> base.copy(
+        AccentPalette.DEFAULT -> baseScheme.copy(
+            primary = LightPrimary,
+            onPrimary = LightOnPrimary,
+            primaryContainer = LightPrimaryContainer,
+            onPrimaryContainer = LightOnPrimaryContainer,
             secondary = LightSecondary,
             onSecondary = LightOnSecondary,
             secondaryContainer = LightSecondaryContainer,
@@ -44,35 +47,59 @@ fun lightColorSchemeFor(palette: AccentPalette): ColorScheme {
             onTertiaryContainer = LightOnTertiaryContainer,
         )
 
-        AccentPalette.FOREST -> base.copy(
-            secondary = Color(0xFF4C662B),
-            secondaryContainer = Color(0xFFCDECA2),
-            tertiary = Color(0xFF386668),
-            tertiaryContainer = Color(0xFFBBECEF),
+        AccentPalette.VIVID -> baseScheme.copy(
+            primary = VividOrange,
+            onPrimary = VividOrange_OnPrimary,
+            primaryContainer = VividRed,
+            onPrimaryContainer = VividRed_OnPrimary,
+            secondary = VividYellow,
+            onSecondary = VividYellow_OnSecondary,
+            secondaryContainer = VividYellow.copy(alpha = 0.3f),
+            onSecondaryContainer = VividYellow_OnSecondary,
+            tertiary = VividRed,
+            onTertiary = VividRed_OnPrimary,
+            tertiaryContainer = VividRed.copy(alpha = 0.3f),
+            onTertiaryContainer = VividYellow_OnSecondary,
         )
 
-        AccentPalette.OCEAN -> base.copy(
-            secondary = Color(0xFF00658E),
-            secondaryContainer = Color(0xFFC7E7FF),
-            tertiary = Color(0xFF00677F),
-            tertiaryContainer = Color(0xFFB6EBFF),
+        AccentPalette.FOREST -> baseScheme.copy(
+            primary = ForestGreen,
+            onPrimary = ForestGreen_OnPrimary,
+            primaryContainer = ForestGreen.copy(alpha = 0.3f),
+            onPrimaryContainer = ForestLime_OnSecondary,
+            secondary = ForestLime,
+            onSecondary = ForestLime_OnSecondary,
+            secondaryContainer = ForestLime.copy(alpha = 0.3f),
+            onSecondaryContainer = ForestLime_OnSecondary,
+            tertiary = ForestBrown,
+            onTertiary = ForestBrown_OnTertiary,
+            tertiaryContainer = ForestBrown.copy(alpha = 0.3f),
+            onTertiaryContainer = ForestLime_OnSecondary,
         )
 
-        AccentPalette.SUNSET -> base.copy(
-            secondary = Color(0xFF8F4C00),
-            secondaryContainer = Color(0xFFFFDCC2),
-            tertiary = Color(0xFF795900),
-            tertiaryContainer = Color(0xFFFFE086),
+        AccentPalette.OCEAN -> baseScheme.copy(
+            primary = OceanBlue,
+            onPrimary = OceanBlue_OnPrimary,
+            primaryContainer = OceanBlue.copy(alpha = 0.3f),
+            onPrimaryContainer = OceanCyan_OnSecondary,
+            secondary = OceanCyan,
+            onSecondary = OceanCyan_OnSecondary,
+            secondaryContainer = OceanCyan.copy(alpha = 0.3f),
+            onSecondaryContainer = OceanCyan_OnSecondary,
+            tertiary = OceanSand,
+            onTertiary = OceanSand_OnTertiary,
+            tertiaryContainer = OceanSand.copy(alpha = 0.3f),
+            onTertiaryContainer = OceanSand_OnTertiary,
         )
     }
 }
 
+/**
+ * Gera um ColorScheme escuro com base na paleta selecionada.
+ * As cores base (Background, Surface, Error) são compartilhadas.
+ */
 fun darkColorSchemeFor(palette: AccentPalette): ColorScheme {
-    val base = darkColorScheme(
-        primary = DarkPrimary,
-        onPrimary = DarkOnPrimary,
-        primaryContainer = DarkPrimaryContainer,
-        onPrimaryContainer = DarkOnPrimaryContainer,
+    val baseScheme = darkColorScheme(
         error = DarkError,
         onError = DarkOnError,
         errorContainer = DarkErrorContainer,
@@ -88,7 +115,11 @@ fun darkColorSchemeFor(palette: AccentPalette): ColorScheme {
     )
 
     return when (palette) {
-        AccentPalette.DEFAULT -> base.copy(
+        AccentPalette.DEFAULT -> baseScheme.copy(
+            primary = DarkPrimary,
+            onPrimary = DarkOnPrimary,
+            primaryContainer = DarkPrimaryContainer,
+            onPrimaryContainer = DarkOnPrimaryContainer,
             secondary = DarkSecondary,
             onSecondary = DarkOnSecondary,
             secondaryContainer = DarkSecondaryContainer,
@@ -99,25 +130,49 @@ fun darkColorSchemeFor(palette: AccentPalette): ColorScheme {
             onTertiaryContainer = DarkOnTertiaryContainer,
         )
 
-        AccentPalette.FOREST -> base.copy(
-            secondary = Color(0xFFB2D088),
-            secondaryContainer = Color(0xFF354E16),
-            tertiary = Color(0xFFA0CFD2),
-            tertiaryContainer = Color(0xFF1E4E50),
+        AccentPalette.VIVID -> baseScheme.copy(
+            primary = VividOrangeDark,
+            onPrimary = VividOrangeDark_OnPrimary,
+            primaryContainer = VividOrange,
+            onPrimaryContainer = VividOrange_OnPrimary,
+            secondary = VividYellowDark,
+            onSecondary = VividYellowDark_OnSecondary,
+            secondaryContainer = VividYellow,
+            onSecondaryContainer = VividYellow_OnSecondary,
+            tertiary = VividRedDark,
+            onTertiary = VividRedDark_OnTertiary,
+            tertiaryContainer = VividRed,
+            onTertiaryContainer = VividRed_OnPrimary,
         )
 
-        AccentPalette.OCEAN -> base.copy(
-            secondary = Color(0xFF85CFFF),
-            secondaryContainer = Color(0xFF004C6C),
-            tertiary = Color(0xFF5AD5FA),
-            tertiaryContainer = Color(0xFF004D63),
+        AccentPalette.FOREST -> baseScheme.copy(
+            primary = ForestGreenDark,
+            onPrimary = ForestGreenDark_OnPrimary,
+            primaryContainer = ForestGreen,
+            onPrimaryContainer = ForestGreen_OnPrimary,
+            secondary = ForestLimeDark,
+            onSecondary = ForestLimeDark_OnSecondary,
+            secondaryContainer = ForestLime,
+            onSecondaryContainer = ForestLime_OnSecondary,
+            tertiary = ForestBrownDark,
+            onTertiary = ForestBrownDark_OnTertiary,
+            tertiaryContainer = ForestBrown,
+            onTertiaryContainer = ForestBrown_OnTertiary,
         )
 
-        AccentPalette.SUNSET -> base.copy(
-            secondary = Color(0xFFFFB77C),
-            secondaryContainer = Color(0xFF6B3900),
-            tertiary = Color(0xFFF2C048),
-            tertiaryContainer = Color(0xFF5B4400),
+        AccentPalette.OCEAN -> baseScheme.copy(
+            primary = OceanBlueDark,
+            onPrimary = OceanBlueDark_OnPrimary,
+            primaryContainer = OceanBlue,
+            onPrimaryContainer = OceanBlue_OnPrimary,
+            secondary = OceanCyanDark,
+            onSecondary = OceanCyanDark_OnSecondary,
+            secondaryContainer = OceanCyan,
+            onSecondaryContainer = OceanCyan_OnSecondary,
+            tertiary = OceanSandDark,
+            onTertiary = OceanSandDark_OnTertiary,
+            tertiaryContainer = OceanSand,
+            onTertiaryContainer = OceanSand_OnTertiary,
         )
     }
 }

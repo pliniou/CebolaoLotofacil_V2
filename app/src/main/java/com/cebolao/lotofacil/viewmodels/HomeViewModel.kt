@@ -1,5 +1,6 @@
 package com.cebolao.lotofacil.viewmodels
 
+import android.util.Log
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
@@ -14,11 +15,13 @@ import com.cebolao.lotofacil.di.DefaultDispatcher
 import com.cebolao.lotofacil.domain.model.NextDrawInfo
 import com.cebolao.lotofacil.domain.model.StatisticPattern
 import com.cebolao.lotofacil.domain.model.WinnerData
-import com.cebolao.lotofacil.domain.repository.HistoryRepository
 import com.cebolao.lotofacil.domain.repository.SyncStatus
 import com.cebolao.lotofacil.domain.usecase.AnalyzeHistoryUseCase
 import com.cebolao.lotofacil.domain.usecase.GetHomeScreenDataUseCase
+import com.cebolao.lotofacil.domain.usecase.ObserveSyncStatusUseCase
 import com.cebolao.lotofacil.domain.usecase.SyncHistoryUseCase
+import com.cebolao.lotofacil.util.WIDGET_UPDATE_INTERVAL_HOURS
+import com.cebolao.lotofacil.util.WIDGET_UPDATE_WORK_NAME
 import com.cebolao.lotofacil.widget.WidgetUpdateWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
@@ -27,12 +30,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.concurrent.CancellationException
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
+private const val TAG = "HomeViewModel"
 private const val ALL_CONTESTS_WINDOW = 0
-private const val WIDGET_UPDATE_INTERVAL_HOURS = 12L
-private const val WIDGET_UPDATE_WORK_NAME = "widget_update_work"
 
 @Stable
 sealed interface HomeScreenState {
@@ -61,7 +64,7 @@ data class HomeUiState(
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val historyRepository: HistoryRepository,
+    private val observeSyncStatusUseCase: ObserveSyncStatusUseCase,
     private val getHomeScreenDataUseCase: GetHomeScreenDataUseCase,
     private val analyzeHistoryUseCase: AnalyzeHistoryUseCase,
     private val syncHistoryUseCase: SyncHistoryUseCase,
@@ -77,12 +80,13 @@ class HomeViewModel @Inject constructor(
     init {
         observeSyncStatus()
         loadInitialData()
+        enqueueWidgetUpdateWork()
     }
 
     private fun observeSyncStatus() {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             try {
-                historyRepository.syncStatus.collect { status ->
+                observeSyncStatusUseCase().collect { status ->
                     _uiState.update { it.copy(isSyncing = status is SyncStatus.Syncing) }
 
                     when (status) {
@@ -96,48 +100,48 @@ class HomeViewModel @Inject constructor(
                         else -> Unit
                     }
                 }
+            } catch (e: CancellationException) {
+                Log.w(TAG, "Sync status observation cancelled", e)
+                throw e
             } catch (e: Exception) {
-                android.util.Log.e("HomeViewModel", "Error observing sync status", e)
+                Log.e(TAG, "Error observing sync status", e)
             }
         }
     }
 
     private fun loadInitialData() {
         viewModelScope.launch(dispatcher) {
-            _uiState.update { it.copy(screenState = HomeScreenState.Loading) }
-
-            try {
-                getHomeScreenDataUseCase().collect { result ->
-                    result
-                        .onSuccess { data ->
-                            _uiState.update {
-                                it.copy(
-                                    screenState = HomeScreenState.Success(
-                                        lastDraw = data.lastDraw,
-                                        nextDrawInfo = data.nextDrawInfo,
-                                        winnerData = data.winnerData
-                                    ),
-                                    statistics = data.initialStats,
-                                    selectedTimeWindow = ALL_CONTESTS_WINDOW
-                                )
-                            }
-                            enqueueWidgetUpdateWork()
-                        }
-                        .onFailure {
-                            _uiState.update {
-                                it.copy(
-                                    screenState = HomeScreenState.Error(
-                                        R.string.error_load_data_failed
-                                    )
-                                )
-                            }
-                        }
+            _uiState.update {
+                if (it.screenState is HomeScreenState.Success) {
+                    it.copy(isStatsLoading = true)
+                } else {
+                    it.copy(screenState = HomeScreenState.Loading, isStatsLoading = true)
                 }
-            } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(
-                        screenState = HomeScreenState.Error(R.string.error_load_data_failed)
-                    )
+            }
+
+            getHomeScreenDataUseCase().collect { result ->
+                result.onSuccess { data ->
+                    _uiState.update {
+                        it.copy(
+                            screenState = HomeScreenState.Success(
+                                lastDraw = data.lastDraw,
+                                nextDrawInfo = data.nextDrawInfo,
+                                winnerData = data.winnerData
+                            ),
+                            statistics = data.initialStats,
+                            isStatsLoading = false,
+                            selectedTimeWindow = ALL_CONTESTS_WINDOW
+                        )
+                    }
+                }.onFailure { e ->
+                    Log.e(TAG, "Failed to load initial home screen data", e)
+                    _uiState.update {
+                        it.copy(
+                            screenState = HomeScreenState.Error(R.string.error_load_data_failed),
+                            statistics = null,
+                            isStatsLoading = false
+                        )
+                    }
                 }
             }
         }
@@ -155,8 +159,9 @@ class HomeViewModel @Inject constructor(
                 ExistingPeriodicWorkPolicy.KEEP,
                 updateRequest
             )
+            Log.d(TAG, "Widget update work enqueued/kept.")
         } catch (e: Exception) {
-            android.util.Log.e("HomeViewModel", "Failed to enqueue widget work", e)
+            Log.e(TAG, "Failed to enqueue widget work", e)
         }
     }
 
@@ -175,11 +180,13 @@ class HomeViewModel @Inject constructor(
     fun forceSync() {
         if (!_uiState.value.isSyncing) {
             syncHistoryUseCase()
+        } else {
+            Log.d(TAG, "Sync requested but already in progress.")
         }
     }
 
     fun onTimeWindowSelected(window: Int) {
-        if (_uiState.value.selectedTimeWindow == window) {
+        if (_uiState.value.selectedTimeWindow == window || _uiState.value.isStatsLoading) {
             return
         }
 
@@ -195,8 +202,8 @@ class HomeViewModel @Inject constructor(
                         it.copy(statistics = newStats, isStatsLoading = false)
                     }
                 }
-                .onFailure {
-                    // Log do erro seria ideal aqui.
+                .onFailure { e ->
+                    Log.e(TAG, "Failed to analyze history for window $window", e)
                     _uiState.update { it.copy(isStatsLoading = false) }
                 }
         }

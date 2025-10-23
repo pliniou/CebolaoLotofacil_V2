@@ -6,10 +6,10 @@ import com.cebolao.lotofacil.data.HistoricalDraw
 import com.cebolao.lotofacil.data.HistoryParser
 import com.cebolao.lotofacil.di.IoDispatcher
 import com.cebolao.lotofacil.domain.repository.UserPreferencesRepository
+import com.cebolao.lotofacil.util.DEFAULT_NUMBER_FORMAT
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
-import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -31,28 +31,32 @@ class HistoryLocalDataSourceImpl @Inject constructor(
     private var assetHistoryCache: List<HistoricalDraw>? = null
 
     override suspend fun getLocalHistory(): List<HistoricalDraw> = withContext(ioDispatcher) {
-        val assetHistory = parseHistoryFromAssets()
-        val savedHistoryStrings = userPreferencesRepository.getHistory()
-        val savedHistory = savedHistoryStrings.mapNotNull { HistoryParser.parseLine(it) }
+        runCatching {
+            val assetHistory = parseHistoryFromAssets()
+            val savedHistoryStrings = userPreferencesRepository.getHistory()
+            val savedHistory = savedHistoryStrings.mapNotNull { HistoryParser.parseLine(it) }
 
-        val allDraws = (savedHistory + assetHistory)
-            .distinctBy { it.contestNumber }
-            .sortedByDescending { it.contestNumber }
+            val allDraws = (savedHistory + assetHistory)
+                .distinctBy { it.contestNumber }
+                .sortedByDescending { it.contestNumber }
 
-        Log.d(
-            TAG,
-            "Loaded ${allDraws.size} contests from local sources (Assets: ${assetHistory.size}, DataStore: ${savedHistory.size})"
-        )
-        allDraws
+            Log.d(
+                TAG,
+                "Loaded ${allDraws.size} contests from local sources (Assets: ${assetHistory.size}, DataStore: ${savedHistory.size})"
+            )
+            allDraws
+        }.getOrElse { e ->
+            Log.e(TAG, "Failed to load local history", e)
+            emptyList()
+        }
     }
 
     override suspend fun saveNewContests(newDraws: List<HistoricalDraw>) {
         if (newDraws.isEmpty()) return
 
-        // Formata: "NUMERO - 01,02,..."
         val newHistoryEntries = newDraws.map { draw ->
             "${draw.contestNumber} - ${
-                draw.numbers.sorted().joinToString(",") { "%02d".format(it) }
+                draw.numbers.sorted().joinToString(",") { DEFAULT_NUMBER_FORMAT.format(it) }
             }"
         }.toSet()
 
@@ -61,8 +65,10 @@ class HistoryLocalDataSourceImpl @Inject constructor(
     }
 
     private suspend fun parseHistoryFromAssets(): List<HistoricalDraw> {
-        return assetHistoryCache ?: withContext(ioDispatcher) {
-            try {
+        assetHistoryCache?.let { return it }
+
+        return withContext(ioDispatcher) {
+            runCatching {
                 context.assets.open(ASSET_HISTORY_FILENAME).bufferedReader().use { reader ->
                     reader.lineSequence()
                         .filter { it.isNotBlank() }
@@ -75,10 +81,12 @@ class HistoryLocalDataSourceImpl @Inject constructor(
                         }
                         .toList()
                 }
-            } catch (e: IOException) {
+            }.getOrElse { e ->
                 Log.e(TAG, "Failed to read history file from assets: $ASSET_HISTORY_FILENAME", e)
                 emptyList()
+            }.also {
+                assetHistoryCache = it
             }
-        }.also { assetHistoryCache = it }
+        }
     }
 }

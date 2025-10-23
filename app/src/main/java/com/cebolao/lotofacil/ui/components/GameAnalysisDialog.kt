@@ -17,7 +17,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.cebolao.lotofacil.R
+import com.cebolao.lotofacil.ui.theme.AppConfig
 import com.cebolao.lotofacil.ui.theme.Dimen
+import com.cebolao.lotofacil.util.DEFAULT_PLACEHOLDER
 import com.cebolao.lotofacil.viewmodels.GameAnalysisResult
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -42,7 +44,7 @@ fun GameAnalysisDialog(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(Dimen.ExtraSmallPadding, Alignment.CenterHorizontally),
                         verticalArrangement = Arrangement.spacedBy(Dimen.ExtraSmallPadding),
-                        maxItemsInEachRow = 5
+                        maxItemsInEachRow = AppConfig.UI.NumberGridItemsPerRow
                     ) {
                         result.game.numbers.sorted().forEach {
                             NumberBall(
@@ -61,8 +63,8 @@ fun GameAnalysisDialog(
                         Text("Resumo de prêmios", style = MaterialTheme.typography.titleMedium)
                         AppDivider()
                         val totalPremios = result.checkResult.scoreCounts.values.sum()
-                        val ultimoConcurso = result.checkResult.lastHitContest ?: "--"
-                        val ultimoAcerto = result.checkResult.lastHitScore ?: "--"
+                        val ultimoConcurso = result.checkResult.lastHitContest?.toString() ?: DEFAULT_PLACEHOLDER
+                        val ultimoAcerto = result.checkResult.lastHitScore?.toString() ?: DEFAULT_PLACEHOLDER
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),

@@ -30,36 +30,42 @@ data class HistoricalDraw(
     companion object {
         /**
          * Converte um resultado da API para o modelo de dados do app.
-         * 
+         * Usa runCatching e when para um parsing mais robusto e idiomático.
+         *
          * @param apiResult Resultado da API Lotofácil
          * @return [HistoricalDraw] se válido, null caso contrário
          */
         fun fromApiResult(apiResult: LotofacilApiResult): HistoricalDraw? {
-            return try {
+            // Usa runCatching para envolver toda a lógica de parsing e validação
+            return runCatching {
                 val contest = apiResult.numero
-                val numbers = apiResult.listaDezenas
-                    .mapNotNull { it.toIntOrNull() }
-                    .toSet()
+                // mapNotNull para converter para Int e filtrar nulos/inválidos
+                val numbers = apiResult.listaDezenas.mapNotNull { it.toIntOrNull() }.toSet()
 
+                // Usa when para validação concisa
                 when {
                     contest <= 0 -> {
                         Log.w(TAG, "Invalid contest number: $contest")
-                        null
+                        null // Retorna null se o concurso for inválido
                     }
                     numbers.size != LotofacilConstants.GAME_SIZE -> {
-                        Log.w(TAG, "Invalid number count for contest $contest: ${numbers.size}")
-                        null
+                        Log.w(TAG, "Invalid number count for contest $contest: ${numbers.size}, expected ${LotofacilConstants.GAME_SIZE}")
+                        null // Retorna null se a contagem de números estiver errada
                     }
-                    else -> HistoricalDraw(
+                    !numbers.all { it in LotofacilConstants.VALID_NUMBER_RANGE } -> {
+                        Log.w(TAG, "Invalid numbers found for contest $contest: $numbers")
+                        null // Retorna null se algum número estiver fora do range válido
+                    }
+                    else -> HistoricalDraw( // Cria o objeto se tudo for válido
                         contestNumber = contest,
                         numbers = numbers,
-                        date = apiResult.dataApuracao
+                        date = apiResult.dataApuracao // Mantém a data opcional
                     )
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to parse API result", e)
-                null
-            }
+            }.onFailure { e ->
+                // Loga qualquer exceção inesperada durante o parsing
+                Log.e(TAG, "Failed to parse API result for contest ${apiResult.numero}", e)
+            }.getOrNull() // Retorna null se runCatching capturar uma exceção
         }
     }
 }

@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_background"
+    android:gravity="center_horizontal"
     android:orientation="vertical"
     android:padding="@dimen/card_padding">
 
@@ -28,7 +29,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/small_padding"
             android:layout_weight="1"
-            android:text="@string/home_title" />
+            tools:text="@string/widget_next_contest_title_generic" />
 
         <ImageButton
             android:id="@+id/widget_refresh_button"
@@ -40,30 +41,41 @@
             app:tint="?android:attr/textColorSecondary" />
     </LinearLayout>
 
-    <FrameLayout
+    <LinearLayout
+        android:id="@+id/widget_content"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="@dimen/small_padding"
-        android:layout_weight="1">
-
-        <GridLayout
-            android:id="@+id/widget_numbers_grid"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:columnCount="5"
-            android:visibility="gone"
-            tools:visibility="visible" />
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone"
+        tools:visibility="visible">
 
         <TextView
-            android:id="@+id/widget_loading_text"
-            style="@style/Widget.Text.Loading"
+            android:id="@+id/widget_date"
+            style="@style/Widget.Text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="@string/general_loading"
-            android:visibility="visible"
-            tools:visibility="gone"/>
+            tools:text="17/10/2025" />
 
-    </FrameLayout>
+        <TextView
+            android:id="@+id/widget_prize"
+            style="@style/Widget.Text.Prize" 
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/extra_small_padding" 
+            tools:text="R$ 1.700.000,00" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/widget_loading_text"
+        style="@style/Widget.Text.Loading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="@string/general_loading"
+        android:visibility="visible"
+        tools:visibility="gone" />
+
 </LinearLayout>

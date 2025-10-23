@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -25,6 +27,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
+import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,38 +40,34 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cebolao.lotofacil.R
 import com.cebolao.lotofacil.data.HistoricalDraw
 import com.cebolao.lotofacil.domain.model.NextDrawInfo
+import com.cebolao.lotofacil.domain.model.StatisticPattern
 import com.cebolao.lotofacil.domain.model.WinnerData
 import com.cebolao.lotofacil.ui.components.AnimateOnEntry
 import com.cebolao.lotofacil.ui.components.AppDivider
 import com.cebolao.lotofacil.ui.components.DistributionChartsCard
-import com.cebolao.lotofacil.ui.components.InfoRow
 import com.cebolao.lotofacil.ui.components.MessageState
 import com.cebolao.lotofacil.ui.components.NumberBall
 import com.cebolao.lotofacil.ui.components.NumberBallVariant
 import com.cebolao.lotofacil.ui.components.SectionCard
 import com.cebolao.lotofacil.ui.components.StatisticsExplanationCard
 import com.cebolao.lotofacil.ui.components.StatisticsPanel
+import com.cebolao.lotofacil.ui.theme.AppConfig
 import com.cebolao.lotofacil.ui.theme.Dimen
+import com.cebolao.lotofacil.util.LOCALE_COUNTRY
+import com.cebolao.lotofacil.util.LOCALE_LANGUAGE
 import com.cebolao.lotofacil.viewmodels.HomeScreenState
+import com.cebolao.lotofacil.viewmodels.HomeUiState
 import com.cebolao.lotofacil.viewmodels.HomeViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import java.text.NumberFormat
 import java.util.Locale
-
-private object HomeScreenConstants {
-    const val NEXT_DRAW_ANIM_DELAY = 50L
-    const val ACCUMULATED_PRIZE_ANIM_DELAY = 100L
-    const val LAST_DRAW_ANIM_DELAY = 200L
-    const val STATS_PANEL_ANIM_DELAY = 300L
-    const val CHARTS_ANIM_DELAY = 400L
-    const val EXPLANATION_CARD_ANIM_DELAY = 500L
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,26 +75,16 @@ fun HomeScreen(homeViewModel: HomeViewModel = hiltViewModel()) {
     val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val pullToRefreshState = rememberPullToRefreshState()
-    val context = LocalContext.current
 
-    if (pullToRefreshState.isRefreshing) {
-        LaunchedEffect(true) { homeViewModel.forceSync() }
-    }
-    LaunchedEffect(uiState.isSyncing) {
-        if (!uiState.isSyncing) pullToRefreshState.endRefresh()
-    }
-    LaunchedEffect(uiState.showSyncFailedMessage) {
-        if (uiState.showSyncFailedMessage) {
-            snackbarHostState.showSnackbar(context.getString(R.string.home_sync_failed_message), duration = SnackbarDuration.Long)
-            homeViewModel.onSyncMessageShown()
-        }
-    }
-    LaunchedEffect(uiState.showSyncSuccessMessage) {
-        if (uiState.showSyncSuccessMessage) {
-            snackbarHostState.showSnackbar(context.getString(R.string.home_sync_success_message), duration = SnackbarDuration.Short)
-            homeViewModel.onSyncSuccessMessageShown()
-        }
-    }
+    HomeScreenEffects(
+        uiState = uiState,
+        pullToRefreshState = pullToRefreshState,
+        snackbarHostState = snackbarHostState,
+        onRefresh = { homeViewModel.forceSync() },
+        onSyncMessageShown = { homeViewModel.onSyncMessageShown() },
+        onSyncSuccessMessageShown = { homeViewModel.onSyncSuccessMessageShown() },
+        endRefresh = { pullToRefreshState.endRefresh() }
+    )
 
     AppScreen(
         title = stringResource(R.string.home_title),
@@ -109,157 +98,224 @@ fun HomeScreen(homeViewModel: HomeViewModel = hiltViewModel()) {
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         actions = {
-            if (uiState.isSyncing && !pullToRefreshState.isRefreshing) {
-                CircularProgressIndicator(modifier = Modifier.size(Dimen.MediumIcon))
+            if (uiState.isSyncing && uiState.screenState !is HomeScreenState.Loading && !pullToRefreshState.isRefreshing) {
+                CircularProgressIndicator(modifier = Modifier.size(Dimen.MediumIcon).padding(end = Dimen.SmallPadding))
             }
         }
     ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .nestedScroll(pullToRefreshState.nestedScrollConnection)
-        ) {
-            AnimatedContent(
-                targetState = uiState.screenState is HomeScreenState.Loading,
-                label = "HomeScreenContent"
-            ) { isLoading ->
-                if (isLoading) {
+        HomeScreenContent(
+            modifier = Modifier.padding(innerPadding),
+            uiState = uiState,
+            pullToRefreshState = pullToRefreshState,
+            onRetry = { homeViewModel.retryInitialLoad() },
+            onTimeWindowSelected = { window -> homeViewModel.onTimeWindowSelected(window) },
+            onPatternSelected = { pattern -> homeViewModel.onPatternSelected(pattern) }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun HomeScreenEffects(
+    uiState: HomeUiState,
+    pullToRefreshState: PullToRefreshState,
+    snackbarHostState: SnackbarHostState,
+    onRefresh: () -> Unit,
+    onSyncMessageShown: () -> Unit,
+    onSyncSuccessMessageShown: () -> Unit,
+    endRefresh: () -> Unit
+) {
+    val context = LocalContext.current
+
+    if (pullToRefreshState.isRefreshing) {
+        LaunchedEffect(true) { onRefresh() }
+    }
+
+    LaunchedEffect(uiState.isSyncing) {
+        if (!uiState.isSyncing) {
+            endRefresh()
+        }
+    }
+
+    LaunchedEffect(uiState.showSyncFailedMessage) {
+        if (uiState.showSyncFailedMessage) {
+            snackbarHostState.showSnackbar(
+                context.getString(R.string.home_sync_failed_message),
+                duration = SnackbarDuration.Long
+            )
+            onSyncMessageShown()
+        }
+    }
+
+    LaunchedEffect(uiState.showSyncSuccessMessage) {
+        if (uiState.showSyncSuccessMessage) {
+            snackbarHostState.showSnackbar(
+                context.getString(R.string.home_sync_success_message),
+                duration = SnackbarDuration.Short
+            )
+            onSyncSuccessMessageShown()
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun HomeScreenContent(
+    modifier: Modifier = Modifier,
+    uiState: HomeUiState,
+    pullToRefreshState: PullToRefreshState,
+    onRetry: () -> Unit,
+    onTimeWindowSelected: (Int) -> Unit,
+    onPatternSelected: (StatisticPattern) -> Unit
+) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .nestedScroll(pullToRefreshState.nestedScrollConnection)
+    ) {
+        AnimatedContent(
+            targetState = uiState.screenState,
+            label = "HomeScreenStateContent"
+        ) { targetState ->
+            when (targetState) {
+                is HomeScreenState.Loading -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
                     }
-                } else {
+                }
+                is HomeScreenState.Error -> {
+                    MessageState(
+                        modifier = Modifier.padding(horizontal = Dimen.ScreenPadding),
+                        icon = Icons.Default.ErrorOutline,
+                        title = stringResource(R.string.general_failed_to_load_data),
+                        message = stringResource(targetState.messageResId),
+                        actionLabel = stringResource(R.string.general_retry),
+                        onActionClick = onRetry,
+                        iconTint = MaterialTheme.colorScheme.error
+                    )
+                }
+                is HomeScreenState.Success -> {
                     LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(
                             horizontal = Dimen.ScreenPadding,
                             vertical = Dimen.CardPadding
                         ),
                         verticalArrangement = Arrangement.spacedBy(Dimen.LargePadding)
                     ) {
-                        when (val screenState = uiState.screenState) {
-                            is HomeScreenState.Error -> item {
-                                MessageState(
-                                    modifier = Modifier.padding(horizontal = Dimen.ScreenPadding),
-                                    icon = Icons.Default.ErrorOutline,
-                                    title = stringResource(R.string.general_failed_to_load_data),
-                                    message = stringResource(screenState.messageResId),
-                                    actionLabel = stringResource(R.string.general_retry),
-                                    onActionClick = { homeViewModel.retryInitialLoad() },
-                                    iconTint = MaterialTheme.colorScheme.error
-                                )
+                        item(key = "next_draw") {
+                            AnimateOnEntry(delayMillis = AppConfig.Animation.HomeScreenNextDrawDelay) {
+                                targetState.nextDrawInfo?.let { NextContestCard(it) }
                             }
-                            is HomeScreenState.Success -> {
-                                item(key = "next_draw") {
-                                    AnimateOnEntry(
-                                        delayMillis = HomeScreenConstants.NEXT_DRAW_ANIM_DELAY
-                                    ) {
-                                        screenState.nextDrawInfo?.let { NextDrawInfoCard(it) }
-                                    }
-                                }
-                                item(key = "accumulated_prize") {
-                                    AnimateOnEntry(
-                                        delayMillis = HomeScreenConstants.ACCUMULATED_PRIZE_ANIM_DELAY
-                                    ) {
-                                        screenState.nextDrawInfo?.let { AccumulatedPrizeCard(it) }
-                                    }
-                                }
-                                item(key = "last_draw") {
-                                    screenState.lastDraw?.let {
-                                        AnimateOnEntry(
-                                            delayMillis = HomeScreenConstants.LAST_DRAW_ANIM_DELAY
-                                        ) {
-                                            LastDrawSection(it, screenState.winnerData.toImmutableList())
-                                        }
-                                    }
-                                }
-                                item(key = "statistics") {
-                                    uiState.statistics?.let {
-                                        AnimateOnEntry(
-                                            delayMillis = HomeScreenConstants.STATS_PANEL_ANIM_DELAY
-                                        ) {
-                                            StatisticsPanel(
-                                                stats = it,
-                                                isStatsLoading = uiState.isStatsLoading,
-                                                selectedWindow = uiState.selectedTimeWindow,
-                                                onTimeWindowSelected = { window -> homeViewModel.onTimeWindowSelected(window) }
-                                            )
-                                        }
-                                    }
-                                }
-                                item(key = "charts") {
-                                    uiState.statistics?.let {
-                                        AnimateOnEntry(
-                                            delayMillis = HomeScreenConstants.CHARTS_ANIM_DELAY
-                                        ) {
-                                            DistributionChartsCard(
-                                                stats = it,
-                                                selectedPattern = uiState.selectedPattern,
-                                                onPatternSelected = { pattern -> homeViewModel.onPatternSelected(pattern) }
-                                            )
-                                        }
-                                    }
-                                }
-                                item(key = "explanation") {
-                                    AnimateOnEntry(
-                                        delayMillis = HomeScreenConstants.EXPLANATION_CARD_ANIM_DELAY
-                                    ) {
-                                        StatisticsExplanationCard()
-                                    }
+                        }
+                        item(key = "last_draw") {
+                            targetState.lastDraw?.let {
+                                AnimateOnEntry(delayMillis = AppConfig.Animation.HomeScreenLastDrawDelay) {
+                                    LastDrawSection(it, targetState.winnerData.toImmutableList())
                                 }
                             }
-                            else -> Unit
+                        }
+                        item(key = "statistics") {
+                            uiState.statistics?.let {
+                                AnimateOnEntry(delayMillis = AppConfig.Animation.HomeScreenStatsPanelDelay) {
+                                    StatisticsPanel(
+                                        stats = it,
+                                        isStatsLoading = uiState.isStatsLoading,
+                                        selectedWindow = uiState.selectedTimeWindow,
+                                        onTimeWindowSelected = onTimeWindowSelected
+                                    )
+                                }
+                            }
+                        }
+                        item(key = "charts") {
+                            uiState.statistics?.let {
+                                AnimateOnEntry(delayMillis = AppConfig.Animation.HomeScreenChartsDelay) {
+                                    DistributionChartsCard(
+                                        stats = it,
+                                        selectedPattern = uiState.selectedPattern,
+                                        onPatternSelected = onPatternSelected
+                                    )
+                                }
+                            }
+                        }
+                        item(key = "explanation") {
+                            AnimateOnEntry(delayMillis = AppConfig.Animation.HomeScreenExplanationDelay) {
+                                StatisticsExplanationCard()
+                            }
                         }
                     }
                 }
             }
-            PullToRefreshContainer(
-                state = pullToRefreshState,
-                modifier = Modifier.align(Alignment.TopCenter)
-            )
         }
+        PullToRefreshContainer(
+            state = pullToRefreshState,
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
     }
 }
 
 @Composable
-private fun NextDrawInfoCard(nextDrawInfo: NextDrawInfo) {
+private fun NextContestCard(nextDrawInfo: NextDrawInfo) {
     SectionCard {
-        InfoRow(stringResource(R.string.home_next_contest, nextDrawInfo.contestNumber), nextDrawInfo.formattedDate)
-        InfoRow(stringResource(R.string.home_prize_estimate), nextDrawInfo.formattedPrize)
-    }
-}
-
-@Composable
-private fun AccumulatedPrizeCard(nextDrawInfo: NextDrawInfo) {
-    SectionCard {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Dimen.MediumPadding)
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(Dimen.SmallPadding)
         ) {
-            Icon(
-                imageVector = Icons.Default.Star,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.tertiary
+            Text(
+                text = stringResource(R.string.home_next_contest, nextDrawInfo.contestNumber),
+                style = MaterialTheme.typography.titleMedium
             )
-            Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = nextDrawInfo.formattedDate,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(Dimen.SmallPadding))
+
+            Text(
+                text = stringResource(R.string.home_prize_estimate),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = nextDrawInfo.formattedPrize,
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(Dimen.SmallPadding))
+            AppDivider()
+            Spacer(modifier = Modifier.height(Dimen.SmallPadding))
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Dimen.SmallPadding)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.tertiary,
+                    modifier = Modifier.size(Dimen.SmallIcon)
+                )
                 Text(
                     text = stringResource(R.string.home_accumulated_prize_final_five),
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.bodySmall
                 )
                 Text(
-                    text = stringResource(R.string.home_special_prize_info),
+                    text = nextDrawInfo.formattedPrizeFinalFive,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.tertiary
                 )
             }
-            Text(
-                text = nextDrawInfo.formattedPrizeFinalFive,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.tertiary
-            )
         }
     }
 }
+
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -286,7 +342,8 @@ private fun LastDrawSection(lastDraw: HistoricalDraw, winnerData: ImmutableList<
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(Dimen.SmallPadding, Alignment.CenterHorizontally),
-                verticalArrangement = Arrangement.spacedBy(Dimen.SmallPadding)
+                verticalArrangement = Arrangement.spacedBy(Dimen.SmallPadding),
+                maxItemsInEachRow = AppConfig.UI.NumberGridItemsPerRow
             ) {
                 lastDraw.numbers.sorted().forEach {
                     NumberBall(it, size = Dimen.NumberBall, variant = NumberBallVariant.Lotofacil)
@@ -303,7 +360,14 @@ private fun LastDrawSection(lastDraw: HistoricalDraw, winnerData: ImmutableList<
 
 @Composable
 private fun WinnerInfoSection(winnerData: ImmutableList<WinnerData>) {
-    val currencyFormat = remember { NumberFormat.getCurrencyInstance(Locale("pt", "BR")) }
+    val currencyFormat = remember {
+        NumberFormat.getCurrencyInstance(
+            Locale(
+                LOCALE_LANGUAGE,
+                LOCALE_COUNTRY
+            )
+        )
+    }
 
     Column(verticalArrangement = Arrangement.spacedBy(Dimen.MediumPadding)) {
         Text(
@@ -316,7 +380,7 @@ private fun WinnerInfoSection(winnerData: ImmutableList<WinnerData>) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(Modifier.weight(1.5f)) {
+                Column(Modifier.weight(1f)) {
                     Text(
                         text = stringResource(R.string.home_hits_format, winnerInfo.hits),
                         style = MaterialTheme.typography.bodyMedium,
@@ -332,7 +396,7 @@ private fun WinnerInfoSection(winnerData: ImmutableList<WinnerData>) {
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
-                Column(Modifier.weight(1.2f), horizontalAlignment = Alignment.End) {
+                Column(Modifier.weight(1f), horizontalAlignment = Alignment.End) {
                     Text(
                         text = currencyFormat.format(winnerInfo.prize),
                         style = MaterialTheme.typography.bodyMedium,

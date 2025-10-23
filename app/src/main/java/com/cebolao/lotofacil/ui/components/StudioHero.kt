@@ -24,7 +24,7 @@ fun StudioHero(modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.spacedBy(Dimen.MediumPadding)
         ) {
             Image(
-                painter = painterResource(id = R.drawable.logo_cebola),
+                painter = painterResource(id = R.drawable.ic_splash_logo),
                 contentDescription = stringResource(R.string.studio_name),
                 modifier = Modifier.size(Dimen.Logo)
             )

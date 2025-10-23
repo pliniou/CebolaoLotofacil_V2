@@ -3,7 +3,6 @@ package com.cebolao.lotofacil.ui.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -22,24 +21,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.core.text.HtmlCompat
 import com.cebolao.lotofacil.ui.theme.Dimen
-
-@Composable
-fun InfoPanel(
-    title: String,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
-) {
-    SectionCard(modifier = modifier) {
-        Text(text = title, style = MaterialTheme.typography.titleMedium)
-        AppDivider()
-        Column(
-            verticalArrangement = Arrangement.spacedBy(Dimen.MediumPadding),
-            modifier = Modifier.padding(top = Dimen.SmallPadding)
-        ) {
-            content()
-        }
-    }
-}
 
 @Composable
 fun FormattedText(
@@ -80,17 +61,26 @@ fun InfoPoint(title: String, description: String, modifier: Modifier = Modifier)
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(Dimen.ExtraSmallPadding)
     ) {
-        FormattedText(text = title)
-        FormattedText(text = description)
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = description,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
+@Suppress("DEPRECATION")
 private fun htmlToAnnotatedString(html: String): AnnotatedString {
-    @Suppress("DEPRECATION")
     val spanned = HtmlCompat.fromHtml(html, HtmlCompat.FROM_HTML_MODE_LEGACY)
     return buildAnnotatedString {
         append(spanned.toString())
-        spanned.getSpans(0, spanned.length, Any::class.java).forEach { span ->
+        spanned.getSpans(0, spanned.length, Any::class.java)?.forEach { span ->
             val start = spanned.getSpanStart(span)
             val end = spanned.getSpanEnd(span)
             when (span) {

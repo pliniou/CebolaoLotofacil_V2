@@ -28,11 +28,6 @@ import com.cebolao.lotofacil.data.RestrictivenessCategory
 import com.cebolao.lotofacil.ui.theme.AppConfig
 import com.cebolao.lotofacil.ui.theme.Dimen
 
-private object FilterStatsPanelConstants {
-    const val PROBABILITY_THRESHOLD_LOW = 0.1f
-    const val PROBABILITY_THRESHOLD_MEDIUM = 0.4f
-}
-
 @Composable
 fun FilterStatsPanel(
     activeFilters: List<FilterState>,
@@ -68,8 +63,8 @@ private fun FilterRestrictiveness(probability: Float) {
     )
 
     val (progressColor, textColor) = when {
-        animatedProbability < FilterStatsPanelConstants.PROBABILITY_THRESHOLD_LOW -> MaterialTheme.colorScheme.error to MaterialTheme.colorScheme.error
-        animatedProbability < FilterStatsPanelConstants.PROBABILITY_THRESHOLD_MEDIUM -> MaterialTheme.colorScheme.tertiary to MaterialTheme.colorScheme.tertiary
+        animatedProbability < AppConfig.UI.FilterPanelProbLow -> MaterialTheme.colorScheme.error to MaterialTheme.colorScheme.error
+        animatedProbability < AppConfig.UI.FilterPanelProbMedium -> MaterialTheme.colorScheme.tertiary to MaterialTheme.colorScheme.tertiary
         else -> MaterialTheme.colorScheme.primary to MaterialTheme.colorScheme.primary
     }
 
@@ -100,7 +95,7 @@ private fun FilterRestrictiveness(probability: Float) {
                 .height(Dimen.ProgressBarHeight)
                 .clip(MaterialTheme.shapes.small),
             color = animatedProgressColor,
-            trackColor = animatedProgressColor.copy(alpha = 0.2f)
+            trackColor = animatedProgressColor.copy(alpha = AppConfig.UI.FilterPanelTrackAlpha)
         )
     }
 }
@@ -136,16 +131,16 @@ private fun FilterStatRow(filter: FilterState) {
 
 @Composable
 private fun RestrictivenessChip(category: RestrictivenessCategory) {
-    val (color, text) = when (category) {
-        RestrictivenessCategory.VERY_TIGHT -> MaterialTheme.colorScheme.error to "Muito Restrito"
-        RestrictivenessCategory.TIGHT -> MaterialTheme.colorScheme.error.copy(alpha = 0.8f) to "Restrito"
-        RestrictivenessCategory.MODERATE -> MaterialTheme.colorScheme.tertiary to "Moderado"
-        RestrictivenessCategory.LOOSE -> MaterialTheme.colorScheme.primary to "Flexível"
-        RestrictivenessCategory.VERY_LOOSE -> MaterialTheme.colorScheme.primary.copy(alpha = 0.8f) to "Muito Flexível"
-        RestrictivenessCategory.DISABLED -> MaterialTheme.colorScheme.outline to "Desabilitado"
+    val (color, text, alpha) = when (category) {
+        RestrictivenessCategory.VERY_TIGHT -> Triple(MaterialTheme.colorScheme.error, "Muito Restrito", AppConfig.UI.FilterPanelChipBgAlpha)
+        RestrictivenessCategory.TIGHT -> Triple(MaterialTheme.colorScheme.error, "Restrito", AppConfig.UI.FilterPanelChipBgAlpha * 0.8f)
+        RestrictivenessCategory.MODERATE -> Triple(MaterialTheme.colorScheme.tertiary, "Moderado", AppConfig.UI.FilterPanelChipBgAlpha)
+        RestrictivenessCategory.LOOSE -> Triple(MaterialTheme.colorScheme.primary, "Flexível", AppConfig.UI.FilterPanelChipBgAlpha * 0.8f)
+        RestrictivenessCategory.VERY_LOOSE -> Triple(MaterialTheme.colorScheme.primary, "Muito Flexível", AppConfig.UI.FilterPanelChipBgAlpha)
+        RestrictivenessCategory.DISABLED -> Triple(MaterialTheme.colorScheme.outline, "Desabilitado", AppConfig.UI.FilterPanelChipBgAlpha)
     }
     Surface(
-        color = color.copy(alpha = AppConfig.UI.FilterPanelChipBgAlpha),
+        color = color.copy(alpha = alpha),
         shape = MaterialTheme.shapes.small
     ) {
         Text(

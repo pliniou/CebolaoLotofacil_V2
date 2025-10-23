@@ -4,6 +4,7 @@ import android.animation.ObjectAnimator
 import android.os.Bundle
 import android.view.View
 import android.view.animation.AnticipateInterpolator
+import android.view.animation.DecelerateInterpolator
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -16,8 +17,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.core.animation.doOnEnd
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.splashscreen.SplashScreenViewProvider
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cebolao.lotofacil.data.repository.THEME_MODE_AUTO
+import com.cebolao.lotofacil.data.repository.THEME_MODE_DARK
 import com.cebolao.lotofacil.ui.screens.MainScreen
 import com.cebolao.lotofacil.ui.theme.AccentPalette
 import com.cebolao.lotofacil.ui.theme.AppConfig
@@ -32,34 +36,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splash = installSplashScreen()
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
 
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-
         splash.setOnExitAnimationListener { splashScreenViewProvider ->
-            val splashView = splashScreenViewProvider.view
-            val iconView = splashScreenViewProvider.iconView
-
-            val alphaAnimator = ObjectAnimator.ofFloat(
-                splashView, View.ALPHA, 1f, 0f
-            ).apply {
-                interpolator = AnticipateInterpolator()
-                duration = AppConfig.Animation.SplashExitDuration.toLong()
-                doOnEnd { splashScreenViewProvider.remove() }
-            }
-
-            val scaleXAnimator = ObjectAnimator.ofFloat(iconView, View.SCALE_X, 1f, 0.5f).apply {
-                interpolator = AnticipateInterpolator()
-                duration = AppConfig.Animation.SplashExitDuration.toLong()
-            }
-            val scaleYAnimator = ObjectAnimator.ofFloat(iconView, View.SCALE_Y, 1f, 0.5f).apply {
-                interpolator = AnticipateInterpolator()
-                duration = AppConfig.Animation.SplashExitDuration.toLong()
-            }
-
-            scaleXAnimator.start()
-            scaleYAnimator.start()
-            alphaAnimator.start()
+            setupSplashScreenExitAnimation(splashScreenViewProvider)
         }
 
         setContent {
@@ -72,12 +53,11 @@ class MainActivity : ComponentActivity() {
 
             splash.setKeepOnScreenCondition { !uiState.isReady }
 
-            // CORREÇÃO: Lógica de seleção de tema simplificada para maior clareza.
-            val useDarkTheme = themeMode == "dark" || (themeMode == "auto" && isSystemInDarkTheme())
+            val useDarkTheme = themeMode == THEME_MODE_DARK || (themeMode == THEME_MODE_AUTO && isSystemInDarkTheme())
 
             CebolaoLotofacilTheme(
                 darkTheme = useDarkTheme,
-                dynamicColor = false, // Garante que a paleta selecionada seja usada.
+                dynamicColor = false,
                 accentPalette = accentPalette
             ) {
                 Surface(
@@ -90,5 +70,31 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    private fun setupSplashScreenExitAnimation(splashScreenViewProvider: SplashScreenViewProvider) {
+        val splashView = splashScreenViewProvider.view
+        val iconView = splashScreenViewProvider.iconView
+
+        val alphaAnimator: ObjectAnimator = ObjectAnimator.ofFloat(
+            splashView, View.ALPHA, 1f, 0f
+        ).apply {
+            interpolator = DecelerateInterpolator()
+            duration = AppConfig.Animation.SplashExitDuration.toLong()
+            doOnEnd { splashScreenViewProvider.remove() }
+        }
+
+        val scaleXAnimator: ObjectAnimator = ObjectAnimator.ofFloat(iconView, View.SCALE_X, 1f, 0.5f).apply {
+            interpolator = AnticipateInterpolator()
+            duration = AppConfig.Animation.SplashExitDuration.toLong()
+        }
+        val scaleYAnimator: ObjectAnimator = ObjectAnimator.ofFloat(iconView, View.SCALE_Y, 1f, 0.5f).apply {
+            interpolator = AnticipateInterpolator()
+            duration = AppConfig.Animation.SplashExitDuration.toLong()
+        }
+
+        scaleXAnimator.start()
+        scaleYAnimator.start()
+        alphaAnimator.start()
     }
 }

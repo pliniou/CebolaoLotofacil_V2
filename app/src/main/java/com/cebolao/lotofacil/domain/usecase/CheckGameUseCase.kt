@@ -1,5 +1,6 @@
 package com.cebolao.lotofacil.domain.usecase
 
+import android.util.Log
 import com.cebolao.lotofacil.data.CheckResult
 import com.cebolao.lotofacil.data.HistoricalDraw
 import com.cebolao.lotofacil.di.DefaultDispatcher
@@ -12,21 +13,29 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
 
+private const val TAG = "CheckGameUseCase"
 private const val RECENT_CONTESTS_COUNT = 15
+const val MIN_SCORE_FOR_PRIZE = 11 // Pontuação mínima para premiação
 
 class CheckGameUseCase @Inject constructor(
     private val historyRepository: HistoryRepository,
     @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher
 ) {
     operator fun invoke(gameNumbers: Set<Int>): Flow<Result<CheckResult>> = flow {
-        val history = historyRepository.getHistory()
-        if (history.isEmpty()) {
-            emit(Result.failure(Exception("Histórico de sorteios não disponível.")))
-            return@flow
+        runCatching {
+            historyRepository.getHistory()
+        }.onSuccess { history ->
+            if (history.isEmpty()) {
+                Log.w(TAG, "Attempted to check game against empty history.")
+                emit(Result.failure(Exception("Histórico de sorteios não disponível ou vazio.")))
+                return@onSuccess
+            }
+            val result = calculateResult(gameNumbers, history)
+            emit(Result.success(result))
+        }.onFailure { e ->
+            Log.e(TAG, "Failed to get history for checking game.", e)
+            emit(Result.failure(e))
         }
-
-        val result = calculateResult(gameNumbers, history)
-        emit(Result.success(result))
     }.flowOn(defaultDispatcher)
 
     private fun calculateResult(
@@ -43,9 +52,9 @@ class CheckGameUseCase @Inject constructor(
 
         history.forEach { draw ->
             val hits = draw.numbers.intersect(gameNumbers).size
-            if (hits >= 11) {
+            if (hits >= MIN_SCORE_FOR_PRIZE) {
                 scoreCounts[hits] = (scoreCounts[hits] ?: 0) + 1
-                if (lastHitContest == null) {
+                if (lastHitContest == null || draw.contestNumber > lastHitContest) {
                     lastHitContest = draw.contestNumber
                     lastHitScore = hits
                 }

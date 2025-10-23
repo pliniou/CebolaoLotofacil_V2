@@ -35,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.cebolao.lotofacil.R
 import com.cebolao.lotofacil.data.FilterPreset
 import com.cebolao.lotofacil.data.FilterType
@@ -65,7 +66,13 @@ fun FiltersScreen(
         viewModel.events.collectLatest { event ->
             when (event) {
                 is NavigationEvent.NavigateToGeneratedGames -> {
-                    navController.navigate(Screen.GeneratedGames.route)
+                    navController.navigate(Screen.GeneratedGames.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
                 }
                 is NavigationEvent.ShowSnackbar -> {
                     snackbarHostState.showSnackbar(event.message)

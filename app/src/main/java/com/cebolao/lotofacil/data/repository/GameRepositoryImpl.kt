@@ -1,10 +1,11 @@
 package com.cebolao.lotofacil.data.repository
 
+import android.util.Log
 import com.cebolao.lotofacil.data.LotofacilGame
 import com.cebolao.lotofacil.di.ApplicationScope
-import com.cebolao.lotofacil.di.STATE_IN_TIMEOUT_MS
 import com.cebolao.lotofacil.domain.repository.GameRepository
 import com.cebolao.lotofacil.domain.repository.UserPreferencesRepository
+import com.cebolao.lotofacil.util.STATE_IN_TIMEOUT_MS
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -24,6 +25,8 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import javax.inject.Singleton
+
+private const val TAG = "GameRepositoryImpl"
 
 @Singleton
 class GameRepositoryImpl @Inject constructor(
@@ -47,12 +50,12 @@ class GameRepositoryImpl @Inject constructor(
     init {
         repositoryScope.launch {
             val pinnedGameStrings = userPreferencesRepository.pinnedGames.first()
-            val loadedGames = pinnedGameStrings.mapNotNull {
-                try {
-                    json.decodeFromString<LotofacilGame>(it)
-                } catch (_: Exception) {
-                    null
-                }
+            val loadedGames = pinnedGameStrings.mapNotNull { gameString ->
+                runCatching {
+                    json.decodeFromString<LotofacilGame>(gameString)
+                }.onFailure { e ->
+                    Log.w(TAG, "Failed to load/deserialize pinned game: $gameString", e)
+                }.getOrNull()
             }
             _games.value = loadedGames.toImmutableList()
         }
@@ -117,7 +120,8 @@ class GameRepositoryImpl @Inject constructor(
     override suspend fun importGames(serialized: String): Int {
         val parsed = try {
             json.decodeFromString<List<LotofacilGame>>(serialized.trim())
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to import/deserialize games", e)
             return 0
         }
 

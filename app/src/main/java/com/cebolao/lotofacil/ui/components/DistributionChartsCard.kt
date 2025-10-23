@@ -12,9 +12,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.cebolao.lotofacil.data.StatisticsReport
 import com.cebolao.lotofacil.domain.model.StatisticPattern
+import com.cebolao.lotofacil.ui.theme.AppConfig
 import com.cebolao.lotofacil.ui.theme.Dimen
 import kotlinx.collections.immutable.toImmutableList
 
@@ -26,15 +28,32 @@ fun DistributionChartsCard(
     onPatternSelected: (StatisticPattern) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val chartData = when (selectedPattern) {
-        StatisticPattern.SUM -> stats.sumDistribution
-        StatisticPattern.EVENS -> stats.evenDistribution
-        StatisticPattern.PRIMES -> stats.primeDistribution
-        StatisticPattern.FRAME -> stats.frameDistribution
-        StatisticPattern.PORTRAIT -> stats.portraitDistribution
-        StatisticPattern.FIBONACCI -> stats.fibonacciDistribution
-        StatisticPattern.MULTIPLES_OF_3 -> stats.multiplesOf3Distribution
-    }.entries.sortedBy { it.key }.map { it.key.toString() to it.value }
+    val chartData = remember(selectedPattern, stats) {
+        val dataMap = when (selectedPattern) {
+            StatisticPattern.SUM -> {
+                val sumData = stats.sumDistribution
+                val minRange = AppConfig.UI.SumChartMinRange
+                val maxRange = AppConfig.UI.SumChartMaxRange
+                val step = AppConfig.UI.SumChartStep
+                val buckets = (minRange..maxRange step step).associateWith { 0 }.toMutableMap()
+
+                sumData.forEach { (value, count) ->
+                    val bucketStart = (value / step) * step
+                    if (buckets.containsKey(bucketStart)) {
+                        buckets[bucketStart] = buckets.getValue(bucketStart) + count
+                    }
+                }
+                buckets
+            }
+            StatisticPattern.EVENS -> stats.evenDistribution
+            StatisticPattern.PRIMES -> stats.primeDistribution
+            StatisticPattern.FRAME -> stats.frameDistribution
+            StatisticPattern.PORTRAIT -> stats.portraitDistribution
+            StatisticPattern.FIBONACCI -> stats.fibonacciDistribution
+            StatisticPattern.MULTIPLES_OF_3 -> stats.multiplesOf3Distribution
+        }
+        dataMap.map { it.key.toString() to it.value }.sortedBy { it.first.toIntOrNull() ?: 0 }
+    }
 
     val maxValue = chartData.maxOfOrNull { it.second } ?: 0
 
