@@ -38,7 +38,7 @@ private val DASH_PATH_EFFECT = PathEffect.dashPathEffect(
     floatArrayOf(AppConfig.UI.BarChartDashInterval, AppConfig.UI.BarChartDashInterval),
     AppConfig.UI.BarChartDashPhase
 )
-private val BAR_CORNER_RADIUS = CornerRadius(Dimen.ExtraSmallPadding.value)
+private val BAR_CORNER_RADIUS = CornerRadius(Dimen.ExtraSmallPadding.value * 2)
 
 @Composable
 fun BarChart(
@@ -108,13 +108,13 @@ fun BarChart(
             .pointerInput(data) {
                 detectTapGestures { offset ->
                     val yAxisLabelWidthPx = Dimen.BarChartYAxisLabelWidth.toPx()
-                    val barSpacingPx = Dimen.ExtraSmallPadding.toPx()
+                    val barSpacingPx = Dimen.SmallPadding.toPx()
                     val chartAreaWidth = size.width - yAxisLabelWidthPx
-                    val totalSpacing = barSpacingPx * (data.size + 1)
+                    val totalSpacing = barSpacingPx * (data.size - 1)
                     val barWidth = ((chartAreaWidth - totalSpacing) / data.size).coerceAtLeast(0f)
 
                     val tappedBarIndex = data.indices.firstOrNull { index ->
-                        val barLeft = yAxisLabelWidthPx + barSpacingPx + index * (barWidth + barSpacingPx)
+                        val barLeft = yAxisLabelWidthPx + index * (barWidth + barSpacingPx)
                         val barRight = barLeft + barWidth
                         offset.x in barLeft..barRight
                     }
@@ -142,14 +142,14 @@ fun BarChart(
             outlineVariant
         )
 
-        val barSpacingPx = Dimen.ExtraSmallPadding.toPx()
-        val totalSpacing = barSpacingPx * (data.size + 1)
+        val barSpacingPx = Dimen.SmallPadding.toPx()
+        val totalSpacing = barSpacingPx * (data.size - 1)
         val barWidth = ((chartAreaWidth - totalSpacing) / data.size).coerceAtLeast(0f)
         val barRects = mutableListOf<Rect>()
 
         data.forEachIndexed { index, (label, value) ->
             val barHeight = (value.toFloat() / maxValue) * chartAreaHeight * animatedValue
-            val left = yAxisLabelWidthPx + barSpacingPx + index * (barWidth + barSpacingPx)
+            val left = yAxisLabelWidthPx + index * (barWidth + barSpacingPx)
             val top = valueLabelHeightPx + chartAreaHeight - barHeight
             barRects.add(
                 Rect(left = left, top = top, right = left + barWidth, bottom = valueLabelHeightPx + chartAreaHeight)
@@ -202,7 +202,7 @@ private fun DrawScope.drawTooltip(
 ) {
     val tooltipWidthPx = Dimen.BarChartTooltipWidth.toPx()
     val tooltipHeightPx = Dimen.BarChartTooltipHeight.toPx()
-    val cornerRadiusPx = Dimen.ExtraSmallPadding.toPx()
+    val cornerRadiusPx = Dimen.SmallPadding.toPx()
     val tooltipMarginPx = Dimen.SmallPadding.toPx()
 
     val tooltipRect = Rect(
@@ -245,7 +245,7 @@ private fun DrawScope.drawGrid(
         val textY = y - (textPaint.ascent() + textPaint.descent()) / 2
         drawContext.canvas.nativeCanvas.drawText(
             value.toString(),
-            yAxisLabelWidth - Dimen.ExtraSmallPadding.toPx(),
+            yAxisLabelWidth - Dimen.SmallPadding.toPx(),
             textY,
             textPaint
         )

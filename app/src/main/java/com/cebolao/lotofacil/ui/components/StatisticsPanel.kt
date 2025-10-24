@@ -1,8 +1,10 @@
 package com.cebolao.lotofacil.ui.components
 
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,7 +18,6 @@ import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,9 +26,8 @@ import com.cebolao.lotofacil.R
 import com.cebolao.lotofacil.data.StatisticsReport
 import com.cebolao.lotofacil.ui.theme.AppConfig
 import com.cebolao.lotofacil.ui.theme.Dimen
+import com.cebolao.lotofacil.util.UiConstants.TIME_WINDOWS
 import kotlinx.collections.immutable.toImmutableList
-
-private val TIME_WINDOWS = listOf(0, 20, 50, 100, 200, 500)
 
 @Composable
 fun StatisticsPanel(
@@ -53,34 +53,37 @@ fun StatisticsPanel(
 
                 AppDivider()
 
-                StatRow(
-                    title = stringResource(R.string.home_hot_numbers),
-                    numbers = stats.mostFrequentNumbers.toImmutableList(),
-                    icon = Icons.Filled.LocalFireDepartment,
-                    suffix = stringResource(R.string.home_suffix_times)
-                )
-
-                AppDivider()
-
-                StatRow(
-                    title = stringResource(R.string.home_overdue_numbers),
-                    numbers = stats.mostOverdueNumbers.toImmutableList(),
-                    icon = Icons.Filled.HourglassEmpty,
-                    suffix = stringResource(R.string.home_suffix_ago)
-                )
+                AnimatedContent(
+                    targetState = stats,
+                    transitionSpec = { fadeIn(animationSpec = tween(AppConfig.Animation.MediumDuration)) togetherWith fadeOut(animationSpec = tween(AppConfig.Animation.MediumDuration)) },
+                    label = "StatsContent"
+                ) { targetStats ->
+                    Column(verticalArrangement = Arrangement.spacedBy(Dimen.CardPadding)) {
+                        StatRow(
+                            title = stringResource(R.string.home_hot_numbers),
+                            numbers = targetStats.mostFrequentNumbers.toImmutableList(),
+                            icon = Icons.Filled.LocalFireDepartment,
+                            suffix = stringResource(R.string.home_suffix_times)
+                        )
+                        AppDivider()
+                        StatRow(
+                            title = stringResource(R.string.home_overdue_numbers),
+                            numbers = targetStats.mostOverdueNumbers.toImmutableList(),
+                            icon = Icons.Filled.HourglassEmpty,
+                            suffix = stringResource(R.string.home_suffix_ago)
+                        )
+                    }
+                }
             }
-            AnimatedVisibility(
-                visible = isStatsLoading,
-                enter = fadeIn(),
-                exit = fadeOut(),
-                modifier = Modifier.matchParentSize()
-            ) {
+
+            if (isStatsLoading) {
                 Box(
                     contentAlignment = Alignment.Center,
-                    modifier = Modifier.background(
-                        MaterialTheme.colorScheme.surfaceColorAtElevation(Dimen.Elevation.Level1)
-                            .copy(alpha = AppConfig.UI.StatsPanelLoadingOverlayAlpha)
-                    )
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(
+                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConfig.UI.StatsPanelLoadingOverlayAlpha)
+                        )
                 ) {
                     CircularProgressIndicator()
                 }

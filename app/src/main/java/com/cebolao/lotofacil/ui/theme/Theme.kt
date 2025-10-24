@@ -6,18 +6,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.ProvidableCompositionLocal
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
-
-val LocalAnimationEnabled: ProvidableCompositionLocal<Boolean> = staticCompositionLocalOf { true }
 
 @Composable
 fun CebolaoLotofacilTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false,
+    dynamicColor: Boolean = false, // Dynamic color is disabled for brand consistency
     accentPalette: AccentPalette = AccentPalette.DEFAULT,
     content: @Composable () -> Unit
 ) {
@@ -30,18 +24,10 @@ fun CebolaoLotofacilTheme(
         else -> lightColorSchemeFor(accentPalette)
     }
 
-    val view = LocalView.current
-    when {
-        !view.isInEditMode -> {
-        }
-    }
-
-    CompositionLocalProvider(LocalAnimationEnabled provides true) {
-        MaterialTheme(
-            colorScheme = colorScheme,
-            typography = Typography,
-            shapes = Shapes,
-            content = content
-        )
-    }
+    MaterialTheme(
+        colorScheme = colorScheme,
+        typography = Typography,
+        shapes = Shapes,
+        content = content
+    )
 }

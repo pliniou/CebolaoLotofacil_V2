@@ -39,6 +39,10 @@ class GameRepositoryImpl @Inject constructor(
     private val _games = MutableStateFlow<ImmutableList<LotofacilGame>>(persistentListOf())
     override val games: StateFlow<ImmutableList<LotofacilGame>> = _games.asStateFlow()
 
+    // Comparator centralizado para garantir ordenação consistente.
+    private val gameComparator = compareByDescending<LotofacilGame> { it.isPinned }
+        .thenByDescending { it.creationTimestamp }
+
     override val pinnedGames: StateFlow<ImmutableList<LotofacilGame>> = games
         .map { gamesList -> gamesList.filter { it.isPinned }.toImmutableList() }
         .stateIn(
@@ -66,7 +70,7 @@ class GameRepositoryImpl @Inject constructor(
             _games.update { currentGames ->
                 (currentGames + newGames)
                     .distinctBy { it.numbers }
-                    .sortedWith(compareByDescending<LotofacilGame> { it.isPinned }.thenByDescending { it.creationTimestamp })
+                    .sortedWith(gameComparator)
                     .toImmutableList()
             }
         }
@@ -89,7 +93,7 @@ class GameRepositoryImpl @Inject constructor(
                 val updatedGame = gameToToggle.copy(isPinned = !gameToToggle.isPinned)
                 currentGames
                     .map { if (it.numbers == updatedGame.numbers) updatedGame else it }
-                    .sortedWith(compareByDescending<LotofacilGame> { it.isPinned }.thenByDescending { it.creationTimestamp })
+                    .sortedWith(gameComparator)
                     .toImmutableList()
             }
         }
@@ -131,7 +135,7 @@ class GameRepositoryImpl @Inject constructor(
             _games.update { currentGames ->
                 (currentGames + parsed)
                     .distinctBy { it.numbers }
-                    .sortedWith(compareByDescending<LotofacilGame> { it.isPinned }.thenByDescending { it.creationTimestamp })
+                    .sortedWith(gameComparator)
                     .toImmutableList()
             }
         }

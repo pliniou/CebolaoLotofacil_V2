@@ -27,7 +27,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -62,13 +61,13 @@ fun FilterCard(
     )
     val borderColor by animateColorAsState(
         targetValue = if (enabled) MaterialTheme.colorScheme.primary.copy(alpha = AppConfig.UI.FilterCardBorderAlpha)
-        else MaterialTheme.colorScheme.surface.copy(alpha = AppConfig.UI.FilterCardDisabledBorderAlpha),
+        else MaterialTheme.colorScheme.outline.copy(alpha = 0.1f),
         animationSpec = tween(AppConfig.Animation.MediumDuration),
         label = "borderColor"
     )
     val containerColor by animateColorAsState(
         targetValue = if (enabled) MaterialTheme.colorScheme.primaryContainer.copy(alpha = AppConfig.UI.FilterCardContainerAlpha)
-        else MaterialTheme.colorScheme.surfaceColorAtElevation(elevation),
+        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
         animationSpec = tween(AppConfig.Animation.MediumDuration),
         label = "containerColor"
     )
@@ -78,7 +77,7 @@ fun FilterCard(
         shape = MaterialTheme.shapes.large,
         elevation = CardDefaults.cardElevation(elevation),
         colors = CardDefaults.cardColors(containerColor = containerColor),
-        border = BorderStroke(Dimen.Border.Thick, borderColor)
+        border = BorderStroke(Dimen.Border.Default, borderColor)
     ) {
         Column(
             modifier = Modifier.padding(
@@ -128,7 +127,7 @@ private fun FilterHeader(
             modifier = Modifier.size(Dimen.MediumIcon)
         )
         Column(modifier = Modifier.weight(1f)) {
-            Text(filterState.type.title, style = MaterialTheme.typography.titleSmall)
+            Text(filterState.type.title, style = MaterialTheme.typography.titleMedium)
             if (!dataAvailable) {
                 Text(
                     "Dados indisponíveis",
@@ -192,7 +191,7 @@ private fun ValueIndicator(
         )
         Text(
             value.toString(),
-            style = MaterialTheme.typography.titleSmall,
+            style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary
         )

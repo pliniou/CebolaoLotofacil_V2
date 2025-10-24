@@ -9,7 +9,6 @@ import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CardElevation
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
@@ -21,10 +20,10 @@ fun SectionCard(
     modifier: Modifier = Modifier,
     shape: Shape = MaterialTheme.shapes.large,
     colors: CardColors = CardDefaults.cardColors(
-        containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(Dimen.Elevation.Level1)
+        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
     ),
     elevation: CardElevation = CardDefaults.cardElevation(defaultElevation = Dimen.Elevation.Level1),
-    border: BorderStroke? = null,
+    border: BorderStroke? = BorderStroke(Dimen.Border.Default, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
     contentSpacing: Dp = Dimen.CardPadding,
     content: @Composable () -> Unit
 ) {

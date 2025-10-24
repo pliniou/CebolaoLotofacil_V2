@@ -3,7 +3,7 @@
     <string name="app_name">Cebolão Lotofácil</string>
 
     <string name="studio_name">Cebola Studios</string>
-    <string name="studio_slogan">Apps simples, honestos e diretos ao ponto.</string>
+    <string name="studio_slogan">App simples, honesto e direto ao ponto.</string>
 
     <string name="error_analysis_failed">Ops, falha ao analisar o jogo. Tente novamente.</string>
     <string name="error_load_data_failed">Não foi possível carregar os dados. Sua conexão com a sorte (e a internet) está ativa?</string>
@@ -22,14 +22,14 @@
     <string name="onboarding_start">Começar</string>
 
     <string name="home_title">Cebolão</string>
-    <string name="home_subtitle">Sua Sorte, mais Inteligente</string>
+    <string name="home_subtitle">Sua Sorte, nossa Estatística</string>
     <string name="home_sync_button_description">Atualizar dados</string>
     <string name="home_last_contest_format">Último Concurso: #%1$d</string>
     <string name="home_next_contest">Próximo Concurso #%1$d</string>
     <string name="home_prize_estimate">Prêmio Estimado</string>
-    <string name="home_accumulated_prize_final_five">Acumulado Final 0 ou 5</string>
+    <string name="home_accumulated_prize_final_five">Acumulado para os Concursos Final 0/5</string>
     <string name="home_statistics_center">Central de Estatísticas</string>
-    <string name="home_analysis_period">Período de Análise</string>
+    <string name="home_analysis_period">Período</string>
     <string name="home_all_contests">Todos</string>
     <string name="home_last_contests_format">Últimos %1$d</string>
     <string name="home_hot_numbers">Dezenas Quentes (as mais sorteadas)</string>
@@ -40,14 +40,14 @@
     <string name="home_overdue_hot_numbers_desc">Mostra os 5 números mais \'frios\' (sem sair há tempos) e os \'quentes\' (frequentes). O valor abaixo indica o atraso (em concursos) ou a frequência total.</string>
     <string name="home_distribution_charts_desc">A barra mais alta indica o padrão mais comum (ex: 8 números pares). Use os filtros acima do gráfico para explorar diferentes estatísticas e encontrar sua estratégia.</string>
     <string name="home_sync_success_message">Dados atualizados com sucesso!</string>
-    <string name="home_sync_failed_message">Não foi possível atualizar. Mostrando os dados locais, sem pânico!</string>
+    <string name="home_sync_failed_message">Não foi possível atualizar. Mostrando os dados locais. Sem pânico, o gerador de dezenas é offline!</string>
     <string name="home_winners_last_contest">Ganhadores do Último Concurso</string>
     <string name="home_hits_format">%1$d acertos</string>
     <string name="home_winner_count_one">%1$d ganhador</string>
     <string name="home_winner_count_other">%1$d ganhadores</string>
 
     <string name="filters_title">Gerador Inteligente</string>
-    <string name="filters_subtitle">Refine a sorte com base em dados</string>
+    <string name="filters_subtitle">Refine a sorte com base em dados estatísticos</string>
     <string name="filters_reset_button_description">Resetar filtros</string>
     <string name="filters_reset_dialog_title">Resetar Filtros?</string>
     <string name="filters_reset_dialog_message">Isso desativa todos os filtros e restaura os padrões. Certeza que quer começar do zero?</string>
@@ -80,13 +80,13 @@
     <string name="games_clear_confirm">Limpar</string>
 
     <string name="checker_title">Conferidor</string>
-    <string name="checker_subtitle">Teste sua sorte contra a história</string>
+    <string name="checker_subtitle">Teste sua sorte</string>
     <string name="checker_progress_format">%1$d de 15 números selecionados</string>
     <string name="checker_clear_button_description">Limpar seleção</string>
     <string name="checker_save_button_description">Salvar jogo</string>
     <string name="checker_check_button">Conferir Jogo</string>
-    <string name="checker_save_success_message">Jogo salvo! Que ele traga bons resultados.</string>
-    <string name="checker_save_fail_message">Para salvar, você precisa de 15 números. Quase lá!</string>
+    <string name="checker_save_success_message">Jogo salvo! Oremos.</string>
+    <string name="checker_save_fail_message">Para salvar, você precisa de 15 dezenas.</string>
     <string name="checker_results_header_wins">Histórico de Premiações</string>
     <string name="checker_results_header_no_wins">Análise de Desempenho</string>
     <string name="checker_results_analysis_in_contests">Análise em %1$d concursos</string>
@@ -96,23 +96,29 @@
     <string name="checker_last_hit_info">Último prêmio no concurso #%1$s com %2$s acertos.</string>
     <string name="checker_no_wins_message">Este jogo nunca foi premiado. Que tal ser o primeiro?</string>
     <string name="checker_simple_stats_title">Estatísticas do Jogo</string>
-    <string name="checker_recent_hits_chart_title">Acertos nos Últimos 15 Sorteios</string>
+    <string name="checker_recent_hits_chart_title">Últimos 15 Sorteios</string>
     <string name="checker_incomplete_game_message">Faltam números! Selecione 15 dezenas para conferir.</string>
 
     <string name="share_game_subject">Um jogo da Lotofácil para você!</string>
     <string name="share_game_message_template"><![CDATA[Gerei este jogo da Lotofácil com o app Cebolão Generator! Se ganhar, não esquece dos amigos… 😉\n\n<b>%1$s</b>]]></string>
 
+    <string name="game_generator_heuristic_start">Iniciando geração otimizada…</string>
+    <string name="game_generator_random_fallback">Buscando mais jogos aleatórios…</string>
+    <string name="game_generator_random_start">Iniciando geração aleatória…</string>
+    <string name="game_generator_failure_no_history">Filtro \'Repetidas do Anterior\' ativo, mas o último sorteio não está disponível.</string>
+    <string name="game_generator_failure_generic">Não foi possível gerar %1$d jogos com os filtros atuais após %2$d tentativas. Tente filtros menos restritos.</string>
+
     <string name="about_title">Sobre e Ajuda</string>
     <string name="about_subtitle">Informações, regras e configurações</string>
     <string name="about_info_purpose_title">Sobre o App</string>
-    <string name="about_info_purpose_subtitle">Para que serve o Cebolão Generator?</string>
+    <string name="about_info_purpose_subtitle">Para que serve o Cebolão Lotofácil Generator?</string>
     <string name="about_info_rules_title">Regras Básicas</string>
     <string name="about_info_rules_subtitle">Como funciona a Lotofácil</string>
     <string name="about_info_bolao_title">Bolão!?</string>
-    <string name="about_info_bolao_subtitle">Aumente suas chances em grupo</string>
+    <string name="about_info_bolao_subtitle">Aumente suas chances e socialize o prêmio</string>
     <string name="about_info_privacy_title">Privacidade</string>
-    <string name="about_info_privacy_subtitle">Seus dados (e jogos) estão seguros</string>
-    <string name="about_info_legal_title">Avisos Legais</string>
+    <string name="about_info_privacy_subtitle">Suas dezenas estão seguras</string>
+    <string name="about_info_legal_title">Avisos Legais e Não Divertidos</string>
     <string name="about_info_legal_subtitle">Isenção de responsabilidade</string>
     <string name="about_purpose_desc_body">Este app é uma ferramenta de estudo para a Lotofácil. Ele ajuda a entender padrões, explorar filtros e visualizar combinações. Ele não promete acertos — afinal, é um jogo de azar!</string>
     <string name="about_purpose_desc_footer">Importante: loterias são jogos de sorte. Jogue com responsabilidade.</string>
@@ -125,16 +131,16 @@
     <string name="about_legal_item1">Este app não possui vínculo com a Caixa Econômica Federal.</string>
     <string name="about_legal_item2">Resultados e estatísticas são para fins de estudo. Sempre confira o bilhete oficial.</string>
     <string name="about_legal_item3">Não há nenhuma garantia de ganho ou previsão de resultados.</string>
-    <string name="about_legal_footer">Isenção de responsabilidade: as informações são educativas e não são um conselho de investimento.</string>
-    <string name="about_privacy_desc_body">Sua privacidade é prioridade. O app não coleta dados pessoais; tudo fica salvo apenas no seu dispositivo. Simples assim.</string>
+    <string name="about_legal_footer">Isenção de responsabilidade: as informações não são um conselho de investimento.</string>
+    <string name="about_privacy_desc_body">Sua privacidade é prioridade. O app não coleta dados pessoais… a gente nem quer eles</string>
     <string name="about_privacy_item1">Sem cadastros, sem rastreamento.</string>
     <string name="about_privacy_item2">Preferências salvas localmente no seu aparelho.</string>
-    <string name="about_privacy_item3">A conexão de rede é segura (HTTPS) para buscar os resultados.</string>
+    <string name="about_privacy_item3">A conexão de rede é segura (HTTPS) para buscar os resultados, direto da API da Caixa Economica.</string>
     <string name="about_rules_item1">Você escolhe 15 números de um total de 25.</string>
     <string name="about_rules_item2">Prêmios para 11, 12, 13, 14 e 15 acertos.</string>
-    <string name="about_rules_item3">Sorteios ocorrem regularmente. Fique de olho nos canais oficiais.</string>
+    <string name="about_rules_item3">Sorteios ocorrem de Segunda a Sábado. Fique de olho nos canais oficiais.</string>
     <string name="about_bolao_desc_body">Participar de bolões é uma forma inteligente de aumentar as chances, cobrindo mais combinações e dividindo os custos (e os prêmios!).</string>
-    <string name="about_bolao_desc_footer">Dica de amigo: combine as regras de participação e divisão do prêmio antes de jogar.</string>
+    <string name="about_bolao_desc_footer">Dica do Zébolinha: combine as regras de participação e divisão do prêmio antes de jogar. Bolões feitos na Lóterica permitem a impressão de um bilhete para cada cota de aposta.</string>
 
     <string name="widget_last_draw_title">Último Sorteio</string>
     <string name="widget_last_draw_description">Mostra o resultado do último concurso da Lotofácil.</string>

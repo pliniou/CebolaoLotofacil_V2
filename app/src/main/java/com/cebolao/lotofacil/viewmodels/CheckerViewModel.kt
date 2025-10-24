@@ -9,8 +9,7 @@ import com.cebolao.lotofacil.R
 import com.cebolao.lotofacil.data.CheckResult
 import com.cebolao.lotofacil.data.LotofacilConstants
 import com.cebolao.lotofacil.data.LotofacilGame
-import com.cebolao.lotofacil.domain.usecase.CheckGameUseCase
-import com.cebolao.lotofacil.domain.usecase.GetGameSimpleStatsUseCase
+import com.cebolao.lotofacil.domain.usecase.AnalyzeGameUseCase
 import com.cebolao.lotofacil.domain.usecase.SaveGameUseCase
 import com.cebolao.lotofacil.navigation.Screen
 import com.cebolao.lotofacil.util.CHECKER_ARG_SEPARATOR
@@ -21,7 +20,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -51,8 +49,7 @@ sealed interface CheckerUiState {
 
 @HiltViewModel
 class CheckerViewModel @Inject constructor(
-    private val checkGameUseCase: CheckGameUseCase,
-    private val getGameSimpleStatsUseCase: GetGameSimpleStatsUseCase,
+    private val analyzeGameUseCase: AnalyzeGameUseCase,
     private val saveGameUseCase: SaveGameUseCase,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -98,17 +95,16 @@ class CheckerViewModel @Inject constructor(
             _uiState.value = CheckerUiState.Loading
             val game = LotofacilGame(numbers = _selectedNumbers.value)
 
-            val checkResult = checkGameUseCase(game.numbers).first()
-            val simpleStatsResult = getGameSimpleStatsUseCase(game).first()
-
-            if (checkResult.isSuccess && simpleStatsResult.isSuccess) {
-                _uiState.value = CheckerUiState.Success(
-                    result = checkResult.getOrThrow(),
-                    simpleStats = simpleStatsResult.getOrThrow()
-                )
-            } else {
-                _uiState.value = CheckerUiState.Error(R.string.error_analysis_failed)
-            }
+            analyzeGameUseCase(game)
+                .onSuccess { result ->
+                    _uiState.value = CheckerUiState.Success(
+                        result = result.checkResult,
+                        simpleStats = result.simpleStats
+                    )
+                }
+                .onFailure {
+                    _uiState.value = CheckerUiState.Error(R.string.error_analysis_failed)
+                }
         }
     }
 

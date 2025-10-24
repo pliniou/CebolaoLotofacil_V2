@@ -16,7 +16,7 @@ import com.cebolao.lotofacil.domain.model.NextDrawInfo
 import com.cebolao.lotofacil.domain.model.StatisticPattern
 import com.cebolao.lotofacil.domain.model.WinnerData
 import com.cebolao.lotofacil.domain.repository.SyncStatus
-import com.cebolao.lotofacil.domain.usecase.AnalyzeHistoryUseCase
+import com.cebolao.lotofacil.domain.usecase.GetAnalyzedStatsUseCase
 import com.cebolao.lotofacil.domain.usecase.GetHomeScreenDataUseCase
 import com.cebolao.lotofacil.domain.usecase.ObserveSyncStatusUseCase
 import com.cebolao.lotofacil.domain.usecase.SyncHistoryUseCase
@@ -66,7 +66,7 @@ data class HomeUiState(
 class HomeViewModel @Inject constructor(
     private val observeSyncStatusUseCase: ObserveSyncStatusUseCase,
     private val getHomeScreenDataUseCase: GetHomeScreenDataUseCase,
-    private val analyzeHistoryUseCase: AnalyzeHistoryUseCase,
+    private val getAnalyzedStatsUseCase: GetAnalyzedStatsUseCase,
     private val syncHistoryUseCase: SyncHistoryUseCase,
     private val workManager: WorkManager,
     @DefaultDispatcher private val dispatcher: CoroutineDispatcher
@@ -196,7 +196,7 @@ class HomeViewModel @Inject constructor(
                 it.copy(isStatsLoading = true, selectedTimeWindow = window)
             }
 
-            analyzeHistoryUseCase(window)
+            getAnalyzedStatsUseCase(window)
                 .onSuccess { newStats ->
                     _uiState.update {
                         it.copy(statistics = newStats, isStatsLoading = false)

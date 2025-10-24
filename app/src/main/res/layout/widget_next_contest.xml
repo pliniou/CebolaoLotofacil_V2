@@ -60,10 +60,10 @@
 
         <TextView
             android:id="@+id/widget_prize"
-            style="@style/Widget.Text.Prize" 
+            style="@style/Widget.Text.Prize"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/extra_small_padding" 
+            android:layout_marginTop="@dimen/extra_small_padding"
             tools:text="R$ 1.700.000,00" />
 
     </LinearLayout>
@@ -72,8 +72,10 @@
         android:id="@+id/widget_loading_text"
         style="@style/Widget.Text.Loading"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_gravity="center"
+        android:layout_weight="1"
+        android:gravity="center"
         android:text="@string/general_loading"
         android:visibility="visible"
         tools:visibility="gone" />

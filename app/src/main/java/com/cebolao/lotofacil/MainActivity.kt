@@ -4,7 +4,6 @@ import android.animation.ObjectAnimator
 import android.os.Bundle
 import android.view.View
 import android.view.animation.AnticipateInterpolator
-import android.view.animation.DecelerateInterpolator
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -75,26 +74,19 @@ class MainActivity : ComponentActivity() {
     private fun setupSplashScreenExitAnimation(splashScreenViewProvider: SplashScreenViewProvider) {
         val splashView = splashScreenViewProvider.view
         val iconView = splashScreenViewProvider.iconView
+        val exitDuration = AppConfig.Animation.SplashExitDuration.toLong()
 
-        val alphaAnimator: ObjectAnimator = ObjectAnimator.ofFloat(
-            splashView, View.ALPHA, 1f, 0f
-        ).apply {
-            interpolator = DecelerateInterpolator()
-            duration = AppConfig.Animation.SplashExitDuration.toLong()
+        ObjectAnimator.ofFloat(splashView, View.ALPHA, 1f, 0f).apply {
+            interpolator = AnticipateInterpolator(1.5f)
+            duration = exitDuration
             doOnEnd { splashScreenViewProvider.remove() }
-        }
+        }.start()
 
-        val scaleXAnimator: ObjectAnimator = ObjectAnimator.ofFloat(iconView, View.SCALE_X, 1f, 0.5f).apply {
-            interpolator = AnticipateInterpolator()
-            duration = AppConfig.Animation.SplashExitDuration.toLong()
-        }
-        val scaleYAnimator: ObjectAnimator = ObjectAnimator.ofFloat(iconView, View.SCALE_Y, 1f, 0.5f).apply {
-            interpolator = AnticipateInterpolator()
-            duration = AppConfig.Animation.SplashExitDuration.toLong()
-        }
-
-        scaleXAnimator.start()
-        scaleYAnimator.start()
-        alphaAnimator.start()
+        ObjectAnimator.ofFloat(iconView, View.SCALE_X, 1f, 1.5f).apply {
+            duration = exitDuration
+        }.start()
+        ObjectAnimator.ofFloat(iconView, View.SCALE_Y, 1f, 1.5f).apply {
+            duration = exitDuration
+        }.start()
     }
 }

@@ -197,7 +197,7 @@ private fun FilterPresetItem(preset: FilterPreset, onClick: () -> Unit) {
             indication = null,
             onClick = onClick
         ),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(Modifier.padding(Dimen.MediumPadding)) {
             Text(preset.name, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)

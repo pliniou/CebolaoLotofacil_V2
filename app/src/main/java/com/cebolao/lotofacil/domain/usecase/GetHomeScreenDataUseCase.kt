@@ -7,7 +7,6 @@ import com.cebolao.lotofacil.domain.model.HomeScreenData
 import com.cebolao.lotofacil.domain.model.NextDrawInfo
 import com.cebolao.lotofacil.domain.model.WinnerData
 import com.cebolao.lotofacil.domain.repository.HistoryRepository
-import com.cebolao.lotofacil.domain.service.StatisticsAnalyzer
 import com.cebolao.lotofacil.util.DEFAULT_PLACEHOLDER
 import com.cebolao.lotofacil.util.LOCALE_COUNTRY
 import com.cebolao.lotofacil.util.LOCALE_LANGUAGE
@@ -25,7 +24,7 @@ private const val TAG = "GetHomeScreenDataUseCase"
 
 class GetHomeScreenDataUseCase @Inject constructor(
     private val historyRepository: HistoryRepository,
-    private val statisticsAnalyzer: StatisticsAnalyzer,
+    private val getAnalyzedStatsUseCase: GetAnalyzedStatsUseCase,
     @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher
 ) {
     operator fun invoke(): Flow<Result<HomeScreenData>> = flow {
@@ -33,6 +32,7 @@ class GetHomeScreenDataUseCase @Inject constructor(
             val resultData = coroutineScope {
                 val latestApiResultDeferred = async { historyRepository.getLatestApiResult() }
                 val historyDeferred = async { historyRepository.getHistory() }
+                val initialStatsDeferred = async { getAnalyzedStatsUseCase(timeWindow = 0) }
 
                 val history = historyDeferred.await()
                 if (history.isEmpty()) {
@@ -40,11 +40,9 @@ class GetHomeScreenDataUseCase @Inject constructor(
                     throw IllegalStateException("Nenhum histórico de sorteio encontrado.")
                 }
 
-                val initialStatsDeferred = async { statisticsAnalyzer.analyze(history) }
-
                 val lastDraw = history.firstOrNull()
                 val latestApiResult = latestApiResultDeferred.await()
-                val initialStats = initialStatsDeferred.await()
+                val initialStats = initialStatsDeferred.await().getOrThrow()
 
                 val (nextDraw, winners) = processApiResult(latestApiResult)
 

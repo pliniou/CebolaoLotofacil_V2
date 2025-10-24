@@ -40,8 +40,8 @@ fun AnimateOnEntry(
         enter = slideInVertically(
             initialOffsetY = { fullHeight -> fullHeight / AppConfig.UI.AnimateOnEntryOffsetYDivisor },
             animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessMediumLow
+                dampingRatio = Spring.DampingRatioLowBouncy,
+                stiffness = Spring.StiffnessLow
             )
         ) + fadeIn(animationSpec = tween(durationMillis)),
         exit = slideOutVertically() + fadeOut()

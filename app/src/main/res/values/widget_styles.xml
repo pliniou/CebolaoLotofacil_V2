@@ -11,6 +11,7 @@
     </style>
 
     <style name="Widget.Text.Prize" parent="Widget.Text.Title">
+        <item name="android:fontFamily">@font/gabarito_semibold</item>
         <item name="android:textSize">@dimen/widget_large_text_size</item>
     </style>
 

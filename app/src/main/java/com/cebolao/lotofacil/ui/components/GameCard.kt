@@ -20,7 +20,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -52,13 +51,13 @@ fun GameCard(
     val isPinned = game.isPinned
 
     val elevation by animateDpAsState(
-        targetValue = if (isPinned) Dimen.Elevation.Level2 else Dimen.Elevation.Level1,
+        targetValue = if (isPinned) Dimen.Elevation.Level3 else Dimen.Elevation.Level1,
         animationSpec = spring(stiffness = Spring.StiffnessMedium),
         label = "elevation"
     )
     val borderColor by animateColorAsState(
-        targetValue = if (isPinned) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface.copy(
-            alpha = AppConfig.UI.GameCardDisabledBorderAlpha
+        targetValue = if (isPinned) MaterialTheme.colorScheme.primary.copy(alpha = 0.8f) else MaterialTheme.colorScheme.outline.copy(
+            alpha = 0.2f
         ),
         animationSpec = tween(AppConfig.Animation.ShortDuration),
         label = "borderColor"
@@ -67,7 +66,7 @@ fun GameCard(
         targetValue = if (isPinned) {
             MaterialTheme.colorScheme.primaryContainer.copy(alpha = AppConfig.UI.GameCardPinnedContainerAlpha)
         } else {
-            MaterialTheme.colorScheme.surfaceColorAtElevation(elevation)
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
         },
         animationSpec = tween(AppConfig.Animation.ShortDuration),
         label = "containerColor"
@@ -77,7 +76,7 @@ fun GameCard(
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(elevation),
         border = BorderStroke(
-            width = Dimen.Border.Thick,
+            width = if (isPinned) Dimen.Border.Thick else Dimen.Border.Default,
             color = borderColor
         ),
         colors = CardDefaults.cardColors(containerColor = containerColor)

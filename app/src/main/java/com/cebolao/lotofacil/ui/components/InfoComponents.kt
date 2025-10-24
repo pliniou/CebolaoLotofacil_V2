@@ -75,7 +75,6 @@ fun InfoPoint(title: String, description: String, modifier: Modifier = Modifier)
     }
 }
 
-@Suppress("DEPRECATION")
 private fun htmlToAnnotatedString(html: String): AnnotatedString {
     val spanned = HtmlCompat.fromHtml(html, HtmlCompat.FROM_HTML_MODE_LEGACY)
     return buildAnnotatedString {

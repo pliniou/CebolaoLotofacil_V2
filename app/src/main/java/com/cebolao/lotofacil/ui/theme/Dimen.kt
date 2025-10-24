@@ -5,6 +5,7 @@ import androidx.compose.ui.unit.dp
 /**
  * Centraliza todas as dimensões da UI, incluindo espaçamentos, tamanhos,
  * elevações e bordas para garantir consistência visual em todo o app.
+ * Refatorado para seguir uma grade de 4dp.
  */
 object Dimen {
 
@@ -26,36 +27,36 @@ object Dimen {
 
     val SmallIcon = 20.dp
     val MediumIcon = 24.dp
-    val LargeIcon = 36.dp
+    val LargeIcon = 32.dp
 
-    val Logo = 64.dp
-    val ProgressBarHeight = 6.dp
-    val ProgressBarStroke = 2.5.dp
-    val BarChartHeight = 180.dp
-    val BarChartYAxisLabelWidth = 40.dp
+    val Logo = 72.dp
+    val ProgressBarHeight = 8.dp
+    val ProgressBarStroke = 2.dp
+    val BarChartHeight = 200.dp
+    val BarChartYAxisLabelWidth = 36.dp
     val BarChartXAxisLabelHeight = 40.dp
-    val BarChartTooltipWidth = 60.dp
-    val BarChartTooltipHeight = 30.dp
+    val BarChartTooltipWidth = 64.dp
+    val BarChartTooltipHeight = 32.dp
 
-    // Novas dimensões para ColorPaletteCard
-    val PaletteCardWidth = 130.dp
-    val PaletteCardHeight = 110.dp
+    val PaletteCardWidth = 132.dp
+    val PaletteCardHeight = 112.dp
     //endregion
 
     //region Elevações (Elevation)
     object Elevation {
         val Level0 = 0.dp
-        val Level1 = 2.dp
-        val Level2 = 4.dp
+        val Level1 = 1.dp
+        val Level2 = 3.dp
         val Level3 = 6.dp
         val Level4 = 8.dp
+        val Level5 = 12.dp
     }
     //endregion
 
     //region Bordas (Border)
     object Border {
         val Default = 1.dp
-        val Thick = 1.5.dp
+        val Thick = 2.dp
     }
     //endregion
 

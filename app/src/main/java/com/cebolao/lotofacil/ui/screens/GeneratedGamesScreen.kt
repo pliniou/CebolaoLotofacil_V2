@@ -1,5 +1,6 @@
 package com.cebolao.lotofacil.ui.screens
 
+import android.app.Activity
 import android.content.Intent
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
@@ -43,7 +44,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.core.text.HtmlCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -61,16 +61,14 @@ import com.cebolao.lotofacil.ui.components.MessageState
 import com.cebolao.lotofacil.ui.components.SectionCard
 import com.cebolao.lotofacil.ui.components.TitleWithIcon
 import com.cebolao.lotofacil.ui.theme.Dimen
-import com.cebolao.lotofacil.util.LOCALE_COUNTRY
-import com.cebolao.lotofacil.util.LOCALE_LANGUAGE
-import com.cebolao.lotofacil.util.MIME_TYPE_TEXT_PLAIN
+import com.cebolao.lotofacil.util.rememberCurrencyFormatter
 import com.cebolao.lotofacil.viewmodels.GameAnalysisUiState
+import com.cebolao.lotofacil.viewmodels.GameScreenEvent
 import com.cebolao.lotofacil.viewmodels.GameSummary
 import com.cebolao.lotofacil.viewmodels.GameViewModel
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.text.NumberFormat
-import java.util.Locale
 
 private val gameTabs = listOf("Todos", "Fixados")
 
@@ -85,11 +83,21 @@ fun GeneratedGamesScreen(
     val uiState by gameViewModel.uiState.collectAsStateWithLifecycle()
     val analysisState by gameViewModel.analysisState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    val context = LocalContext.current
+    val context = LocalContext.current as Activity
     val pagerState = rememberPagerState(pageCount = { gameTabs.size })
     val scope = rememberCoroutineScope()
 
     var showClearDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(key1 = Unit) {
+        gameViewModel.events.collectLatest { event ->
+            when (event) {
+                is GameScreenEvent.ShareGame -> {
+                    context.startActivity(Intent.createChooser(event.intent, context.getString(R.string.games_share_chooser_title)))
+                }
+            }
+        }
+    }
 
     HandleAnalysisState(analysisState, gameViewModel, snackbarHostState)
 
@@ -139,7 +147,7 @@ fun GeneratedGamesScreen(
                     GamesList(
                         games = gamesToShow,
                         onGameAction = { game, action ->
-                            handleGameAction(action, game, gameViewModel, navController, context)
+                            handleGameAction(action, game, gameViewModel, navController)
                         }
                     )
                 }
@@ -169,25 +177,14 @@ private fun handleGameAction(
     action: GameCardAction,
     game: LotofacilGame,
     gameViewModel: GameViewModel,
-    navController: NavController,
-    context: android.content.Context
+    navController: NavController
 ) {
     when (action) {
         GameCardAction.Analyze -> gameViewModel.analyzeGame(game)
         GameCardAction.Pin -> gameViewModel.togglePinState(game)
         GameCardAction.Delete -> gameViewModel.requestDeleteGame(game)
         GameCardAction.Check -> navController.navigateToChecker(game.numbers)
-        GameCardAction.Share -> {
-            val numbersFormatted = game.numbers.sorted().joinToString(", ")
-            val shareTemplate = context.getString(R.string.share_game_message_template, numbersFormatted)
-            val shareText = HtmlCompat.fromHtml(shareTemplate, HtmlCompat.FROM_HTML_MODE_COMPACT).toString()
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = MIME_TYPE_TEXT_PLAIN
-                putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.share_game_subject))
-                putExtra(Intent.EXTRA_TEXT, shareText)
-            }
-            context.startActivity(Intent.createChooser(intent, context.getString(R.string.games_share_chooser_title)))
-        }
+        GameCardAction.Share -> gameViewModel.shareGame(game)
     }
 }
 
@@ -235,6 +232,7 @@ private fun ScreenActions(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun GamesList(
     games: ImmutableList<LotofacilGame>,
@@ -254,7 +252,7 @@ private fun GamesList(
             items = games,
             key = { game -> game.numbers.sorted().joinToString("-") }
         ) { game ->
-            AnimateOnEntry {
+            AnimateOnEntry(modifier = Modifier.animateItemPlacement()) {
                 GameCard(
                     game = game,
                     onAction = { action -> onGameAction(game, action) }
@@ -266,7 +264,7 @@ private fun GamesList(
 
 @Composable
 private fun GameSummaryCard(summary: GameSummary, modifier: Modifier = Modifier) {
-    val currencyFormat = remember { NumberFormat.getCurrencyInstance(Locale(LOCALE_COUNTRY, LOCALE_LANGUAGE)) }
+    val currencyFormat = rememberCurrencyFormatter()
 
     SectionCard(modifier = modifier) {
         TitleWithIcon(text = "Resumo dos Jogos", icon = Icons.Default.Style)

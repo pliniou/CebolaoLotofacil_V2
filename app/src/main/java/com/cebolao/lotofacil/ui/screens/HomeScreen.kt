@@ -59,15 +59,12 @@ import com.cebolao.lotofacil.ui.components.StatisticsExplanationCard
 import com.cebolao.lotofacil.ui.components.StatisticsPanel
 import com.cebolao.lotofacil.ui.theme.AppConfig
 import com.cebolao.lotofacil.ui.theme.Dimen
-import com.cebolao.lotofacil.util.LOCALE_COUNTRY
-import com.cebolao.lotofacil.util.LOCALE_LANGUAGE
+import com.cebolao.lotofacil.util.rememberCurrencyFormatter
 import com.cebolao.lotofacil.viewmodels.HomeScreenState
 import com.cebolao.lotofacil.viewmodels.HomeUiState
 import com.cebolao.lotofacil.viewmodels.HomeViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import java.text.NumberFormat
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -198,8 +195,10 @@ private fun HomeScreenContent(
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(
-                            horizontal = Dimen.ScreenPadding,
-                            vertical = Dimen.CardPadding
+                            start = Dimen.ScreenPadding,
+                            end = Dimen.ScreenPadding,
+                            top = Dimen.CardPadding,
+                            bottom = Dimen.BottomBarOffset
                         ),
                         verticalArrangement = Arrangement.spacedBy(Dimen.LargePadding)
                     ) {
@@ -360,14 +359,7 @@ private fun LastDrawSection(lastDraw: HistoricalDraw, winnerData: ImmutableList<
 
 @Composable
 private fun WinnerInfoSection(winnerData: ImmutableList<WinnerData>) {
-    val currencyFormat = remember {
-        NumberFormat.getCurrencyInstance(
-            Locale(
-                LOCALE_LANGUAGE,
-                LOCALE_COUNTRY
-            )
-        )
-    }
+    val currencyFormat = rememberCurrencyFormatter()
 
     Column(verticalArrangement = Arrangement.spacedBy(Dimen.MediumPadding)) {
         Text(
@@ -393,7 +385,7 @@ private fun WinnerInfoSection(winnerData: ImmutableList<WinnerData>) {
                             if (winnerInfo.winnerCount == 1) R.string.home_winner_count_one else R.string.home_winner_count_other,
                             winnerInfo.winnerCount
                         ),
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodySmall
                     )
                 }
                 Column(Modifier.weight(1f), horizontalAlignment = Alignment.End) {

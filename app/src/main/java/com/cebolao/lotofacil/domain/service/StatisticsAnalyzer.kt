@@ -18,6 +18,7 @@ private const val CACHE_MAX_SIZE = 50
 private const val CACHE_EVICTION_FACTOR = 0.25
 private const val SUM_DISTRIBUTION_GROUPING = 10
 private const val DEFAULT_GROUPING = 1
+private const val ALL_CONTESTS_WINDOW = 0
 
 @Singleton
 class StatisticsAnalyzer @Inject constructor(
@@ -26,18 +27,26 @@ class StatisticsAnalyzer @Inject constructor(
 
     private val analysisCache = ConcurrentHashMap<String, StatisticsReport>()
 
-    suspend fun analyze(draws: List<HistoricalDraw>): StatisticsReport =
+    /**
+     * Analisa uma lista de sorteios, com suporte para janelas de tempo.
+     * @param draws A lista completa de sorteios históricos.
+     * @param timeWindow O número de sorteios recentes para analisar. Se 0, analisa a lista completa.
+     */
+    suspend fun analyze(draws: List<HistoricalDraw>, timeWindow: Int = ALL_CONTESTS_WINDOW): StatisticsReport =
         withContext(defaultDispatcher) {
             if (draws.isEmpty()) return@withContext StatisticsReport()
 
-            val cacheKey = generateCacheKey(draws)
+            val drawsToAnalyze = if (timeWindow > ALL_CONTESTS_WINDOW) draws.take(timeWindow) else draws
+            if (drawsToAnalyze.isEmpty()) return@withContext StatisticsReport()
+
+            val cacheKey = generateCacheKey(drawsToAnalyze)
             analysisCache[cacheKey]?.let { return@withContext it }
 
             val report = coroutineScope {
-                val mostFrequentDeferred = async { calculateMostFrequent(draws) }
-                val mostOverdueDeferred = async { calculateMostOverdue(draws) }
-                val distributionsDeferred = async { calculateAllDistributions(draws) }
-                val averageSumDeferred = async { calculateAverageSum(draws) }
+                val mostFrequentDeferred = async { calculateMostFrequent(drawsToAnalyze) }
+                val mostOverdueDeferred = async { calculateMostOverdue(drawsToAnalyze) }
+                val distributionsDeferred = async { calculateAllDistributions(drawsToAnalyze) }
+                val averageSumDeferred = async { calculateAverageSum(drawsToAnalyze) }
 
                 val distributions = distributionsDeferred.await()
 
@@ -52,7 +61,7 @@ class StatisticsAnalyzer @Inject constructor(
                     multiplesOf3Distribution = distributions.multiplesOf3Distribution,
                     sumDistribution = distributions.sumDistribution,
                     averageSum = averageSumDeferred.await(),
-                    totalDrawsAnalyzed = draws.size,
+                    totalDrawsAnalyzed = drawsToAnalyze.size,
                     analysisDate = System.currentTimeMillis()
                 )
             }
@@ -105,19 +114,19 @@ class StatisticsAnalyzer @Inject constructor(
     private suspend fun calculateAllDistributions(draws: List<HistoricalDraw>): DistributionResults {
         return coroutineScope {
             val evenDeferred =
-                async { calculateDistribution(draws) { it.count { num -> num % 2 == 0 } } }
+                async { calculateDistribution(draws) { it.evens } }
             val primeDeferred =
-                async { calculateDistribution(draws) { it.count { num -> num in LotofacilConstants.PRIMOS } } }
+                async { calculateDistribution(draws) { it.primes } }
             val frameDeferred =
-                async { calculateDistribution(draws) { it.count { num -> num in LotofacilConstants.MOLDURA } } }
+                async { calculateDistribution(draws) { it.frame } }
             val portraitDeferred =
-                async { calculateDistribution(draws) { it.count { num -> num in LotofacilConstants.MIOLO } } }
+                async { calculateDistribution(draws) { it.portrait } }
             val fibonacciDeferred =
-                async { calculateDistribution(draws) { it.count { num -> num in LotofacilConstants.FIBONACCI } } }
+                async { calculateDistribution(draws) { it.fibonacci } }
             val multiplesOf3Deferred =
-                async { calculateDistribution(draws) { it.count { num -> num in LotofacilConstants.MULTIPLOS_DE_3 } } }
+                async { calculateDistribution(draws) { it.multiplesOf3 } }
             val sumDeferred =
-                async { calculateDistribution(draws, SUM_DISTRIBUTION_GROUPING) { it.sum() } }
+                async { calculateDistribution(draws, SUM_DISTRIBUTION_GROUPING) { it.sum } }
 
             DistributionResults(
                 evenDistribution = evenDeferred.await(),
@@ -134,16 +143,16 @@ class StatisticsAnalyzer @Inject constructor(
     private fun calculateDistribution(
         draws: List<HistoricalDraw>,
         grouping: Int = DEFAULT_GROUPING,
-        valueExtractor: (Set<Int>) -> Int
+        valueExtractor: (HistoricalDraw) -> Int
     ): Map<Int, Int> {
         return draws.groupingBy { draw ->
-            (valueExtractor(draw.numbers) / grouping) * grouping
+            (valueExtractor(draw) / grouping) * grouping
         }.eachCount()
     }
 
     private fun calculateAverageSum(draws: List<HistoricalDraw>): Float {
         if (draws.isEmpty()) return 0f
-        return draws.map { it.numbers.sum() }.average().toFloat()
+        return draws.map { it.sum }.average().toFloat()
     }
 
     private fun generateCacheKey(draws: List<HistoricalDraw>): String {

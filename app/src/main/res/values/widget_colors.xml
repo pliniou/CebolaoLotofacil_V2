@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="widget_background_light">#B3F0DEE6</color> 
-    <color name="widget_background_dark">#B34E444A</color> </resources>
+    <!-- Light Theme -->
+    <color name="widget_background_light">#D9EEDEE7</color> <!-- 85% alpha of LightSurfaceVariant -->
+
+    <!-- Dark Theme -->
+    <color name="widget_background_dark">#D94D444B</color> <!-- 85% alpha of DarkSurfaceVariant -->
+</resources>

@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -43,25 +44,30 @@ fun NumberBall(
     variant: NumberBallVariant = NumberBallVariant.Primary
 ) {
     val elevation by animateDpAsState(
-        targetValue = if (isSelected) Dimen.Elevation.Level2 else Dimen.Elevation.Level1,
+        targetValue = if (isSelected) Dimen.Elevation.Level4 else Dimen.Elevation.Level1,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
+            stiffness = Spring.StiffnessLow
         ),
         label = "ballElevation"
     )
 
-    val (containerColor, contentColor, borderColor) = rememberBallColors(
+    val (containerColors, contentColor, borderColor) = rememberBallColors(
         isSelected = isSelected,
         isHighlighted = isHighlighted,
         isDisabled = isDisabled,
         variant = variant
     )
 
-    val animatedContainer by animateColorAsState(
-        containerColor,
+    val animatedContainerStart by animateColorAsState(
+        containerColors.first,
         tween(AppConfig.Animation.ShortDuration),
-        label = "ballContainer"
+        label = "ballContainerStart"
+    )
+    val animatedContainerEnd by animateColorAsState(
+        containerColors.second,
+        tween(AppConfig.Animation.ShortDuration),
+        label = "ballContainerEnd"
     )
     val animatedContent by animateColorAsState(
         contentColor,
@@ -91,14 +97,11 @@ fun NumberBall(
                 shape = CircleShape,
                 spotColor = MaterialTheme.colorScheme.primary.copy(alpha = AppConfig.UI.NumberBallShadowSpotAlpha)
             )
+            .clip(CircleShape)
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(
-                        animatedContainer,
-                        animatedContainer.copy(alpha = AppConfig.UI.NumberBallGradientAlpha)
-                    )
-                ),
-                shape = CircleShape
+                    colors = listOf(animatedContainerStart, animatedContainerEnd)
+                )
             )
             .border(
                 width = Dimen.Border.Default,
@@ -127,31 +130,46 @@ private fun rememberBallColors(
     isHighlighted: Boolean,
     isDisabled: Boolean,
     variant: NumberBallVariant
-): Triple<Color, Color, Color> {
+): Triple<Pair<Color, Color>, Color, Color> {
     val primaryTone = when (variant) {
         NumberBallVariant.Primary -> MaterialTheme.colorScheme.primary
         NumberBallVariant.Secondary -> MaterialTheme.colorScheme.secondary
         NumberBallVariant.Lotofacil -> MaterialTheme.colorScheme.tertiary
     }
 
+    val primaryToneContainer = when (variant) {
+        NumberBallVariant.Primary -> MaterialTheme.colorScheme.primaryContainer
+        NumberBallVariant.Secondary -> MaterialTheme.colorScheme.secondaryContainer
+        NumberBallVariant.Lotofacil -> MaterialTheme.colorScheme.tertiaryContainer
+    }
+
+    val onPrimaryToneContainer = when (variant) {
+        NumberBallVariant.Primary -> MaterialTheme.colorScheme.onPrimaryContainer
+        NumberBallVariant.Secondary -> MaterialTheme.colorScheme.onSecondaryContainer
+        NumberBallVariant.Lotofacil -> MaterialTheme.colorScheme.onTertiaryContainer
+    }
+
     return when {
         isDisabled -> Triple(
-            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConfig.UI.NumberBallDisabledAlpha),
+            Pair(
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = AppConfig.UI.NumberBallDisabledAlpha),
+                MaterialTheme.colorScheme.surface.copy(alpha = AppConfig.UI.NumberBallDisabledAlpha)
+            ),
             MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = AppConfig.UI.NumberBallDisabledAlpha),
             MaterialTheme.colorScheme.outline.copy(alpha = AppConfig.UI.NumberBallBorderAlphaDisabled)
         )
         isSelected -> Triple(
-            primaryTone,
+            Pair(primaryTone, primaryTone.copy(alpha = AppConfig.UI.NumberBallGradientAlpha)),
             MaterialTheme.colorScheme.onPrimary,
             primaryTone.copy(alpha = AppConfig.UI.NumberBallBorderAlphaSelected)
         )
         isHighlighted -> Triple(
-            MaterialTheme.colorScheme.primaryContainer,
-            MaterialTheme.colorScheme.onPrimaryContainer,
-            MaterialTheme.colorScheme.primary.copy(alpha = AppConfig.UI.NumberBallBorderAlphaHighlighted)
+            Pair(primaryToneContainer, primaryToneContainer.copy(alpha = AppConfig.UI.NumberBallGradientAlpha)),
+            onPrimaryToneContainer,
+            primaryTone.copy(alpha = AppConfig.UI.NumberBallBorderAlphaHighlighted)
         )
         else -> Triple(
-            MaterialTheme.colorScheme.surfaceVariant,
+            Pair(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.surface),
             MaterialTheme.colorScheme.onSurfaceVariant,
             MaterialTheme.colorScheme.outline.copy(alpha = AppConfig.UI.NumberBallBorderAlphaDefault)
         )

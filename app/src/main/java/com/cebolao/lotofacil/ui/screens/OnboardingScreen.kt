@@ -65,7 +65,7 @@ fun OnboardingScreen(onOnboardingComplete: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .windowInsetsPadding(WindowInsets.statusBars)
-                .padding(horizontal = Dimen.ScreenPadding, vertical = Dimen.CardPadding)
+                .padding(vertical = Dimen.CardPadding)
         ) {
             HorizontalPager(
                 state = pagerState,
@@ -100,7 +100,7 @@ private fun OnboardingPageContent(page: OnboardingPage) {
             .fillMaxSize()
             .padding(Dimen.ScreenPadding),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(Dimen.CardPadding)
+        verticalArrangement = Arrangement.Center
     ) {
         Image(
             painter = painterResource(id = page.imageResId),
@@ -108,13 +108,18 @@ private fun OnboardingPageContent(page: OnboardingPage) {
             modifier = Modifier.fillMaxSize(AppConfig.UI.OnboardingImageFraction),
             contentScale = ContentScale.Fit
         )
-        Text(page.title, style = MaterialTheme.typography.headlineMedium)
-        Text(
-            text = page.description,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
-        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(Dimen.MediumPadding)
+        ) {
+            Text(page.title, style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center)
+            Text(
+                text = page.description,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
 

@@ -36,11 +36,10 @@ import com.cebolao.lotofacil.data.LotofacilConstants
 import com.cebolao.lotofacil.ui.theme.Dimen
 import com.cebolao.lotofacil.util.LOCALE_COUNTRY
 import com.cebolao.lotofacil.util.LOCALE_LANGUAGE
+import com.cebolao.lotofacil.util.UiConstants.GAME_QUANTITY_OPTIONS
 import com.cebolao.lotofacil.viewmodels.GenerationUiState
 import java.text.NumberFormat
 import java.util.Locale
-
-private val GAME_QUANTITY_OPTIONS = listOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 
 @Composable
 fun GenerationActionsPanel(
@@ -166,7 +165,7 @@ private fun QuantitySelector(
         }
         Text(
             text = quantity.toString(),
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
         IconButton(onClick = onIncrement, enabled = isIncrementEnabled) {

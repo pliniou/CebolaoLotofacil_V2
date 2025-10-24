@@ -8,7 +8,8 @@ import com.cebolao.lotofacil.data.FilterPreset
 import com.cebolao.lotofacil.data.FilterState
 import com.cebolao.lotofacil.data.FilterType
 import com.cebolao.lotofacil.domain.service.FilterSuccessCalculator
-import com.cebolao.lotofacil.domain.service.GameGenerator
+import com.cebolao.lotofacil.domain.service.GenerationProgress
+import com.cebolao.lotofacil.domain.service.GenerationProgressType
 import com.cebolao.lotofacil.domain.usecase.GenerateGamesUseCase
 import com.cebolao.lotofacil.domain.usecase.GetLastDrawUseCase
 import com.cebolao.lotofacil.domain.usecase.SaveGeneratedGamesUseCase
@@ -163,23 +164,23 @@ class FiltersViewModel @Inject constructor(
         }
     }
 
-    private suspend fun handleGenerationProgress(progress: GameGenerator.GenerationProgress) {
+    private suspend fun handleGenerationProgress(progress: GenerationProgress) {
         when (val type = progress.progressType) {
-            is GameGenerator.ProgressType.Started -> {
+            is GenerationProgressType.Started -> {
                 _generationState.value = GenerationUiState.Loading(MSG_LOADING_START, 0, progress.total)
             }
-            is GameGenerator.ProgressType.Step -> {
+            is GenerationProgressType.Step -> {
                 _generationState.value = GenerationUiState.Loading(type.message, progress.current, progress.total)
             }
-            is GameGenerator.ProgressType.Attempt -> {
+            is GenerationProgressType.Attempt -> {
                 _generationState.value = GenerationUiState.Loading(MSG_LOADING_GENERATING, progress.current, progress.total)
             }
-            is GameGenerator.ProgressType.Finished -> {
+            is GenerationProgressType.Finished -> {
                 saveGeneratedGamesUseCase(type.games)
                 _eventFlow.emit(NavigationEvent.NavigateToGeneratedGames)
                 _generationState.value = GenerationUiState.Idle
             }
-            is GameGenerator.ProgressType.Failed -> {
+            is GenerationProgressType.Failed -> {
                 _eventFlow.emit(NavigationEvent.ShowSnackbar(type.reason))
                 _generationState.value = GenerationUiState.Idle
             }

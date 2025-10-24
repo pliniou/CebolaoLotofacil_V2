@@ -1,11 +1,14 @@
 package com.cebolao.lotofacil.domain.service
 
+import android.content.Context
 import android.util.Log
+import com.cebolao.lotofacil.R
 import com.cebolao.lotofacil.data.FilterState
 import com.cebolao.lotofacil.data.FilterType
 import com.cebolao.lotofacil.data.LotofacilConstants
 import com.cebolao.lotofacil.data.LotofacilGame
 import com.cebolao.lotofacil.di.DefaultDispatcher
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
@@ -23,72 +26,70 @@ private const val HEURISTIC_ATTEMPTS_MULTIPLIER = 50
 private const val PROGRESS_UPDATE_FREQUENCY = 5
 private const val TAG = "GameGenerator"
 
-private const val MSG_HEURISTIC_START = "Iniciando geração otimizada..."
-private const val MSG_RANDOM_START = "Buscando jogos aleatórios..."
-private const val MSG_RANDOM_START_GENERIC = "Iniciando geração aleatória..."
-private const val MSG_FAILURE_PREFIX = "Não foi possível gerar"
-private const val MSG_FAILURE_SUFFIX = "jogos com os filtros atuais após"
-private const val MSG_FAILURE_SUFFIX_2 = "tentativas. Tente filtros menos restritos."
-private const val MSG_FAILURE_NO_HISTORY =
-    "Filtro 'Repetidas do Anterior' ativo, mas o último sorteio não está disponível."
+sealed class GenerationProgressType {
+    data object Started : GenerationProgressType()
+    data class Step(val message: String) : GenerationProgressType()
+    data class Attempt(val attemptNumber: Int, val found: Int) : GenerationProgressType()
+    data class Finished(val games: List<LotofacilGame>) : GenerationProgressType()
+    data class Failed(val reason: String) : GenerationProgressType()
+}
+
+data class GenerationProgress(
+    val progressType: GenerationProgressType,
+    val current: Int = 0,
+    val total: Int = 0
+)
 
 @Singleton
 class GameGenerator @Inject constructor(
+    @ApplicationContext private val context: Context,
     @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher
 ) {
     private val secureRandom: SecureRandom = SecureRandom()
     private val allNumbers = LotofacilConstants.ALL_NUMBERS
-
-    sealed class ProgressType {
-        data object Started : ProgressType()
-        data class Step(val message: String) : ProgressType()
-        data class Attempt(val attemptNumber: Int, val found: Int) : ProgressType()
-        data class Finished(val games: List<LotofacilGame>) : ProgressType()
-        data class Failed(val reason: String) : ProgressType()
-    }
-
-    data class GenerationProgress(
-        val progressType: ProgressType,
-        val current: Int = 0,
-        val total: Int = 0
-    )
 
     fun generateGamesWithProgress(
         activeFilters: List<FilterState>,
         count: Int,
         lastDraw: Set<Int>? = null
     ): Flow<GenerationProgress> = flow {
-        emit(GenerationProgress(ProgressType.Started, 0, count))
+        emit(GenerationProgress(GenerationProgressType.Started, 0, count))
 
         val validGames = mutableSetOf<LotofacilGame>()
         val enabledFilters = activeFilters.filter { it.isEnabled }
 
         val repeatsFilter = enabledFilters.find { it.type == FilterType.REPETIDAS_CONCURSO_ANTERIOR }
         if (repeatsFilter != null && lastDraw == null) {
-            emit(GenerationProgress(ProgressType.Failed(MSG_FAILURE_NO_HISTORY), 0, count))
+            val reason = context.getString(R.string.game_generator_failure_no_history)
+            emit(GenerationProgress(GenerationProgressType.Failed(reason), 0, count))
             return@flow
         }
 
         if (repeatsFilter != null) {
-            emit(GenerationProgress(ProgressType.Step(MSG_HEURISTIC_START), 0, count))
+            val message = context.getString(R.string.game_generator_heuristic_start)
+            emit(GenerationProgress(GenerationProgressType.Step(message), 0, count))
             generateHeuristically(repeatsFilter, lastDraw, enabledFilters, validGames, count)
             if (validGames.size >= count) {
-                emit(GenerationProgress(ProgressType.Finished(validGames.toList()), validGames.size, count))
+                emit(GenerationProgress(GenerationProgressType.Finished(validGames.toList()), validGames.size, count))
                 return@flow
             }
         }
 
-        val randomStartMessage = if (repeatsFilter != null) MSG_RANDOM_START else MSG_RANDOM_START_GENERIC
-        emit(GenerationProgress(ProgressType.Step(randomStartMessage), validGames.size, count))
+        val randomStartMessage = if (repeatsFilter != null) {
+            context.getString(R.string.game_generator_random_fallback)
+        } else {
+            context.getString(R.string.game_generator_random_start)
+        }
+        emit(GenerationProgress(GenerationProgressType.Step(randomStartMessage), validGames.size, count))
         val success = generateRandomly(enabledFilters, lastDraw, validGames, count)
 
         if (success) {
-            emit(GenerationProgress(ProgressType.Finished(validGames.toList()), validGames.size, count))
+            emit(GenerationProgress(GenerationProgressType.Finished(validGames.toList()), validGames.size, count))
         } else {
             val heuristicAttempts = if (repeatsFilter != null) HEURISTIC_ATTEMPTS_MULTIPLIER * count else 0
             val totalAttempts = heuristicAttempts + MAX_RANDOM_ATTEMPTS
-            val reason = "$MSG_FAILURE_PREFIX $count $MSG_FAILURE_SUFFIX $totalAttempts $MSG_FAILURE_SUFFIX_2"
-            emit(GenerationProgress(ProgressType.Failed(reason), validGames.size, count))
+            val reason = context.getString(R.string.game_generator_failure_generic, count, totalAttempts)
+            emit(GenerationProgress(GenerationProgressType.Failed(reason), validGames.size, count))
         }
 
     }.flowOn(defaultDispatcher)
@@ -107,7 +108,7 @@ class GameGenerator @Inject constructor(
 
             if (isGameValid(candidate, enabledFilters, lastDraw)) {
                 if (validGames.add(candidate)) {
-                    emit(GenerationProgress(ProgressType.Attempt(attempt, validGames.size), validGames.size, count))
+                    emit(GenerationProgress(GenerationProgressType.Attempt(attempt, validGames.size), validGames.size, count))
                     if (validGames.size >= count) return
                 }
             }
@@ -127,7 +128,7 @@ class GameGenerator @Inject constructor(
             if (isGameValid(game, enabledFilters, lastDraw)) {
                 if (validGames.add(game)) {
                     if (validGames.size % PROGRESS_UPDATE_FREQUENCY == 0 || validGames.size == count) {
-                        emit(GenerationProgress(ProgressType.Attempt(attempts, validGames.size), validGames.size, count))
+                        emit(GenerationProgress(GenerationProgressType.Attempt(attempts, validGames.size), validGames.size, count))
                     }
                 }
             }
